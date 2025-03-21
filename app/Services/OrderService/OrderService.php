@@ -22,7 +22,7 @@ class OrderService implements OrderServiceInterface
             'client_id' => $client->id,
             'user_id' => null,
             'amount' => $amount,
-            'currency_name' => $currency->name,
+            //'currency_name' => $currency->name,
         ]);
 
         broadcast(new UserMessageSent($order));
