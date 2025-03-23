@@ -40,7 +40,7 @@ class ChatService
         Message::create([
             'chat_id' => $chatId,
             'order_id' => $save_order_id,
-            'user_id' => 6,
+            'user_id' => null,
             'sender_type' => 'client',
             'message' => $message,
         ]);
