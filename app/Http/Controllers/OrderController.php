@@ -84,7 +84,7 @@ class OrderController extends Controller
         $created_message = Message::create([
             'chat_id' => $order->chat_id,
             'order_id' => $orderId,
-            'user_id' => 6,
+            'user_id' => auth()->user()->id,
             'sender_type' => 'user',
             'message' => $request->getMessage(),
         ]);
