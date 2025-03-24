@@ -36,7 +36,7 @@
       <!-- Контент -->
       <div class="modal-body">
         <div class="left-panel">
-          <div v-if="!selectedOrder.status === 'success'" class="select_user">
+          <div v-if="selectedOrder.status !== 'success'" class="select_user">
             <label class="block text-sm font-medium text-gray-700 mb-1">Ответственный</label>
             <multiselect v-model="form.selectedUser" :options="users" placeholder="Назначить ответственного"
                          :close-on-select="true" :show-labels="false" label="name"></multiselect>
@@ -80,7 +80,7 @@
       <div class="modal-footer">
 
         <transition name="fade">
-          <div v-if="!confirmationOrder && !selectedOrder.status === 'success'">
+          <div v-if="!confirmationOrder && selectedOrder.status !== 'success'">
             <div class="btn_save">
               <ButtonUI @click="store" type="submit" color="green">Сохранить</ButtonUI>
             </div>
