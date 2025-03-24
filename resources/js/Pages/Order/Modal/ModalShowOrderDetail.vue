@@ -18,7 +18,7 @@
           <span :class="getStatusColor(selectedOrder.status )" class="text-base font-medium leading-none ml-2">{{ translateStatus(selectedOrder.status) }}</span>
         </div>
 
-        <div v-if="!selectedOrder.status === 'success'" class="flex items-center cursor-pointer">
+        <div v-if="selectedOrder.status !== 'success'" class="flex items-center cursor-pointer">
           <div class="relative group">
             <div @click="openChat" class="cursor-pointer sm:ms-6 sm:flex sm:items-center">
               <Icon icon="wpf:message-outline" width="26" height="26"/>
