@@ -11,7 +11,7 @@
       <!-- Заголовок -->
       <div class="modal-header">
         <div class="flex items-center">
-          <h2 v-if="!selectedOrder.status === 'success'" class="text-lg font-semibold">Обработка заказа </h2>
+          <h2 v-if="selectedOrder.status !== 'success'" class="text-lg font-semibold">Обработка заказа </h2>
           <h2 v-else class="text-lg font-semibold">Заказ </h2>
           <span class="ml-2">№{{ selectedOrder.id }}</span>
 
