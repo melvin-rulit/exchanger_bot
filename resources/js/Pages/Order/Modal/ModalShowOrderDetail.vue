@@ -314,7 +314,7 @@ export default {
 }
 
 .order-image {
-  max-width: 100%;
+  max-width: 90%;
   max-height: 70%;
   border-radius: 8px;
   margin-right: 20%;
