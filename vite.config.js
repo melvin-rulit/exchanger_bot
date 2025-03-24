@@ -9,7 +9,7 @@ export default defineConfig({
     cors: true,
     // orign: 'http://192.168.0.103:5173',
     hmr: {
-        host: '192.168.0.104'
+        host: '192.168.1.27'
     }
     // proxy: {
     //   '/api': {
