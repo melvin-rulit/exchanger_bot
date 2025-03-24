@@ -64,7 +64,7 @@
 
             <div class="info-item">
               <span class="label">Дата закрытия:</span>
-              <span class="value">{{ formatDate(selectedOrder.closed_at) }}</span>
+<!--              <span class="value">{{ formatDate(selectedOrder.closed_at) }}</span>-->
             </div>
           </div>
 
