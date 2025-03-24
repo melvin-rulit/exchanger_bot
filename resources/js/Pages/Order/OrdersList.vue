@@ -187,6 +187,7 @@ export default {
             statusTranslations: {
                 new: 'Новый',
                 active: 'Активный',
+                success: 'Завершен',
                 deleted: 'Удален',
             },
             query: '',
