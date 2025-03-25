@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/send_message/{order}', [OrderController::class, 'storeMessage']);
         Route::put('/update_order', [OrderController::class, 'updateOrder']);
         Route::put('/close_order', [OrderController::class, 'closeOrder']);
+        Route::put('/fix_order/{orderId}', [OrderController::class, 'fixOrder']);
     });
 
     Route::group(['prefix' => 'consultation', 'name' => 'consultation'], function () {

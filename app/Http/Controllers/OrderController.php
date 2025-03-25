@@ -121,4 +121,19 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Заказ завершен', 'order' => $order]);
     }
+    public function fixOrder(int $orderId): JsonResponse
+    {
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json(['message' => 'Заказ не найден'], 404);
+        }
+
+        $order->update(['is_pinned' => !$order->is_pinned]);
+
+        return response()->json([
+            'message' => $order->is_pinned ? 'Заказ закреплен' : 'Закрепление снято',
+            'order' => $order
+        ]);
+    }
 }
