@@ -27,6 +27,18 @@
           </div>
         </div>
 
+        <div @click="fixTheOrder(selectedOrder.id)">
+          <div v-if="!selectedOrder.is_pinned" class="cursor-pointer flex items-center">
+            <Icon icon="mynaui:pin" width="24" height="24" />
+            <span class="text-xs rounded ml-2 hover:underline">Закрепить заказ</span>
+          </div>
+          <div v-else class="cursor-pointer flex items-center">
+            <Icon icon="mynaui:pin-solid" width="24" height="24" />
+            <span class="text-xs rounded ml-2 hover:underline">Закреплен</span>
+          </div>
+        </div>
+
+
         <button @click="close" class="close-btn" aria-label="Close modal">
           <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
         </button>
@@ -177,6 +189,20 @@ export default {
           .catch(error => {
             this.errors = error.response.data.message
           })
+    },
+    fixTheOrder($orderId) {
+      OrdersService.fix_order($orderId)
+        .then(response => {
+          // this.selectedOrder.is_pinned = response.data.order
+          if (response.data.order) {
+            this.selectedOrder.is_pinned = response.data.order.is_pinned;
+          } else {
+            this.selectedOrder.is_pinned = !this.selectedOrder.is_pinned;
+          }
+        })
+        .catch(error => {
+          this.errors = error.response.data.message
+        })
     },
     closeOrder: async function () {
         // event.preventDefault()

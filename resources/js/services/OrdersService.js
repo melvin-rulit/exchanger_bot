@@ -30,4 +30,8 @@ export class OrdersService {
         let url = `${this.serverUrl}/orders/close_order`;
         return axios.put(url, form)
     }
+    static fix_order(orderId) {
+        let url = `${this.serverUrl}/orders/fix_order/${orderId}`;
+        return axios.put(url)
+    }
 }
