@@ -6,6 +6,7 @@ use App\Models\Country;
 use App\Models\Currency;
 use App\Services\ChatService\ChatService;
 use App\Services\ClientService\ClientsService;
+use App\Services\CredentialService\CredentialService;
 use App\Services\OrderService\OrderService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
@@ -18,13 +19,15 @@ class TelegramBotService implements TelegramBotServiceInterface
     protected ChatService $chatService;
     protected ClientsService $clientsService;
     protected OrderService $orderService;
+    protected CredentialService $credentialService;
 
-    public function __construct(ChatService $chatService, ClientsService $clientsService, OrderService $orderService)
+    public function __construct(ChatService $chatService, ClientsService $clientsService, OrderService $orderService, CredentialService $credentialService)
     {
         $this->url = config('telegram.telegram_bot.api_url') . config('telegram.telegram_bot.token');
         $this->chatService = $chatService;
         $this->clientsService = $clientsService;
         $this->orderService = $orderService;
+        $this->credentialService = $credentialService;
     }
 
     public function getWebchook($WebchookData): void
@@ -34,6 +37,8 @@ class TelegramBotService implements TelegramBotServiceInterface
             $chatId = $WebchookData['callback_query']['message']['chat']['id'];
             $clientId = $WebchookData['callback_query']['from']['id'];
             $messageId = $WebchookData['callback_query']['message']['message_id'];
+
+            $this->setClientLanguage($this->clientsService->getClientLanguage($clientId));
 
             switch ($callbackData) {
                 case 'language_ru':
@@ -70,7 +75,6 @@ class TelegramBotService implements TelegramBotServiceInterface
                     }
                     break;
 
-
                 default:
                     break;
 
@@ -91,16 +95,14 @@ class TelegramBotService implements TelegramBotServiceInterface
             $clientId = $WebchookData['message']['from']['id'];
             $messageId = $WebchookData['message']['message_id'];
             $this->clientsService->checkIfClientExit($WebchookData);
-            $language = $this->clientsService->getClientLanguage($clientId);
-            App::setLocale($language);
-
+            $this->setClientLanguage($this->clientsService->getClientLanguage($clientId));
 
             if ($messageId) {
 //            $saveMessages = $this->saveMessagesForDeleted($messageId);
             }
 
             if ($this->clientsService->isUserInAmountInput($clientId) && !$this->checkMainMenu($text, $clientId)) {
-
+                Log::info('tut');
                 if ($this->isValidAmount($text, $clientId)) {
                     $amount = $text;
                     $this->checkProcessAmount($chatId, $clientId, $amount);
@@ -112,11 +114,12 @@ class TelegramBotService implements TelegramBotServiceInterface
 
             } elseif ($text === __('buttons.change_language') && !$this->clientsService->isUserInACountryInput($clientId) && !$this->checkMainMenu($text, $clientId) && !$this->clientsService->isUserInAmountInput($clientId)) {
                 $this->sendMessageChangeLanguage($chatId, $clientId, $messageId);
-            } elseif ($this->clientsService->isClientConsultationInput($clientId) && $text !== __('buttons.to_main')) {
+            } elseif ($this->clientsService->isClientSendScreenshot($clientId) || !$this->checkMainMenu($text, $clientId)) {
+                Log::info('tut2');
                 $save_order_id = Redis::get('save_order_id_for' . $clientId);
+
                 if ($save_order_id && $text) {
                     $this->chatService->prepareSaveMessage($text, $chatId, $save_order_id);
-
                 }elseif($text) {
                     $this->chatService->prepareSaveMessage($text, $chatId);
                 }
@@ -148,12 +151,11 @@ class TelegramBotService implements TelegramBotServiceInterface
             }
         }
     }
-
-    // метод при нажатии на кнопки устанавливает выбранный язык и выводит клавиатуру главного меню
     public function changeLanguage($chatId, $clientId, $language, $messageId): void
     {
         $isSetLanguage = $this->clientsService->setClientChangeLanguageInput($clientId, $language, false);
         if ($isSetLanguage) {
+            Log::info('1');
             $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
 
             $language = $this->clientsService->getClientLanguage($clientId);
@@ -161,23 +163,26 @@ class TelegramBotService implements TelegramBotServiceInterface
             $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
         }
     }
-
-    public function checkStartMessage($text, $clientId): bool
+    public function setClientLanguage($language): void
     {
+        //Log::alert(app()->getLocale());
+        App::setLocale($language);
+    }
+    public function checkStartMessage($text, $clientId)
+    {
+        Log::info('2');
         $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
         return $text === '/start';
     }
-
     public function checkMainMenu($text, $clientId): bool
     {
+        Log::info('3');
         if ($text === __('buttons.to_main')) {
             $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
             return true;
         }
         return false;
     }
-
-// Выводим клавиатуру выбора языков и сохраняем статус, что мы на выборе языков
     public function sendMessageChangeLanguage($chatId, $clientId, $messageId)
     {
         $this->clientsService->setClientChangeLanguageInput($clientId, null, true);
@@ -225,6 +230,7 @@ class TelegramBotService implements TelegramBotServiceInterface
             'resize_keyboard' => true,
             'one_time_keyboard' => true,
         ];
+        Log::info('4');
         $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
         $this->deleteMessage($chatId, $messageId);
         $this->sendMessageWithButton($chatId, $keyboard, __('messages.greeting'));
@@ -235,7 +241,7 @@ class TelegramBotService implements TelegramBotServiceInterface
     {
         $language = $this->clientsService->getClientLanguage($clientId);
         $this->clientsService->setUserCountryInput($clientId);
-        $countries = Country::all();
+        $countries = Country::where('is_used', true)->get();
 
         $keyboard = [
             'inline_keyboard' => [],
@@ -268,7 +274,6 @@ class TelegramBotService implements TelegramBotServiceInterface
     {
         $country = Country::with('banks')->where('code', $countryCode)->first();
         Redis::set('select_country_for_' . $clientId, $country->id);
-        Log::info(app()->getLocale());
 
         $keyboard = [
             'inline_keyboard' => [],
@@ -298,6 +303,7 @@ class TelegramBotService implements TelegramBotServiceInterface
     {
         $select_country_id = Redis::get('select_country_for_' . $clientId);
         $country_currency = Currency::where('country_id', $select_country_id)->get();
+
         $keyboard = [
             'inline_keyboard' => [],
         ];
@@ -355,6 +361,8 @@ class TelegramBotService implements TelegramBotServiceInterface
 
     public function checkProcessAmount($chatId, $clientId, $amount): void
     {
+        $credential = $this->credentialService->checkAmountInput($amount);
+
         $keyboard = [
             'keyboard' => [
                 [
@@ -371,7 +379,7 @@ class TelegramBotService implements TelegramBotServiceInterface
         Redis::set('select_amount_for_' . $clientId, $amount);
         $currency_name = Currency::find($currency_id)->name;
         $this->clientsService->setClientAmountSuccessInput($clientId);
-        $this->sendMessageWithButton($chatId, $keyboard, 'Отправьте ' . $amount . ' ' . $currency_name . ' на' . __('messages.enter_the_amount_screenshot'));
+        $this->sendMessageWithButton($chatId, $keyboard, 'Отправьте ' . $amount . ' ' . $currency_name . ' на этот реквизит ' . $credential . '. ' . __('messages.enter_the_amount_screenshot'));
     }
 
     public function sendInvalidAmountMessage($chatId, $messageIdToDelete): void
@@ -393,6 +401,52 @@ class TelegramBotService implements TelegramBotServiceInterface
             'one_time_keyboard' => true,
         ];
         $this->sendMessageWithButton($chatId, $keyboard, __('messages.consultation'));
+    }
+
+    public function getAndSavePhoto($photo, $clientId, $chatId): void
+    {
+        $amount = Redis::get('select_amount_for_' . $clientId);
+        $currency_id = Redis::get('select_currency_for_' . $clientId);
+        $file_id = $photo['file_id'];
+        $file_url = $this->url . "/getFile?file_id=" . $file_id;
+        $response = Http::get($file_url);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            if ($data['ok']) {
+
+                $file_path = $data['result']['file_path'];
+                $download_url = "https://api.telegram.org/file/bot" . config('telegram.telegram_bot.token') . "/$file_path";
+                $imageContent = Http::get($download_url);
+//                $client = $this->clientsService->getClient($clientId);
+
+                $this->clientsService->setClientSendScreenshot($clientId);
+                $order = $this->orderService->saveOrder($chatId, $clientId, $amount, $currency_id);
+                Redis::set('save_order_id_for' . $clientId, $order->id);
+
+                $order->addMediaFromString($imageContent->body())
+                    ->usingFileName('screenshot.jpg')
+                    ->toMediaCollection('amount_check');
+
+//                $this->sendMessage($chatId, 'Чек принят и ушел в разработку. Ждите ответ от менеджера');
+
+                $keyboard = [
+                    'keyboard' => [
+                        [
+                            ['text' => 'Напомнить о заказе'],
+                        ],
+                    ],
+                    'resize_keyboard' => true,
+                    'one_time_keyboard' => true,
+                ];
+                $this->sendMessageWithButton($chatId, $keyboard, 'Чек принят и ушел в разработку. Ждите ответ от менеджера');
+            } else {
+                Log::error('Не удалось получить файл');
+            }
+        } else {
+            Log::error('Ошибка запроса к Telegram API');
+        }
+
     }
 
     public function sendMessage($chatId, $text, $messageIdToDelete = null): void
@@ -447,43 +501,8 @@ class TelegramBotService implements TelegramBotServiceInterface
         ]);
 
         if ($response->failed()) {
-            Log::error('Failed to delete message: ' . $response->body());
+//            Log::error('Failed to delete message: ' . $response->body());
         }
-    }
-
-    public function getAndSavePhoto($photo, $clientId, $chatId): void
-    {
-        $amount = Redis::get('select_amount_for_' . $clientId);
-        $currency_id = Redis::get('select_currency_for_' . $clientId);
-        $file_id = $photo['file_id'];
-        $file_url = $this->url . "/getFile?file_id=" . $file_id;
-        $response = Http::get($file_url);
-
-        if ($response->successful()) {
-            $data = $response->json();
-            if ($data['ok']) {
-
-                $file_path = $data['result']['file_path'];
-                $download_url = "https://api.telegram.org/file/bot" . config('telegram.telegram_bot.token') . "/$file_path";
-                $imageContent = Http::get($download_url);
-//                $client = $this->clientsService->getClient($clientId);
-
-                $this->clientsService->setClientSendScreenshot($clientId);
-                $order = $this->orderService->saveOrder($chatId, $clientId, $amount, $currency_id);
-                Redis::set('save_order_id_for' . $clientId, $order->id);
-
-                $order->addMediaFromString($imageContent->body())
-                    ->usingFileName('screenshot.jpg')
-                    ->toMediaCollection('amount_check');
-
-                $this->sendMessage($chatId, 'чек принят и ушел в разработку. Ждите пожалуйста');
-            } else {
-                Log::error('Не удалось получить файл');
-            }
-        } else {
-            Log::error('Ошибка запроса к Telegram API');
-        }
-
     }
 }
 
