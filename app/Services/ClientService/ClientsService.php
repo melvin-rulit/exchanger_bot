@@ -153,4 +153,15 @@ class ClientsService implements ClientServiceInterface
     {
         $this->setStatus($clientId, 'send_screenshot');
     }
+    public function isClientSendScreenshot($clientId): bool
+    {
+        $isClientConsultationInput = Client::where('bot_id', $clientId)->first();
+
+        if ($isClientConsultationInput) {
+            if ($isClientConsultationInput->status == 'send_screenshot') {
+                return true;
+            }
+        }
+        return false;
+    }
 }

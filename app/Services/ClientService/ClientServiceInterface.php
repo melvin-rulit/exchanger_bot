@@ -19,6 +19,7 @@ interface ClientServiceInterface
     public function isUserInACountryInput($clientId);
     public function setClientCurrencyInput($clientId);
     public function setClientSendScreenshot($clientId);
+    public function isClientSendScreenshot($clientId);
     public function setClientConsultationInput($clientId);
     public function isClientConsultationInput($clientId);
 }
