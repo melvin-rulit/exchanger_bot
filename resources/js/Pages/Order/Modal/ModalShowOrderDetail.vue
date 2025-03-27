@@ -18,23 +18,21 @@
           <span :class="getStatusColor(selectedOrder.status )" class="text-base font-medium leading-none ml-2">{{ translateStatus(selectedOrder.status) }}</span>
         </div>
 
-        <div v-if="selectedOrder.status !== 'success'" class="flex items-center cursor-pointer">
-          <div class="relative group">
-            <div @click="openChat" class="cursor-pointer sm:ms-6 sm:flex sm:items-center">
-              <Icon icon="wpf:message-outline" width="26" height="26"/>
-              <span class="text-xs rounded ml-3 hover:underline"> Отправить сообщение </span>
-            </div>
+        <div v-show="selectedOrder.status !== 'success'" class="flex items-center cursor-pointer space-x-4">
+          <div @click="openChat" class="cursor-pointer flex items-center">
+            <Icon icon="wpf:message-outline" width="26" height="26"/>
+            <span class="text-xs rounded ml-2 hover:underline">Отправить сообщение</span>
           </div>
-        </div>
 
-        <div @click="fixTheOrder(selectedOrder.id)">
-          <div v-if="!selectedOrder.is_pinned" class="cursor-pointer flex items-center">
-            <Icon icon="mynaui:pin" width="24" height="24" />
-            <span class="text-xs rounded ml-2 hover:underline">Закрепить заказ</span>
-          </div>
-          <div v-else class="cursor-pointer flex items-center">
-            <Icon icon="mynaui:pin-solid" width="24" height="24" />
-            <span class="text-xs rounded ml-2 hover:underline">Закреплен</span>
+          <div @click="fixTheOrder(selectedOrder.id)">
+            <div v-if="!selectedOrder.is_pinned" class="cursor-pointer flex items-center">
+              <Icon icon="mynaui:pin" width="24" height="24" />
+              <span class="text-xs rounded ml-2 hover:underline">Закрепить заказ</span>
+            </div>
+            <div v-else class="cursor-pointer flex items-center">
+              <Icon icon="mynaui:pin-solid" width="24" height="24" />
+              <span class="text-xs rounded ml-2 hover:underline">Закреплен</span>
+            </div>
           </div>
         </div>
 
@@ -43,7 +41,6 @@
           <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
         </button>
       </div>
-
 
       <!-- Контент -->
       <div class="modal-body">
@@ -54,31 +51,31 @@
                          :close-on-select="true" :show-labels="false" label="name"></multiselect>
           </div>
 
-          <!-- Блок информации о закрытом заказе -->
-          <div v-else class="order-info">
-            <h2 class="order-title">Информация о заказе</h2>
+          <div v-if="selectedOrder.status === 'success'" class="order-info-wrapper">
+            <div class="order-info">
+              <h1 class="order-title">Информация о заказе</h1>
 
-            <div class="info-item">
-              <span class="label">Клиент:</span>
-<!--              <span class="value">{{ selectedOrder.client_name }}</span>-->
-              <span class="value">dfd</span>
-            </div>
+              <div class="info-item">
+                <span class="label">Клиент: </span>
+                <span class="value">{{ selectedOrder.client.first_name }}</span>
+              </div>
 
-            <div class="info-item">
-              <span class="label">Закрыл заказ:</span>
-              <span class="value">{{ selectedOrder.closed_by }}</span>
-            </div>
+              <div class="info-item">
+                <span class="label">Закрыл заказ: </span>
+                <span class="value">{{ selectedOrder.user.name }}</span>
+              </div>
 
-            <div class="info-item">
-              <span class="label">Сумма заказа:</span>
-              <span class="value">{{ selectedOrder.amount }} {{ selectedOrder.currency }}</span>
-            </div>
+              <div class="info-item">
+                <span class="label">Сумма заказа: </span>
+                <span class="value">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
+              </div>
 
-            <div class="info-item">
-              <span class="label">Дата закрытия:</span>
-<!--              <span class="value">{{ formatDate(selectedOrder.closed_at) }}</span>-->
+              <div class="info-item">
+                <span class="label">Дата закрытия:</span>
+              </div>
             </div>
           </div>
+
 
         </div>
 
@@ -166,29 +163,54 @@ export default {
     }
   },
   mounted() {
-    this.getUsers()
+    this.getManagers()
   },
   methods: {
-    getUsers() {
+    getManagers() {
       UserService.getManagers().then(response => {
         this.managers = response.data.managers
       })
     },
-      store: async function (event) {
-        event.preventDefault()
-        this.errors = null
-        if (!this.form.selectedUser || !this.form.selectedUser.id) {
-          this.triggerErrorAlert('Выберите ответственного сотрудника!')
-          return;
-        }
+    store: async function (event) {
+      event.preventDefault()
+      this.errors = null
+      if (!this.form.selectedUser || !this.form.selectedUser.id) {
+        this.triggerErrorAlert('Выберите ответственного сотрудника!')
+        return;
+      }
 
-        OrdersService.store(this.form)
-          .then(response => {
-            this.triggerSuccessAlert('Изменения сохранены');
-          })
-          .catch(error => {
-            this.errors = error.response.data.message
-          })
+      OrdersService.store(this.form)
+        .then(response => {
+          this.triggerSuccessAlert('Изменения сохранены');
+        })
+        .catch(error => {
+          this.errors = error.response.data.message
+        })
+    },
+    closeOrder: async function () {
+      // event.preventDefault()
+      this.errors = null
+      OrdersService.close_order(this.form)
+        .then(response => {
+          this.selectedOrder.status  = response.data.order.status
+          this.triggerSuccessAlert('Заказ успешно завершен');
+        })
+        .catch(error => {
+          this.errors = error.response.data.message
+        })
+    },
+    prepareCompleted() {
+      this.confirmationOrder = true
+    },
+    successCloseOrder() {
+      this.closeOrder()
+      this.confirmationOrder = false
+    },
+    cancelCloseOrder() {
+      this.confirmationOrder = false
+    },
+    openChat() {
+      this.$emit('close', { openChat: true, orderId: this.selectedOrder.id});
     },
     fixTheOrder($orderId) {
       OrdersService.fix_order($orderId)
@@ -203,31 +225,6 @@ export default {
         .catch(error => {
           this.errors = error.response.data.message
         })
-    },
-    closeOrder: async function () {
-        // event.preventDefault()
-        this.errors = null
-        OrdersService.close_order(this.form)
-          .then(response => {
-            this.selectedOrder.status  = response.data.order.status
-            this.triggerSuccessAlert('Заказ успешно завершен');
-          })
-          .catch(error => {
-            this.errors = error.response.data.message
-          })
-    },
-    prepareCompleted() {
-      this.confirmationOrder = true
-    },
-    successCloseOrder() {
-      this.closeOrder()
-      this.confirmationOrder = false
-    },
-    cancelCloseOrder() {
-      this.confirmationOrder = false
-    },
-    openChat() {
-      this.$emit('close', { openChat: true, orderId: this.selectedOrder.id});
     },
     translateStatus(status) {
       return this.statusTranslations[status] || status;
@@ -258,6 +255,7 @@ export default {
     },
     close() {
       this.form.selectedUser = ''
+      // this.selectedOrder = ''
       this.confirmationOrder = false
       this.$emit('close', { openChat: false, orderId: 0});
     },
@@ -320,14 +318,14 @@ export default {
   display: flex;
   gap: 20px;
 
-    .select_user {
-      display: flex;
-      margin-top: 20px;
-      margin-left: 6%;
-      align-items: center;
-      width: 70%;
-      gap: 10px;
-    }
+  .select_user {
+    display: flex;
+    margin-top: 20px;
+    margin-left: 6%;
+    align-items: center;
+    width: 70%;
+    gap: 10px;
+  }
 }
 
 .left-panel {
@@ -337,12 +335,32 @@ export default {
 .right-panel {
   flex: 1;
   display: flex;
+  align-items: center;
   justify-content: center;
 }
+.order-info-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
 
+.order-info {
+  background: white;
+  padding: 60px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+
+  .order-title {
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 20px;
+  }
+}
 .order-image {
   max-width: 100%;
-  max-height: 70%;
+  max-height: 95%;
   border-radius: 8px;
   margin-right: 20%;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
