@@ -335,7 +335,6 @@ export default {
 .right-panel {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 .order-info-wrapper {
@@ -360,7 +359,7 @@ export default {
 }
 .order-image {
   max-width: 100%;
-  max-height: 95%;
+  max-height: 70%;
   border-radius: 8px;
   margin-right: 20%;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
