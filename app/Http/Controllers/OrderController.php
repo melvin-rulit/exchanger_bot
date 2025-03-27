@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Events\OrderUpdated;
 use App\Http\Requests\Order\CreateOrderMessageRequest;
 use App\Http\Resources\OrderMessagesResource;
+use App\Models\Client;
 use App\Models\Message;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\ClientService\ClientsService;
 use App\Services\TelegramBotService\TelegramMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,10 +19,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class OrderController extends Controller
 {
     protected TelegramMessageService $telegramService;
+    protected ClientsService $clientsService;
 
-    public function __construct(TelegramMessageService $telegramService)
+    public function __construct(TelegramMessageService $telegramService, ClientsService $clientsService)
     {
         $this->telegramService = $telegramService;
+        $this->clientsService = $clientsService;
     }
     public function getOrders(): JsonResponse
     {
@@ -108,10 +112,21 @@ class OrderController extends Controller
 
     public function closeOrder(Request $request): JsonResponse
     {
-//        Order::where('id', $request->selectedOrder['id'])
-//            ->update(['user_id' => $request->selectedUser['id']]);
-//
-//        return response()->json(['message' => 'Заказ обновлён']);
+        $client = $request->selectedOrder['client'];
+        $language = $this->clientsService->getClientLanguage($client['bot_id']);
+        $status = '';
+
+        switch ($language) {
+            case 'ru':
+                $status = 'На главную';
+                break;
+            case 'en':
+                $status = 'to_main';
+                break;
+        }
+// TODO сделать событие если заказ завершен в чат с клиентом вывести /start чтоб он был на главном меню
+        Client::where('id', $client['id'])
+            ->update(['status' => $status]);
 
         $order = Order::findOrFail($request->selectedOrder['id']);
         $user = User::findOrFail($request->selectedUser['id']);
