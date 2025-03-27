@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
 
     Route::group(['prefix' => 'users', 'name' => 'users'], function () {
         Route::get('/', [UserController::class, 'getUsers']);
+        Route::get('/managers', [UserController::class, 'getManagers']);
         Route::get('/me', [UserController::class, 'getAuthUser']);
     });
 

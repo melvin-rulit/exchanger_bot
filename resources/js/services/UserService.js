@@ -12,6 +12,11 @@ export class UserService {
         let url = `${this.serverUrl}/users`;
         return axios.get(url)
     }
+    static getManagers()
+    {
+        let url = `${this.serverUrl}/users/managers`;
+        return axios.get(url)
+    }
     // static getUserStatistic()
     // {
     //     let url = `${this.serverUrl}/user/statistics`;

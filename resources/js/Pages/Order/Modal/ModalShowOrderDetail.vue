@@ -50,7 +50,7 @@
         <div class="left-panel">
           <div v-if="selectedOrder.status !== 'success'" class="select_user">
             <label class="block text-sm font-medium text-gray-700 mb-1">Ответственный</label>
-            <multiselect v-model="form.selectedUser" :options="users" placeholder="Назначить ответственного"
+            <multiselect v-model="form.selectedUser" :options="managers" placeholder="Назначить ответственного"
                          :close-on-select="true" :show-labels="false" label="name"></multiselect>
           </div>
 
@@ -147,7 +147,7 @@ export default {
   },
   data() {
     return {
-      users: '',
+      managers: '',
       form: {
         selectedUser: null,
         selectedOrder: null,
@@ -170,8 +170,8 @@ export default {
   },
   methods: {
     getUsers() {
-      UserService.getUsers().then(response => {
-        this.users = response.data.users
+      UserService.getManagers().then(response => {
+        this.managers = response.data.managers
       })
     },
       store: async function (event) {

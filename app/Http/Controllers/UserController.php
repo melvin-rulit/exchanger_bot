@@ -33,6 +33,14 @@ class UserController extends Controller
             'users' => $users
         ]);
     }
+    public function getManagers(): JsonResponse
+    {
+        $managers = User::role('менеджер')->get();
+
+        return new JsonResponse([
+            'managers' => $managers
+        ]);
+    }
 
     public function getAuthUser(): UserResource
     {
