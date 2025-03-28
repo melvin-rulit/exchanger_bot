@@ -181,6 +181,7 @@ export default {
 
       OrdersService.store(this.form)
         .then(response => {
+          this.selectedOrder.status  = response.data.order.status
           this.triggerSuccessAlert('Менеджер успешно закреплен ');
         })
         .catch(error => {
