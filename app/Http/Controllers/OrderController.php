@@ -13,6 +13,8 @@ use App\Services\ClientService\ClientsService;
 use App\Services\TelegramBotService\TelegramMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -124,12 +126,14 @@ class OrderController extends Controller
                 $status = 'to_main';
                 break;
         }
-// TODO сделать событие если заказ завершен в чат с клиентом вывести /start чтоб он был на главном меню
+
         Client::where('id', $client['id'])
             ->update(['status' => $status]);
 
         $order = Order::findOrFail($request->selectedOrder['id']);
         $user = User::findOrFail($request->selectedUser['id']);
+
+        $this->sendWebhookUpdate($order->chat_id, 'start');
 
         $order->status = 'success';
         $order->save();
@@ -151,4 +155,54 @@ class OrderController extends Controller
             'order' => $order
         ]);
     }
+
+    public function sendWebhookUpdate($chatId, $command): string
+    {
+        $webhookUrl= '';
+        Artisan::call('telegram:get-webhook-info');
+
+        // Получаем вывод команды
+        $output = Artisan::output();
+
+        // Парсим JSON из строки (удаляем лишний текст)
+        preg_match('/\{.*\}/s', $output, $matches);
+        $jsonData = $matches[0] ?? null;
+
+        if ($jsonData) {
+            $webhookInfo = json_decode($jsonData, true);
+
+            if (isset($webhookInfo['result']['url']) && !empty($webhookInfo['result']['url'])) {
+                $webhookUrl = $webhookInfo['result']['url'];
+            }
+        }
+        $fakeUpdate = [
+            "update_id" => rand(100000000, 999999999),
+            "message" => [
+                "message_id" => rand(1, 10000),
+                "from" => [
+                    "id" => $chatId,
+                    "is_bot" => false,
+                    "first_name" => "User",
+                    "username" => "test_user"
+                ],
+                "chat" => [
+                    "id" => $chatId,
+                    "first_name" => "User",
+                    "username" => "test_user",
+                    "type" => "private"
+                ],
+                "date" => time(),
+                "text" => "/$command"
+            ]
+        ];
+
+        $response = Http::post($webhookUrl, $fakeUpdate);
+
+        if ($response->successful()) {
+            return "✅ Команда '/$command' отправлена через Webhook!";
+        } else {
+            return "❌ Ошибка: " . $response->body();
+        }
+    }
+
 }
