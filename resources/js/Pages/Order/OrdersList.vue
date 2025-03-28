@@ -81,19 +81,19 @@
         <tbody>
         <tr v-for="(order, index) in orders" :key="order.id" tabindex="0" @click="showModalOrderDetail(order, order.user)"
             class="inside_table h-12 hover:bg-gray-100">
-          <td v-if="order.is_message && order.status !== 'success'" class="pl-4">
+          <td v-if="order.is_message && order.status !== 'success'" class="pl-5">
             <div @click="showModalChat(order.id)" class="flex items-center">
               <Icon icon="wpf:message-outline" width="26" height="26" class="flashing-icon"/>
             </div>
           </td>
           <td v-else-if="!order.is_message && order.status !== 'success'" class="pl-4">
             <div class="flex items-center">
-              {{ index + 1 }}
+              <p class="text-sm leading-none text-gray-600 ml-3">{{ index + 1 }}</p>
 <!--              <p class="text-sm leading-none text-gray-600 ml-2">{{ order.id }}</p>-->
             </div>
           </td>
           <td v-else class="pl-4">
-            <div class="flex items-center">
+            <div class="flex items-center ml-2">
               <Icon icon="mdi:success" width="26" height="26" class="icon-success" />
             </div>
           </td>
