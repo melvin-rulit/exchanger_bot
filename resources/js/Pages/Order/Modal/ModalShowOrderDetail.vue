@@ -160,6 +160,7 @@ export default {
       alertType: 'success',
       loading: false,
       confirmationOrder: false,
+      isClosing: false,
     }
   },
   mounted() {
@@ -190,7 +191,9 @@ export default {
     },
     closeOrder: async function () {
       // event.preventDefault()
-      this.errors = null
+      if (this.isClosing) return; // ← Если запрос уже отправляется, просто выходим
+      this.isClosing = true; // ← Блокируем повторные вызовы
+
       OrdersService.close_order(this.form)
         .then(response => {
           this.selectedOrder.status  = response.data.order.status
@@ -199,6 +202,9 @@ export default {
         .catch(error => {
           this.errors = error.response.data.message
         })
+        .finally(() => {
+          this.isClosing = false; // ← Сбрасываем флаг после завершения запроса
+        });
     },
     prepareCompleted() {
       if (!this.form.selectedUser || !this.form.selectedUser.id) {
