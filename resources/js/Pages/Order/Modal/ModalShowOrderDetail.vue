@@ -181,7 +181,7 @@ export default {
 
       OrdersService.store(this.form)
         .then(response => {
-          this.triggerSuccessAlert('Изменения сохранены');
+          this.triggerSuccessAlert('Менеджер успешно закреплен ');
         })
         .catch(error => {
           this.errors = error.response.data.message
@@ -202,6 +202,10 @@ export default {
     prepareCompleted() {
       if (!this.form.selectedUser || !this.form.selectedUser.id) {
         this.triggerErrorAlert('Назначьте ответственного менеджера')
+        return;
+      }
+      if (!this.form.selectedUser || !this.form.selectedUser.id || this.selectedOrder.status === 'new') {
+        this.triggerErrorAlert('Менеджер еще не назначен!')
         return;
       }
       this.confirmationOrder = true
