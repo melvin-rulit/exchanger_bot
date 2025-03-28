@@ -268,7 +268,7 @@ export default {
             const channel = pusher.subscribe('update_order');
 
       channel.bind('order-updated', (data) => {
-
+        this.new_sms()
         this.getOrders()
         // if (data.order.is_message !== this.orders.is_message) {
         //     this.orders = data.order;
@@ -311,6 +311,10 @@ export default {
       this.getOrders()
       this.isModalShowOrderDetail = false
     },
+    new_sms() {
+      let audio = new Audio('/audio/new_sms_2.wav');
+      audio.play();
+    }
   },
   // watch: {
   //     'query': _.debounce(function () {
