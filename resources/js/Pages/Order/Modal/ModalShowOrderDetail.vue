@@ -175,7 +175,7 @@ export default {
       event.preventDefault()
       this.errors = null
       if (!this.form.selectedUser || !this.form.selectedUser.id) {
-        this.triggerErrorAlert('Выберите ответственного сотрудника!')
+        this.triggerErrorAlert('Назначьте ответственного менеджера!')
         return;
       }
 
@@ -200,6 +200,10 @@ export default {
         })
     },
     prepareCompleted() {
+      if (!this.form.selectedUser || !this.form.selectedUser.id) {
+        this.triggerErrorAlert('Назначьте ответственного менеджера')
+        return;
+      }
       this.confirmationOrder = true
     },
     successCloseOrder() {
