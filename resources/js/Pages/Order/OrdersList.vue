@@ -243,8 +243,8 @@ export default {
           return 'text-[#38b0b0]'
         case 'active':
           return 'text-[#F93827]'
-        case 'succes':
-          return 'text-[#4caf50]'
+        case 'success':
+          return 'text-[#DBDBDB]'
         case 'deleted':
           return 'text-[#FF0000]'
         default:
