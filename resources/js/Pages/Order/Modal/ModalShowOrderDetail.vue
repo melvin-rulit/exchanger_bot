@@ -190,9 +190,8 @@ export default {
         })
     },
     closeOrder: async function () {
-      // event.preventDefault()
-      if (this.isClosing) return; // ← Если запрос уже отправляется, просто выходим
-      this.isClosing = true; // ← Блокируем повторные вызовы
+      if (this.isClosing) return;
+      this.isClosing = true;
 
       OrdersService.close_order(this.form)
         .then(response => {
@@ -203,7 +202,7 @@ export default {
           this.errors = error.response.data.message
         })
         .finally(() => {
-          this.isClosing = false; // ← Сбрасываем флаг после завершения запроса
+          this.isClosing = false;
         });
     },
     prepareCompleted() {

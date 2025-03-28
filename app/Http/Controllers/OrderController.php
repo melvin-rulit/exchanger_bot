@@ -28,23 +28,70 @@ class OrderController extends Controller
         $this->telegramService = $telegramService;
         $this->clientsService = $clientsService;
     }
+//    public function getOrders(): JsonResponse
+//    {
+//        $orders = Order::with('user')->get();
+//
+//        $prepare_orders = [];
+//
+//        foreach ($orders as $order) {
+//            $media = $order->getMedia('amount_check');
+//
+//            if ($media->count() > 0) {
+//                $media = $media->first();
+//                $order->media = $media->getUrl('screenshot');
+//            }
+//            $order->user;
+//            $order->client;
+//            $prepare_orders[] = $order;
+//        }
+//
+//        return new JsonResponse([
+//            'orders' => $prepare_orders
+//        ]);
+//    }
+
+//    public function getOrders(): JsonResponse
+//    {
+//        $orders = Order::with(['user', 'client'])->get(); // Загружаем сразу user и client
+//
+//        $prepare_orders = $orders->map(function ($order) {
+//            $media = $order->getMedia('amount_check');
+//
+//            if ($media->count() > 0) {
+//                $media = $media->first();
+//                $order->media = $media->getUrl('screenshot');
+//            }
+//
+//            return $order;
+//        });
+//
+//        // Сортируем так, чтобы "success" был в конце
+//        $sorted_orders = $prepare_orders->sortBy(function ($order) {
+//            return $order->status === 'success' ? 1 : 0;
+//        })->values(); // `values()` сбрасывает ключи массива
+//
+//        return new JsonResponse([
+//            'orders' => $sorted_orders
+//        ]);
+//    }
+
     public function getOrders(): JsonResponse
     {
-        $orders = Order::with('user')->get();
+        $orders = Order::with(['user', 'client'])
+            ->orderByRaw("FIELD(status, 'new', 'active', 'success')")
+            ->get();
 
-        $prepare_orders = [];
-
-        foreach ($orders as $order) {
+        $prepare_orders = $orders->map(function ($order) {
             $media = $order->getMedia('amount_check');
 
             if ($media->count() > 0) {
                 $media = $media->first();
                 $order->media = $media->getUrl('screenshot');
             }
-            $order->user;
-            $order->client;
-            $prepare_orders[] = $order;
-        }
+
+            return $order;
+        });
 
         return new JsonResponse([
             'orders' => $prepare_orders
