@@ -2,14 +2,13 @@
   <div>
     <div class="min-h-screen"
          style="background-image: url('Images/background.jpg'); background-size: cover; background-position: center;">
-      <nav
-        class="bg-transparent"
-      >
+
+      <nav class="bg-transparent">
         <!-- Primary Navigation Menu -->
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-13 justify-between">
             <div class="flex">
-
+<!--              🕒 <h1>12:00</h1>-->
 
               <div class="flex shrink-0 items-center cursor-pointer text-white">
                 <!--                                <Link :href="route('dashboard')">-->
@@ -114,7 +113,7 @@
               </span>
               <div class="relative group">
                 <div class="text-white cursor-pointer sm:ms-6 sm:flex sm:items-center">
-                  <Icon icon="guidance:exit" width="24" height="24" />
+                  <Icon @click="logout" icon="guidance:exit" width="24" height="24" />
                   <span
                     class="absolute ml-5 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"> Выйти </span>
                 </div>
@@ -241,5 +240,10 @@ import NavLink from '@/Components/NavLink.vue'
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue'
 import { Link } from '@inertiajs/vue3'
 import { Icon } from '@iconify/vue'
+import { router } from '@inertiajs/vue3';
+
+const logout = () => {
+  router.post(route('logout'));
+};
 
 </script>
