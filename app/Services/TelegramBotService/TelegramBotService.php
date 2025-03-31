@@ -101,32 +101,37 @@ class TelegramBotService implements TelegramBotServiceInterface
 ////            $saveMessages = $this->saveMessagesForDeleted($messageId);
 //            }
 
-            if ($this->clientsService->isUserInAmountInput($clientId) && !$this->checkMainMenu($text, $clientId)) {
-                Log::info('tut');
+            if ($this->clientsService->isUserInAmountInput($clientId) && !$this->checkMainMenu($text, $clientId, $chatId, $messageId)) {
                 if ($this->isValidAmount($text, $clientId)) {
                     $amount = $text;
                     $this->checkProcessAmount($chatId, $clientId, $amount);
                 } else {
                     $this->sendInvalidAmountMessage($chatId, $messageId);
                 }
-            } elseif ($this->clientsService->isUserInACountryInput($clientId) && $text !== __('buttons.change_language') && $text === '' && !$this->checkMainMenu($text, $clientId) && !$this->clientsService->isUserInAmountInput($clientId)) {
+            } elseif ($this->clientsService->isUserInACountryInput($clientId) && $text !== __('buttons.change_language') && $text === '' && !$this->checkMainMenu($text, $clientId, $chatId, $messageId) && !$this->clientsService->isUserInAmountInput($clientId)) {
 
 
-            } elseif ($text === __('buttons.change_language') && !$this->clientsService->isUserInACountryInput($clientId) && !$this->checkMainMenu($text, $clientId) && !$this->clientsService->isUserInAmountInput($clientId)) {
+            } elseif ($text === __('buttons.change_language') && !$this->clientsService->isUserInACountryInput($clientId) && !$this->checkMainMenu($text, $clientId, $chatId, $messageId) && !$this->clientsService->isUserInAmountInput($clientId)) {
                 $this->sendMessageChangeLanguage($chatId, $clientId, $messageId);
-            } elseif ($this->checkMainMenu($text, $clientId) || $this->clientsService->isClientSendScreenshot($clientId)) {
+            } elseif ($this->checkMainMenu($text, $clientId, $chatId, $messageId) || $this->clientsService->isClientSendScreenshot($clientId)) {
                 $save_order_id = Redis::get('save_order_id_for' . $clientId);
+                $this->chatService->prepareSaveMessage($text, $chatId, $save_order_id);
+//                if ($save_order_id && $text) {
+//
+//                }elseif($text) {
+//                    $this->chatService->prepareSaveMessage($text, $chatId);
+//                }
 
-                if ($save_order_id && $text) {
-                    $this->chatService->prepareSaveMessage($text, $chatId, $save_order_id);
-                }elseif($text) {
-                    $this->chatService->prepareSaveMessage($text, $chatId);
-                }
-
-            } else {
+            } elseif (!$this->checkMainMenu($text, $clientId, $chatId, $messageId) && $this->clientsService->isClientConsultationInput($clientId)){
+//                Log::info('what');
+                $this->chatService->prepareSaveMessage($text, $chatId);
+//                Log::info('checkMainMenu вернул: ' . json_encode($this->checkMainMenu($text, $clientId)));
+            }
+            else {
                 if (isset($text)) {
 
-                    if ($this->checkStartMessage($text, $clientId) || $this->checkMainMenu($text, $clientId)) {
+                    if ($this->checkStartMessage($text, $clientId) || $this->checkMainMenu($text, $clientId, $chatId, $messageId)) {
+                        Log::info('ops1');
                         $this->sendStartMessageWithButtons($chatId, $clientId, $messageId);
                     } else {
                         switch ($text) {
@@ -143,6 +148,7 @@ class TelegramBotService implements TelegramBotServiceInterface
                                 $this->sendMessageChangeLanguage($chatId, $clientId, $messageId);
                                 break;
                             default:
+                                Log::info('ops2');
                                 $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
                                 break;
                         }
@@ -172,10 +178,12 @@ class TelegramBotService implements TelegramBotServiceInterface
         $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
         return $text === '/start';
     }
-    public function checkMainMenu($text, $clientId): bool
+    public function checkMainMenu($text, $clientId, $chatId, $messageId): bool
     {
         if ($text === __('buttons.to_main')) {
             $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
+            Log::info('ops27');
+            $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
             return true;
         }
         return false;
