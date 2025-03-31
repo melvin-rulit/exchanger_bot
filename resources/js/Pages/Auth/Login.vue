@@ -31,7 +31,7 @@ const submit = () => {
 
 <template>
     <GuestLayout style="background-image: url('Images/background.jpg')">
-        <Head title="Log in" />
+        <Head title="Вход" />
 
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
