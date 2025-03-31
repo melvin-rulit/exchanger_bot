@@ -149,6 +149,8 @@
         </tbody>
       </table>
     </div>
+
+
     <ModalShowOrderScreenshot
       :is-active="isModalShow"
       :currentImageUrl="currentImageUrl"
@@ -167,7 +169,8 @@
     />
 
 
-    <!--                <Pagination @click="update(page)" url="users" :current-page="page" :limit="limit" :total="total"/>-->
+<!--                    <Pagination @click="update(page)" url="users" :current-page="page" :limit="limit" :total="total"/>-->
+
 
 
   </div>
@@ -222,7 +225,7 @@ export default {
   },
   computed: {
     page() {
-      return Number(this.$route.query.page) ?? 1
+      // return Number(this.$route.query.page) ?? 1
     },
     hasFilters() {
       return Object.values(this.form).some(value => value !== '')
@@ -312,7 +315,7 @@ export default {
       this.isModalShowOrderDetail = false
     },
     new_sms() {
-      let audio = new Audio('/audio/new_sms_2.wav');
+      let audio = new Audio('/audio/sms_new.wav');
       audio.play();
     }
   },
