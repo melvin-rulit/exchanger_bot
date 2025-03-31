@@ -26,7 +26,7 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="name" value="Ник" />
+                <InputLabel for="name" value="Имя/Ник" />
 
                 <TextInput
                     id="name"
