@@ -6,6 +6,7 @@ return [
     'EN' => 'Английский',
     'change_language_success' => 'Язык успешно изменен',
     'to_main' => 'На главную',
+    'cancel' => 'Отмена',
     'transfer' => 'Перевод',
     'get_requisite' => 'Получение реквизитов',
     'consultation' => 'Консультация',
