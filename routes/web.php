@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/messages', [CunsultationController::class, 'getMessages']);
         Route::get('/today_messages/{message_id}', [CunsultationController::class, 'getTodayMessages']);
         Route::post('/send_message/{message_id}', [CunsultationController::class, 'storeMessage']);
+        Route::patch('/set_read_messages/{message_id}', [CunsultationController::class, 'setMessagesOrderRead']);
     });
 
     Route::group(['prefix' => 'users', 'name' => 'users'], function () {

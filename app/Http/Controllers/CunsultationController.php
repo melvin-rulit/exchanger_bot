@@ -49,4 +49,11 @@ class CunsultationController extends Controller
 
         return response()->json($created_message);
     }
+    public function setMessagesOrderRead($message_id): void
+    {
+        $message = Message::find($message_id);
+
+        $message->is_message = false;
+        $message->save();
+    }
 }

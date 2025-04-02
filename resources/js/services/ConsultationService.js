@@ -15,4 +15,8 @@ export class ConsultationService {
         let url = `${this.serverUrl}/consultation/send_message/${messageId}`
         return axios.post(url, { message })
     }
+    static setConsultantMessagesRead(messageId) {
+        let url = `${this.serverUrl}/consultation/set_read_messages/${messageId}`
+        return axios.patch(url, messageId)
+    }
 }

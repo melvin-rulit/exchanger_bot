@@ -26,7 +26,7 @@
             <tr v-for="message of messages" tabindex="0" @click="showModalShowChat(message.id)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
                 <td class="pl-4">
                     <div class="flex items-center">
-                        <Icon icon="wpf:message-outline" width="26" height="26"/>
+                        <Icon icon="wpf:message-outline" width="26" height="26" :class="{'flashing-icon': !message.is_message}"/>
                     </div>
                 </td>
               <td class="">
@@ -65,6 +65,7 @@ import Pusher from 'pusher-js';
 import { Icon } from '@iconify/vue';
 import ModalShowChat from '@/Pages/Consultation/Chats/Modal/ModalShowChat.vue'
 import { ConsultationService } from '@/services/ConsultationService.js'
+import { OrdersService } from '@/services/OrdersService.js'
 
 export default {
     components: { Icon, ConsultationService, ModalShowChat},
@@ -153,7 +154,12 @@ export default {
         showModalShowChat($messageId) {
             this.isModalChatShow = true;
             this.messageId = $messageId
+            this.setMessagesRead()
         },
+      setMessagesRead() {
+        ConsultationService.setConsultantMessagesRead(this.messageId).then(response => {
+        })
+      },
         closeModalShowChat() {
             this.isModalChatShow = false
         },
@@ -197,5 +203,19 @@ export default {
   font-size: 16px;
   font-weight: bold;
   color: #888;
+}
+.flashing-icon {
+  animation: flash 1.5s infinite; /* Анимация будет повторяться бесконечно */
+}
+@keyframes flash {
+  0% {
+    opacity: 1; /* Полная видимость */
+  }
+  50% {
+    opacity: 0; /* Иконка пропадает (мигает) */
+  }
+  100% {
+    opacity: 1; /* Возвращается в норму */
+  }
 }
 </style>
