@@ -161,6 +161,7 @@ export default {
         })
       },
         closeModalShowChat() {
+            this.getTodayMessages()
             this.isModalChatShow = false
         },
       new_sms() {
