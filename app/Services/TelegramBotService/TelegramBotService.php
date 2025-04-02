@@ -433,8 +433,6 @@ class TelegramBotService implements TelegramBotServiceInterface
                     ->usingFileName('screenshot.jpg')
                     ->toMediaCollection('amount_check');
 
-//                $this->sendMessage($chatId, 'Чек принят и ушел в разработку. Ждите ответ от менеджера');
-
                 $keyboard = [
                     'keyboard' => [
                         [
