@@ -129,7 +129,6 @@ export default {
                 cluster: 'eu', logToConsole: true,
             })
             this.channel = this.pusher.subscribe('consultation');
-
             this.channel.bind('new_message', (data) => {
 
             if (this.isActive) {

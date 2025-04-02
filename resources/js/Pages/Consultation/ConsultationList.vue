@@ -138,8 +138,15 @@ export default {
 
             channel.bind('new_message', (data) => {
               // this.new_sms()
-              let audio = new Audio('/audio/new_sms_consultant_2.wav');
-              audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+              if (!this.isModalChatShow){
+                let audio = new Audio('/audio/new_sms_consultant_2.wav');
+                audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+              }else{
+                let audio = new Audio('/audio/new_sms_consultant_chat.wav');
+                audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+              }
+
+
               // const test = new Audio('/audio/new_sms_consultant.wav');
               // test.play().catch(err => console.error('Ошибка воспроизведения:', err));
                 this.getTodayMessages()
