@@ -2,6 +2,7 @@
 
 namespace App\Services\OrderService;
 
+use App\Events\NewOrder;
 use App\Events\UserMessageSent;
 use App\Models\Client;
 use App\Models\Currency;
@@ -25,7 +26,8 @@ class OrderService implements OrderServiceInterface
             'currency_name' => $currency->name,
         ]);
 
-        broadcast(new UserMessageSent($order));
+        broadcast(new NewOrder($order));
+//        broadcast(new UserMessageSent($order));
         return $order;
     }
     public function getOrdersForClient($clientId)

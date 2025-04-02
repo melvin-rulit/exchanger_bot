@@ -218,7 +218,7 @@ export default {
   },
   mounted() {
     this.getOrders()
-    this.checkOrders()
+    this.checkNewOrders()
     this.checkOrdersUpdate()
   },
   created: function() {
@@ -258,19 +258,19 @@ export default {
           return 'text-black'
       }
     },
-    checkOrders() {
-      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
-        cluster: 'eu', logToConsole: true,
-      })
-      const channel = pusher.subscribe('check_amount')
-
-      channel.bind('my-event', (data) => {
-        if (this.hasNewOrders(newOrders)) {
-
-        }
-        this.getOrders()
-      })
-    },
+    // checkOrders() {
+    //   const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+    //     cluster: 'eu', logToConsole: true,
+    //   })
+    //   const channel = pusher.subscribe('check_amount')
+    //
+    //   channel.bind('my-event', (data) => {
+    //     if (this.hasNewOrders(newOrders)) {
+    //
+    //     }
+    //     this.getOrders()
+    //   })
+    // },
     checkOrdersUpdate() {
       const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
         cluster: 'eu', logToConsole: true,
@@ -283,6 +283,19 @@ export default {
         // if (data.order.is_message !== this.orders.is_message) {
         //     this.orders = data.order;
         // }
+      })
+    },
+
+    checkNewOrders() {
+      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+        cluster: 'eu', logToConsole: true,
+      })
+      const channel = pusher.subscribe('new_order')
+
+      channel.bind('order-new', (data) => {
+        this.getOrders()
+        let audio = new Audio('/audio/new_order.wav');
+        audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
       })
     },
     translateStatus(status) {

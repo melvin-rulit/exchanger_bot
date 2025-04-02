@@ -11,7 +11,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class OrderUpdated implements ShouldBroadcast
+class NewOrder implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -35,13 +35,12 @@ class OrderUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('update_order'),
-//          new PrivateChannel('orders.' . 26)
+            new Channel('new_order'),
         ];
     }
     public function broadcastAs(): string
     {
-        return 'order-updated';
+        return 'order-new';
     }
     public function shouldBroadcastNow(): bool
     {
