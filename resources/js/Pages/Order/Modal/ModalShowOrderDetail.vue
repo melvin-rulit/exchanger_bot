@@ -87,8 +87,29 @@
       <!-- Фиксированный футер -->
       <div class="modal-footer">
 
-        <transition name="fade">
-          <div v-if="!confirmationOrder && selectedOrder.status !== 'success'">
+        <div class="spinner-wrapper" v-if="showSpinner">
+            <hollow-dots-spinner
+              :animation-duration="1000"
+              :dot-size="20"
+              :dots-num="3"
+              color="#ff1d5e"
+            />
+        </div>
+
+<!--        <transition name="fade">-->
+<!--          <div v-if="!confirmationOrder && selectedOrder.status !== 'success' && !checkCloseOrder">-->
+<!--            <div class="btn_save">-->
+<!--              <ButtonUI @click="store" type="submit" color="green">Сохранить</ButtonUI>-->
+<!--            </div>-->
+
+<!--            <div class="btn_complete">-->
+<!--              <ButtonUI @click="prepareCompleted" type="submit">Завершить</ButtonUI>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </transition>-->
+
+        <FadeOrInstant :disable-transition="checkCloseOrder" name="fade">
+          <div v-if="!confirmationOrder && selectedOrder.status !== 'success' && !checkCloseOrder">
             <div class="btn_save">
               <ButtonUI @click="store" type="submit" color="green">Сохранить</ButtonUI>
             </div>
@@ -97,7 +118,8 @@
               <ButtonUI @click="prepareCompleted" type="submit">Завершить</ButtonUI>
             </div>
           </div>
-        </transition>
+        </FadeOrInstant>
+
 
         <transition name="fade">
           <div v-if="confirmationOrder">
@@ -105,12 +127,6 @@
               <p class="message_complete">Вы уверены, что хотите завершить этот заказ?</p>
             </div>
 
-            <atom-spinner
-              v-if="ifUpdateSpinner"
-              animation-duration="1000"
-              :size="30"
-              :color="currentColor"
-            />
             <div class="buttons">
               <ButtonUI @click="successCloseOrder" type="submit" color="green">Да</ButtonUI>
               <ButtonUI @click="cancelCloseOrder" type="submit" color="red">Отмена</ButtonUI>
@@ -127,13 +143,14 @@
 import Multiselect from "vue-multiselect";
 import { UserService } from '@/services/UserService.js'
 import { OrdersService } from '@/services/OrdersService.js'
+import FadeOrInstant from "../../../Components/FadeOrInstant.vue";
 import Alert from "../../../Components/Alert.vue";
 import { Icon } from '@iconify/vue';
 import ButtonUI from "../../../Components/ButtonUI.vue";
-import {AtomSpinner} from 'epic-spinners'
+import { HollowDotsSpinner } from 'epic-spinners'
 
 export default {
-  components: {Multiselect, Alert, Icon, ButtonUI, AtomSpinner},
+  components: {Multiselect, FadeOrInstant, Alert, Icon, ButtonUI, HollowDotsSpinner},
   props: {
     isActive: {
       type: Boolean,
@@ -161,8 +178,8 @@ export default {
         success: 'Завершен',
         deleted: 'Удален',
       },
-      ifUpdateSpinner: true,
-      currentColor: "",
+      showSpinner: false,
+      currentColor: "red",
       colors: [
         "red",
         "blue",
@@ -181,6 +198,7 @@ export default {
       alertType: 'success',
       loading: false,
       confirmationOrder: false,
+      checkCloseOrder: false,
       isClosing: false,
     }
   },
@@ -217,9 +235,6 @@ export default {
 
       OrdersService.close_order(this.form)
         .then(response => {
-          // this.selectedOrder.status  = response.data.order.status
-          // this.selectedOrder  = response.data.order
-          // console.log(response.data.order)
           Object.assign(this.selectedOrder, response.data.order);
           this.triggerSuccessAlert('Заказ успешно завершен');
         })
@@ -233,6 +248,7 @@ export default {
         })
         .finally(() => {
           this.isClosing = false;
+          this.showSpinner = false
         });
     },
     prepareCompleted() {
@@ -249,6 +265,8 @@ export default {
     successCloseOrder() {
       this.closeOrder()
       this.confirmationOrder = false
+      this.checkCloseOrder = true
+      this.showSpinner = true
     },
     cancelCloseOrder() {
       this.confirmationOrder = false
@@ -304,6 +322,7 @@ export default {
       this.form.selectedUser = ''
       // this.selectedOrder = ''
       this.confirmationOrder = false
+      this.checkCloseOrder = false
       this.$emit('close', { openChat: false, orderId: 0});
     },
   },
@@ -452,6 +471,14 @@ export default {
   font-size: 16px;
   font-weight: bold;
   bottom: 90px;
+}
+.spinner-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  left: 18%;
+  bottom: 70px;
 }
 .close-btn {
   background: none;
