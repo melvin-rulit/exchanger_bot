@@ -53,7 +53,7 @@ class CunsultationController extends Controller
     {
         $message = Message::find($message_id);
 
-        $message->is_message = false;
+        $message->is_message = true;
         $message->save();
     }
 }
