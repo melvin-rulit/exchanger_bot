@@ -17,7 +17,7 @@
               </td>
               <td>
                 <div class="flex">
-                  <p class="font-semibold mr-2">Клиент</p>
+                  <p class="font-semibold mr-2"></p>
                 </div>
               </td>
             </tr>
@@ -36,7 +36,7 @@
               </td>
               <td class="">
                 <div class="flex items-center">
-                  <p class="text-sm leading-none text-gray-600 ml-2"></p>
+                  <p class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColorClass"/> Чат закрыт клиентом</p>
                 </div>
               </td>
             </tr>
@@ -83,6 +83,7 @@ export default {
                 deleted: 'Удален',
             },
             query: '',
+            type: 'error',
             limit: 5,
             total: 1,
             errors: '',
@@ -105,9 +106,20 @@ export default {
       // }, { once: true });
     },
     computed: {
-        // page() {
-        //     return Number(this.$route.query.page) ?? 1;
-        // },
+      iconColorClass() {
+        switch (this.type) {
+          case 'success':
+            return 'icon-success';
+          case 'error':
+            return 'icon-error';
+          case 'danger':
+            return 'icon-danger';
+          case 'info':
+            return 'icon-info';
+          default:
+            return 'icon-success';
+        }
+      },
         hasFilters() {
             return Object.values(this.form).some(value => value !== '')
         },
@@ -118,20 +130,6 @@ export default {
           this.messages = response.data.last_message
         })
       },
-        getStatusColor(status) {
-            switch (status) {
-                case 'new':
-                    return 'text-[#38b0b0]';
-                case 'active':
-                    return 'text-[#00008B]';
-                case 'stoped':
-                    return 'text-[#FFA500]';
-                case 'deleted':
-                    return 'text-[#FF0000]';
-                default:
-                    return 'text-black';
-            }
-        },
         checkNewMessagesUpdate() {
             const pusher = new Pusher('6c99314bac482dfe845e', {
                 cluster: 'eu', logToConsole: true,
@@ -197,6 +195,22 @@ export default {
     background-color: white;
     cursor: pointer;
   border-bottom: 1px solid rgba(0, 0, 0, .05);
+}
+/* Цвет иконки в зависимости от типа */
+.icon-success {
+  color: #4caf50;
+}
+
+.icon-error {
+  color: #f44336;
+}
+
+.icon-danger {
+  color: #ff9800;
+}
+
+.icon-info {
+  color: #2196f3;
 }
 .no-messages {
   text-align: center;
