@@ -93,6 +93,7 @@ export default {
     },
     mounted() {
       this.getTodayMessages()
+      this.checkNewMessagesUpdate()
     },
     computed: {
         // page() {
@@ -122,36 +123,19 @@ export default {
                     return 'text-black';
             }
         },
-        // checkOrders() {
-        //     const pusher = new Pusher('6c99314bac482dfe845e', {
-        //         cluster: 'eu', logToConsole: true,
-        //     })
-        //     const channel = pusher.subscribe('check_amount')
-        //
-        //     channel.bind('my-event', (data) => {
-        //         this.getOrders()
-        //     })
-        // },
-        // checkOrdersUpdate() {
-        //     const pusher = new Pusher('6c99314bac482dfe845e', {
-        //         cluster: 'eu', logToConsole: true,
-        //     })
-        //     const channel = pusher.subscribe('update_order');
-        //
-        //     channel.bind('order-updated', (data) => {
-        //
-        //         this.getOrders()
-        //         // if (data.order.is_message !== this.orders.is_message) {
-        //         //     this.orders = data.order;
-        //         // }
-        //     });
-        // },
+        checkNewMessagesUpdate() {
+            const pusher = new Pusher('b4da676cf897a4a24446', {
+                cluster: 'eu', logToConsole: true,
+            })
+            const channel = pusher.subscribe('consultation');
+
+            channel.bind('new_message', (data) => {
+                this.getTodayMessages()
+            });
+        },
         translateStatus(status) {
             return this.statusTranslations[status] || status;
         },
-        // reset() {
-        //     this.form = mapValues(this.form, () => '')
-        // },
         showModalShowChat($messageId) {
             this.isModalChatShow = true;
             this.messageId = $messageId
