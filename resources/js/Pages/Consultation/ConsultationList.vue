@@ -94,6 +94,14 @@ export default {
     mounted() {
       this.getTodayMessages()
       this.checkNewMessagesUpdate()
+
+      // this.notificationAudio = new Audio('/audio/new_sms_consultant.wav');
+      // document.addEventListener('click', () => {
+      //   this.notificationAudio.play().then(() => {
+      //     this.notificationAudio.pause();
+      //     this.notificationAudio.currentTime = 0;
+      //   }).catch(() => {});
+      // }, { once: true });
     },
     computed: {
         // page() {
@@ -130,8 +138,13 @@ export default {
             const channel = pusher.subscribe('consultation');
 
             channel.bind('new_message', (data) => {
+              // this.new_sms()
+              let audio = new Audio('/audio/new_sms_consultant.wav');
+              audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+              // const test = new Audio('/audio/new_sms_consultant.wav');
+              // test.play().catch(err => console.error('Ошибка воспроизведения:', err));
                 this.getTodayMessages()
-                this.new_sms()
+
             });
         },
         translateStatus(status) {
@@ -147,7 +160,7 @@ export default {
       new_sms() {
         let audio = new Audio('/audio/new_sms_consultant.wav');
         audio.play();
-      }
+      },
     },
 }
 </script>
