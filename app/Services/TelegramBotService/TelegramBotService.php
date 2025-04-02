@@ -20,6 +20,7 @@ class TelegramBotService implements TelegramBotServiceInterface
     protected ClientsService $clientsService;
     protected OrderService $orderService;
     protected CredentialService $credentialService;
+    protected bool $isInMainMenu = false;
 
     public function __construct(ChatService $chatService, ClientsService $clientsService, OrderService $orderService, CredentialService $credentialService)
     {
@@ -113,8 +114,10 @@ class TelegramBotService implements TelegramBotServiceInterface
 
             } elseif ($text === __('buttons.change_language') && !$this->clientsService->isUserInACountryInput($clientId) && !$this->checkMainMenu($text, $clientId, $chatId, $messageId) && !$this->clientsService->isUserInAmountInput($clientId)) {
                 $this->sendMessageChangeLanguage($chatId, $clientId, $messageId);
-            } elseif ($this->checkMainMenu($text, $clientId, $chatId, $messageId) || $this->clientsService->isClientSendScreenshot($clientId)) {
+            } elseif (!$this->checkMainMenu($text, $clientId, $chatId, $messageId) && $this->clientsService->isClientSendScreenshot($clientId)) {
+//                Log::info('checkMainMenu вернул: ' . json_encode($this->checkMainMenu($text, $clientId, $chatId, $messageId)));
                 $save_order_id = Redis::get('save_order_id_for' . $clientId);
+
                 $this->chatService->prepareSaveMessage($text, $chatId, $save_order_id);
 //                if ($save_order_id && $text) {
 //
@@ -123,15 +126,12 @@ class TelegramBotService implements TelegramBotServiceInterface
 //                }
 
             } elseif (!$this->checkMainMenu($text, $clientId, $chatId, $messageId) && $this->clientsService->isClientConsultationInput($clientId)){
-//                Log::info('what');
                 $this->chatService->prepareSaveMessage($text, $chatId);
-//                Log::info('checkMainMenu вернул: ' . json_encode($this->checkMainMenu($text, $clientId)));
             }
             else {
                 if (isset($text)) {
 
                     if ($this->checkStartMessage($text, $clientId) || $this->checkMainMenu($text, $clientId, $chatId, $messageId)) {
-                        Log::info('ops1');
                         $this->sendStartMessageWithButtons($chatId, $clientId, $messageId);
                     } else {
                         switch ($text) {
@@ -148,7 +148,6 @@ class TelegramBotService implements TelegramBotServiceInterface
                                 $this->sendMessageChangeLanguage($chatId, $clientId, $messageId);
                                 break;
                             default:
-                                Log::info('ops2');
                                 $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
                                 break;
                         }
@@ -180,10 +179,9 @@ class TelegramBotService implements TelegramBotServiceInterface
     }
     public function checkMainMenu($text, $clientId, $chatId, $messageId): bool
     {
-        if ($text === __('buttons.to_main')) {
-            $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
-            Log::info('ops27');
-            $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
+        if ($text === __('buttons.to_main') || $text === __('buttons.cancel')) {
+//            $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
+//            $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
             return true;
         }
         return false;
@@ -220,7 +218,7 @@ class TelegramBotService implements TelegramBotServiceInterface
         $keyboard = [
             'keyboard' => [
                 [
-                    ['text' => __('buttons.transfer')],
+                    //['text' => __('buttons.transfer')],
                 ],
                 [
                     ['text' => __('buttons.get_requisite')]
@@ -237,7 +235,10 @@ class TelegramBotService implements TelegramBotServiceInterface
         ];
         $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
         $this->deleteMessage($chatId, $messageId);
-        $this->sendMessageWithButton($chatId, $keyboard, __('messages.greeting'));
+
+        if(!$this->isInMainMenu){
+            $this->sendMessageWithButton($chatId, $keyboard, __('messages.greeting'));
+        }
     }
 
     public function sendAccountDetails($chatId, $clientId, $messageId): void
@@ -343,21 +344,23 @@ class TelegramBotService implements TelegramBotServiceInterface
 
     public function processAmount($chatId, $clientId, $messageIdToDelete): void
     {
-        $keyboard = [
-            'keyboard' => [
-                [
-                    ['text' => __('buttons.to_main')]
-                ],
-                [
-                    ['text' => __('buttons.consultation')]
-                ],
-            ],
-            'resize_keyboard' => true,
-            'one_time_keyboard' => true,
-        ];
+//        $keyboard = [
+//            'keyboard' => [
+//                [
+//                    ['text' => __('buttons.to_main')]
+//                ],
+//                [
+//                    ['text' => __('buttons.consultation')]
+//                ],
+//            ],
+//            'resize_keyboard' => true,
+//            'one_time_keyboard' => true,
+//        ];
 
         $this->clientsService->setClientAmountInput($clientId);
-        $this->sendMessageWithButton($chatId, $keyboard, __('messages.enter_the_amount_only_numbers'), $messageIdToDelete);
+
+//        $this->sendMessageWithButton($chatId, $keyboard, __('messages.enter_the_amount_only_numbers'), $messageIdToDelete);
+        $this->sendMessage($chatId, __('messages.enter_the_amount_only_numbers'), $messageIdToDelete);
     }
 
     public function checkProcessAmount($chatId, $clientId, $amount): void
@@ -406,6 +409,7 @@ class TelegramBotService implements TelegramBotServiceInterface
 
     public function getAndSavePhoto($photo, $clientId, $chatId): void
     {
+        $this->setClientLanguage($this->clientsService->getClientLanguage($clientId));
         $amount = Redis::get('select_amount_for_' . $clientId);
         $currency_id = Redis::get('select_currency_for_' . $clientId);
         $file_id = $photo['file_id'];
@@ -434,7 +438,7 @@ class TelegramBotService implements TelegramBotServiceInterface
                 $keyboard = [
                     'keyboard' => [
                         [
-                            ['text' => 'Напомнить о заказе'],
+                            ['text' => __('buttons.cancel')],
                         ],
                     ],
                     'resize_keyboard' => true,
