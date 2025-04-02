@@ -22,15 +22,4 @@ export class UserService {
     //     let url = `${this.serverUrl}/user/statistics`;
     //     return axios.get(url)
     // }
-    // static createSubAccount(sub_account) {
-    //     let url = `${this.serverUrl}/user/sub_account/create`;
-    //     return axios.post(url, sub_account)
-    // }
-    // static updateSubAccount(update_sub_account)
-    // {
-    //     let url = `${this.serverUrl}/user/sub_account/${update_sub_account.id}`;
-    //     return axios.patch(url, update_sub_account)
-    // }
-
-
 }
