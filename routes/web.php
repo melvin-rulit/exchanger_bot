@@ -40,7 +40,9 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::group(['prefix' => 'consultation', 'name' => 'consultation'], function () {
-        Route::get('/get_messages', [CunsultationController::class, 'getMessages']);
+        Route::get('/messages', [CunsultationController::class, 'getMessages']);
+        Route::get('/today_messages/{message_id}', [CunsultationController::class, 'getTodayMessages']);
+        Route::post('/send_message/{message_id}', [CunsultationController::class, 'storeMessage']);
     });
 
     Route::group(['prefix' => 'users', 'name' => 'users'], function () {

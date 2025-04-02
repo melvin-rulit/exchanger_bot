@@ -42,21 +42,22 @@
                 </button>
             </div>
 
-            <button
-                @click.stop="close">
-              <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
-            </button>
+          <button
+            @click.stop="close"
+            class="absolute top-4 right-4 p-2 text-black">
+            <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
+          </button>
         </div>
     </div>
 </template>
 
 <script>
-import { OrdersService } from '@/services/OrdersService.js'
+import { ConsultationService } from '@/services/ConsultationService.js'
 import Pusher from 'pusher-js'
 import { Icon } from '@iconify/vue';
 
 export default {
-  components: {Icon},
+  components: {ConsultationService, Icon},
     props: {
         isActive: {
             type: Boolean,
@@ -80,7 +81,7 @@ export default {
         };
     },
     mounted() {
-
+      this.checkMessagesUpdate()
     },
     computed: {
             groupedMessages() {
@@ -113,54 +114,49 @@ export default {
             }
     },
     methods: {
-      // async getOrder() {
-      //   try {
-      //     const response = await OrdersService.getOrder(this.orderId);
-      //     this.messages = response.data.data;
-      //     console.log( this.messages )
-      //     this.organizeMessages();
-      //     await this.$nextTick(() => this.scrollToBottom());
-      //   } catch (error) {
-      //     this.errors = error.response?.data?.errors || 'Ошибка загрузки данных';
-      //   }
-      // },
-      setMessagesRead() {
-            OrdersService.setOrderMessagesRead(this.orderId).then(response => {
+      async getTodayMessages() {
+        try {
+          const response = await ConsultationService.getTodayMessages(this.messageId);
+          this.messages = response.data.messages;
+          this.organizeMessages();
+          await this.$nextTick(() => this.scrollToBottom());
+        } catch (error) {
+          this.errors = error.response?.data?.errors || 'Ошибка загрузки данных';
+        }
+      },
+        checkMessagesUpdate() {
+            this.pusher = new Pusher('6c99314bac482dfe845e', {
+                cluster: 'eu', logToConsole: true,
             })
+            this.channel = this.pusher.subscribe('consultation');
+
+            this.channel.bind('new_message', (data) => {
+
+            if (this.isActive) {
+              this.getTodayMessages()
+            }
+            });
         },
-        // checkOrdersUpdate() {
-        //     this.pusher = new Pusher('6c99314bac482dfe845e', {
-        //         cluster: 'eu', logToConsole: true,
-        //     })
-        //     this.channel =  this.pusher.subscribe('update_order');
-        //
-        //     this.channel.bind('order-updated', (data) => {
-        //
-        //     if (this.isActive) {
-        //         this.getOrder()
-        //     }
-        //     });
-        // },
         organizeMessages() {
             this.clientMessages = this.messages.filter(message => message.sender_type === 'user');
             this.supportMessages = this.messages.filter(message => message.sender_type === 'client');
         },
-      // async sendMessages() {
-      //   if (!this.newMessage.trim()) {
-      //     return;
-      //   }
-      //   try {
-      //     const response = await OrdersService.sendOrderMessages(
-      //       this.orderId,
-      //       this.newMessage
-      //     );
-      //     this.messages.push(response.data);
-      //     this.$nextTick(() => this.scrollToBottom());
-      //     this.newMessage = '';
-      //   } catch (error) {
-      //     console.error('Ошибка отправки:', error);
-      //   }
-      // },
+      async sendMessages() {
+        if (!this.newMessage.trim()) {
+          return;
+        }
+        try {
+          const response = await ConsultationService.sendConsultantMessages(
+            this.messageId,
+            this.newMessage
+          );
+          this.messages.push(response.data);
+          this.$nextTick(() => this.scrollToBottom());
+          this.newMessage = '';
+        } catch (error) {
+          console.error('Ошибка отправки:', error);
+        }
+      },
         scrollToBottom() {
             const chatContainer = this.$el.querySelector('.flex-1');
             if (chatContainer) {
@@ -168,17 +164,13 @@ export default {
             }
         },
         close() {
-            // this.setMessagesRead()
-
-            setTimeout(() => {
-                this.$emit('close');
-            }, 500)
+          this.$emit('close');
         },
     },
     watch: {
       isActive(newVal) {
         if (newVal) {
-          // this.getOrder();
+          this.getTodayMessages();
         }
       },
     },

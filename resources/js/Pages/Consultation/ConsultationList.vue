@@ -5,7 +5,21 @@
         <table class="w-full whitespace-nowrap">
             <thead class="head_table">
             <tr tabindex="0" class="focus:outline-none h-10 rounded">
-
+                <td>
+                  <div class="flex pl-6">
+                    <p class="font-semibold mr-2"></p>
+                  </div>
+                </td>
+              <td>
+                <div class="flex">
+                  <p class="font-semibold mr-2">Последнее сообщение</p>
+                </div>
+              </td>
+              <td>
+                <div class="flex">
+                  <p class="font-semibold mr-2">Клиент</p>
+                </div>
+              </td>
             </tr>
             </thead>
             <tbody v-if="messages.length">
@@ -20,6 +34,11 @@
                   <p class="text-sm leading-none text-gray-600 ml-2">{{ message.message }}</p>
                 </div>
               </td>
+              <td class="">
+                <div class="flex items-center">
+                  <p class="text-sm leading-none text-gray-600 ml-2"></p>
+                </div>
+              </td>
             </tr>
             <tr class="h-3">
             </tr>
@@ -32,13 +51,13 @@
           </tbody>
         </table>
       </div>
-    </div>
 
-  <ModalShowChat
-    :is-active="isModalChatShow"
-    :messageId="messageId"
-    @close="closeModalShowChat"
-  />
+      <ModalShowChat
+        :is-active="isModalChatShow"
+        :messageId="messageId"
+        @close="closeModalShowChat"
+      />
+    </div>
 </template>
 
 <script>
@@ -48,7 +67,7 @@ import ModalShowChat from '@/Pages/Consultation/Chats/Modal/ModalShowChat.vue'
 import { ConsultationService } from '@/services/ConsultationService.js'
 
 export default {
-    components: { Icon, ConsultationService},
+    components: { Icon, ConsultationService, ModalShowChat},
     data: function () {
         return {
             messages: '',
@@ -86,7 +105,7 @@ export default {
     methods: {
       getTodayMessages: function () {
         ConsultationService.getMessages().then(response => {
-          this.messages = response.data.messages
+          this.messages = response.data.last_message
         })
       },
         getStatusColor(status) {
