@@ -64,7 +64,7 @@ export default {
             required: true
         },
         orderId: {
-            required: true
+            required: false
         },
     },
     data() {

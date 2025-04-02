@@ -4,8 +4,7 @@
   <div
     v-if="isActive"
     @click="close"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-  >
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 
     <div @click.stop class="modal-container">
       <!-- Заголовок -->
@@ -62,7 +61,7 @@
 
               <div class="info-item">
                 <span class="label">Закрыл заказ: </span>
-                <span class="value">{{ selectedOrder.user.name }}</span>
+                <span class="value">{{ selectedOrder.user?.name || '' }}</span>
               </div>
 
               <div class="info-item">
@@ -106,6 +105,12 @@
               <p class="message_complete">Вы уверены, что хотите завершить этот заказ?</p>
             </div>
 
+            <atom-spinner
+              v-if="ifUpdateSpinner"
+              animation-duration="1000"
+              :size="30"
+              :color="currentColor"
+            />
             <div class="buttons">
               <ButtonUI @click="successCloseOrder" type="submit" color="green">Да</ButtonUI>
               <ButtonUI @click="cancelCloseOrder" type="submit" color="red">Отмена</ButtonUI>
@@ -125,9 +130,10 @@ import { OrdersService } from '@/services/OrdersService.js'
 import Alert from "../../../Components/Alert.vue";
 import { Icon } from '@iconify/vue';
 import ButtonUI from "../../../Components/ButtonUI.vue";
+import {AtomSpinner} from 'epic-spinners'
 
 export default {
-  components: {Multiselect, Alert, Icon, ButtonUI},
+  components: {Multiselect, Alert, Icon, ButtonUI, AtomSpinner},
   props: {
     isActive: {
       type: Boolean,
@@ -155,6 +161,21 @@ export default {
         success: 'Завершен',
         deleted: 'Удален',
       },
+      ifUpdateSpinner: true,
+      currentColor: "",
+      colors: [
+        "red",
+        "blue",
+        "green",
+        "indigo",
+        "purple",
+        "",
+        "orange",
+        "brown",
+        "deep-orange",
+        "blue-grey",
+        // "cyan"
+      ],
       errors: '',
       alertMessage: '',
       alertType: 'success',
@@ -165,6 +186,7 @@ export default {
   },
   mounted() {
     this.getManagers()
+    this.randomColors()
   },
   methods: {
     getManagers() {
@@ -195,11 +217,19 @@ export default {
 
       OrdersService.close_order(this.form)
         .then(response => {
-          this.selectedOrder.status  = response.data.order.status
+          // this.selectedOrder.status  = response.data.order.status
+          // this.selectedOrder  = response.data.order
+          // console.log(response.data.order)
+          Object.assign(this.selectedOrder, response.data.order);
           this.triggerSuccessAlert('Заказ успешно завершен');
         })
         .catch(error => {
-          this.errors = error.response.data.message
+          if (error.response && error.response.data) {
+            this.errors = error.response.data.message;
+          } else {
+            console.error('Неизвестная ошибка:', error);
+            this.errors = 'Что-то пошло не так. Попробуйте позже.';
+          }
         })
         .finally(() => {
           this.isClosing = false;
@@ -256,6 +286,9 @@ export default {
         default:
           return 'text-black';
       }
+    },
+    randomColors() {
+      this.currentColor = this.colors[Math.floor(Math.random() * this.colors.length)];
     },
     triggerSuccessAlert($message) {
       this.alertMessage = $message;

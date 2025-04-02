@@ -185,6 +185,8 @@ class OrderController extends Controller
         $order->status = 'success';
         $order->save();
 
+        $order->setRelation('user', $user);
+
         return response()->json(['message' => 'Заказ завершен', 'order' => $order]);
     }
     public function fixOrder(int $orderId): JsonResponse

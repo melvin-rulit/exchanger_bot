@@ -189,6 +189,7 @@ export default {
   data: function() {
     return {
       orders: '',
+      oldOrders: [],
       orderId: '',
       selectedOrder: '',
       selectedUser: '',
@@ -239,6 +240,9 @@ export default {
       OrdersService.getOrders().then(response => {
         this.orders = response.data.orders
       })
+    },
+    hasNewOrders(newOrders) {
+      return newOrders.length > this.oldOrders.length
     },
     getStatusColor(status) {
       switch (status) {
