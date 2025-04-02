@@ -124,7 +124,7 @@ export default {
             }
         },
         checkNewMessagesUpdate() {
-            const pusher = new Pusher('b4da676cf897a4a24446', {
+            const pusher = new Pusher('6c99314bac482dfe845e', {
                 cluster: 'eu', logToConsole: true,
             })
             const channel = pusher.subscribe('consultation');
