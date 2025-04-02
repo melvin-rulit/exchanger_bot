@@ -131,6 +131,7 @@ export default {
 
             channel.bind('new_message', (data) => {
                 this.getTodayMessages()
+                this.new_sms()
             });
         },
         translateStatus(status) {
@@ -141,9 +142,12 @@ export default {
             this.messageId = $messageId
         },
         closeModalShowChat() {
-            // this.getOrders()
             this.isModalChatShow = false
-        }
+        },
+      new_sms() {
+        let audio = new Audio('/audio/new_sms_consultant.wav');
+        audio.play();
+      }
     },
 }
 </script>
