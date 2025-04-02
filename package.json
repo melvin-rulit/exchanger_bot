@@ -1,4 +1,5 @@
 {
+    "name": "src",
     "private": true,
     "type": "module",
     "scripts": {

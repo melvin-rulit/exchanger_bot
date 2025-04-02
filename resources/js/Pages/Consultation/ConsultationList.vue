@@ -131,7 +131,7 @@ export default {
         })
       },
         checkNewMessagesUpdate() {
-            const pusher = new Pusher('6c99314bac482dfe845e', {
+            const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
                 cluster: 'eu', logToConsole: true,
             })
             const channel = pusher.subscribe('consultation');

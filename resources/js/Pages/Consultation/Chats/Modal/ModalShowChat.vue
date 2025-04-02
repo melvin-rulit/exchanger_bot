@@ -125,7 +125,7 @@ export default {
         }
       },
         checkMessagesUpdate() {
-            this.pusher = new Pusher('6c99314bac482dfe845e', {
+            this.pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
                 cluster: 'eu', logToConsole: true,
             })
             this.channel = this.pusher.subscribe('consultation');

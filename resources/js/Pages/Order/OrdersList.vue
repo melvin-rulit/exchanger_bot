@@ -259,20 +259,23 @@ export default {
       }
     },
     checkOrders() {
-      const pusher = new Pusher('6c99314bac482dfe845e', {
+      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
         cluster: 'eu', logToConsole: true,
       })
       const channel = pusher.subscribe('check_amount')
 
-            channel.bind('my-event', (data) => {
-                this.getOrders()
-            })
-        },
-        checkOrdersUpdate() {
-            const pusher = new Pusher('6c99314bac482dfe845e', {
-                cluster: 'eu', logToConsole: true,
-            })
-            const channel = pusher.subscribe('update_order');
+      channel.bind('my-event', (data) => {
+        if (this.hasNewOrders(newOrders)) {
+
+        }
+        this.getOrders()
+      })
+    },
+    checkOrdersUpdate() {
+      const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
+        cluster: 'eu', logToConsole: true,
+      })
+      const channel = pusher.subscribe('update_order')
 
       channel.bind('order-updated', (data) => {
         this.new_sms()
