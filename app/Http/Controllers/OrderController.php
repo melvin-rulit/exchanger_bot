@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\ClientService\ClientsService;
 use App\Services\TelegramBotService\TelegramMessageService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -79,6 +80,7 @@ class OrderController extends Controller
     public function getOrders(): JsonResponse
     {
         $orders = Order::with(['user', 'client'])
+            ->whereDate('created_at', Carbon::today())
             ->orderByRaw("FIELD(status, 'new', 'active', 'success')")
             ->get();
 
