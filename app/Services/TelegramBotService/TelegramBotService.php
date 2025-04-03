@@ -127,15 +127,15 @@ class TelegramBotService implements TelegramBotServiceInterface
 
             } elseif (!$this->checkMainMenu($text, $clientId, $chatId, $messageId) && $this->clientsService->isClientConsultationInput($clientId)){
                 if (isset($WebchookData['message']['photo'])) {
-//                    $clientId = $WebchookData['message']['from']['id'];
-//                    $chatId = $WebchookData['message']['chat']['id'];
-//                    $photoCount = count($WebchookData['message']['photo']);
-//                    $this->getAndSavePhoto($WebchookData['message']['photo'][$photoCount - 1], $clientId, $chatId);else{
-//                    $this->chatService->prepareSaveMessage($text, $chatId);
-                        Log::info($WebchookData['message']['photo']['file_id']);
+                    $clientId = $WebchookData['message']['from']['id'];
+                    $chatId = $WebchookData['message']['chat']['id'];
+                    $photoCount = count($WebchookData['message']['photo']);
+                    $this->getAndSavePhoto($WebchookData['message']['photo'][$photoCount - 1], $clientId, $chatId);
+                }else{
+                    $this->chatService->prepareSaveMessage($text, $chatId);
                 }
-
-            }else {
+            }
+            else {
                 if (isset($text)) {
 
                     if ($this->checkStartMessage($text, $clientId) || $this->checkMainMenu($text, $clientId, $chatId, $messageId)) {
