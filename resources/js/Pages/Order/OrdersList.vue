@@ -294,8 +294,13 @@ export default {
 
       channel.bind('order-new', (data) => {
         this.getOrders()
-        let audio = new Audio('/audio/new_order.wav');
-        audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+        if (!this.isModalChatShow){
+          let audio = new Audio('/audio/new_order.wav');
+          audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+        }else{
+          let audio = new Audio('/audio/new_sms_consultant_chat.mp3');
+          audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+        }
       })
     },
     translateStatus(status) {

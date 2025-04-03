@@ -5,10 +5,13 @@
 
       <nav class="bg-transparent">
         <!-- Primary Navigation Menu -->
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto with-custom">
           <div class="flex h-13 justify-between">
             <div class="flex">
-<!--              🕒 <h1>12:00</h1>-->
+<!--              🕒 <h1>03-04-2025</h1>-->
+              <div class="date_block mt-2">
+                <h1>Четверг 03 апреля 2025</h1>
+              </div>
 
               <div class="flex shrink-0 items-center cursor-pointer text-white">
                 <!--                                <Link :href="route('dashboard')">-->
@@ -39,6 +42,7 @@
                 <NavLink
                   :href="route('consultation')"
                   :active="route().current('consultation')"
+                  :class="{ 'pulse-green': hasNewConsultMessages }"
                 >
                   Консультация
                 </NavLink>
@@ -246,4 +250,27 @@ const logout = () => {
   router.post(route('logout'));
 };
 
+const hasNewConsultMessages = ref(true)
+
 </script>
+
+<style>
+.with-custom {
+width: 95%;
+}
+@keyframes pulse-text {
+  0%, 100% {
+    color: #6b7280;
+  }
+  50% {
+    color: #22c55e;
+    text-shadow: 0 0 0px #22c55e;
+  }
+}
+.pulse-green {
+  animation: pulse-text 1s infinite;
+}
+.date_block {
+  color: ghostwhite;
+}
+</style>
