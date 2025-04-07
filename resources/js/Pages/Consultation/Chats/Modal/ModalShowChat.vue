@@ -33,7 +33,7 @@
                     v-model="newMessage"
                     @keydown.enter="sendMessages"
                     type="text"
-                    class="border p-2 w-full rounded-l-md"
+                    class="border p-2 w-full rounded-l-md custom-input"
                     placeholder="Введите сообщение..."/>
                 <button
                     @click="sendMessages"
@@ -237,6 +237,11 @@ export default {
 /* Поле ввода сообщения */
 input {
     border: 1px solid #ddd;
+}
+.custom-input {
+  color: black;
+  background-color: white;
+  -webkit-text-fill-color: initial;
 }
 input:focus {
   outline: none;
