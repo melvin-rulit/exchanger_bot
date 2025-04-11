@@ -10,7 +10,7 @@
             <div class="flex">
 <!--              🕒 <h1>03-04-2025</h1>-->
               <div class="date_block mt-2">
-                <h1>Четверг 03 апреля 2025</h1>
+                <h1>{{today}}</h1>
               </div>
 
               <div class="flex shrink-0 items-center cursor-pointer text-white">
@@ -251,6 +251,24 @@ const logout = () => {
 };
 
 const hasNewConsultMessages = ref(true)
+
+const getFormattedDate = () => {
+  const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
+  const months = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ]
+
+  const now = new Date()
+  const dayName = days[now.getDay()]
+  const day = now.getDate().toString().padStart(2, '0')
+  const month = months[now.getMonth()]
+  const year = now.getFullYear()
+
+  return `${dayName} ${day} ${month} ${year}`
+}
+
+const today = ref(getFormattedDate())
 
 </script>
 
