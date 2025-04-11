@@ -98,10 +98,6 @@ class TelegramBotService implements TelegramBotServiceInterface
             $this->clientsService->checkIfClientExit($WebchookData);
             $this->setClientLanguage($this->clientsService->getClientLanguage($clientId));
 
-//            if ($messageId) {
-////            $saveMessages = $this->saveMessagesForDeleted($messageId);
-//            }
-
             if ($this->clientsService->isUserInAmountInput($clientId) && !$this->checkMainMenu($text, $clientId, $chatId, $messageId)) {
                 if ($this->isValidAmount($text, $clientId)) {
                     $amount = $text;
@@ -109,10 +105,10 @@ class TelegramBotService implements TelegramBotServiceInterface
                 } else {
                     $this->sendInvalidAmountMessage($chatId, $messageId);
                 }
-            } elseif ($this->clientsService->isUserInACountryInput($clientId) && $text !== __('buttons.change_language') && $text === '' && !$this->checkMainMenu($text, $clientId, $chatId, $messageId) && !$this->clientsService->isUserInAmountInput($clientId)) {
+            } elseif ($this->clientsService->isClientInACountryInput($clientId)) {
+                $this->deleteMessage($chatId, $messageId);
 
-
-            } elseif ($text === __('buttons.change_language') && !$this->clientsService->isUserInACountryInput($clientId) && !$this->checkMainMenu($text, $clientId, $chatId, $messageId) && !$this->clientsService->isUserInAmountInput($clientId)) {
+            } elseif ($text === __('buttons.change_language') && !$this->clientsService->isClientInACountryInput($clientId) && !$this->checkMainMenu($text, $clientId, $chatId, $messageId) && !$this->clientsService->isUserInAmountInput($clientId)) {
                 $this->sendMessageChangeLanguage($chatId, $clientId, $messageId);
             } elseif (!$this->checkMainMenu($text, $clientId, $chatId, $messageId) && $this->clientsService->isClientSendScreenshot($clientId)) {
 //                Log::info('checkMainMenu вернул: ' . json_encode($this->checkMainMenu($text, $clientId, $chatId, $messageId)));
@@ -498,7 +494,6 @@ class TelegramBotService implements TelegramBotServiceInterface
 
     public function deleteMessages($chatId, $messageIdToDelete): void
     {
-        // Удаляем сообщение с переданным message_id
         $this->deleteMessage($chatId, $messageIdToDelete);
 
         // Удаляем сообщение с message_id - 1
