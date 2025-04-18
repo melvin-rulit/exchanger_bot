@@ -7,6 +7,7 @@ return [
     'change_language_success' => 'The language is successfully changed',
     'to_main' => 'Go to main menu',
     'cancel' => 'Cancel',
+    'back' => 'Back',
     'transfer' => 'Transfer',
     'get_requisite' => 'Get requisite',
     'consultation' => 'Consultation',

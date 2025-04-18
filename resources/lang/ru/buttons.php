@@ -7,6 +7,7 @@ return [
     'change_language_success' => 'Язык успешно изменен',
     'to_main' => 'На главную',
     'cancel' => 'Отмена',
+    'back' => 'Назад',
     'transfer' => 'Перевод',
     'get_requisite' => 'Получение реквизитов',
     'consultation' => 'Консультация',
