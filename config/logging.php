@@ -127,6 +127,28 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'redis' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/redis.log'),
+            'level' => 'debug',
+        ],
+
+        'telegram' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/telegram.log'),
+            'level' => 'debug',
+        ],
+
+        'orders' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/orders.log'),
+            'level' => 'debug',
+        ],
+        'consultant' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/consultant.log'),
+            'level' => 'debug',
+        ],
     ],
 
 ];
