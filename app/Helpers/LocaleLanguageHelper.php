@@ -5,7 +5,7 @@ namespace App\Helpers;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 
-class SetLocaleLanguageHelper
+class LocaleLanguageHelper
 {
     public static function setAppLanguage($language): void
     {
