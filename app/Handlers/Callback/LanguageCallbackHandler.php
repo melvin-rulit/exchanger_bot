@@ -25,6 +25,7 @@ class LanguageCallbackHandler
 
             $keyboard = KeyboardFactory::startKeyboard();
 
+            $this->telegramMessageService->deleteMessage($chatId, $messageId);
             $this->telegramMessageService->sendMessageWithButtons($chatId, __('messages.greeting'), $keyboard, $messageId);
         }
     }
