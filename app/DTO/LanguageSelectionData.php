@@ -2,15 +2,19 @@
 
 namespace App\DTO;
 
-class MenuSelectionData
+class LanguageSelectionData
 {
-    public function __construct(public int $clientBotId, public int $chatId, public int $messageId) {}
+    public function __construct(
+        public int $chatId,
+        public int $clientId,
+        public int $messageId
+    ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            $data['client_bot_id'],
             $data['chat_id'],
+            $data['client_id'],
             $data['message_id'],
         );
     }
