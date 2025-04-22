@@ -1,10 +1,23 @@
 includes:
-    - ./vendor/nunomaduro/larastan/extension.neon
+    - ./vendor/larastan/larastan/extension.neon
 
 parameters:
+    # Level 9 is the highest level
     level: 5
     paths:
         - app
+    scanFiles:
+        - _ide_helper_models.php
+
+    bootstrapFiles:
+        - app/Helpers/config_string.php
+
     excludePaths:
         - tests
         - vendor
+
+    treatPhpDocTypesAsCertain: true
+    checkMissingVarTagTypehint: true
+    checkExplicitMixed: true
+    inferPrivatePropertyTypeFromConstructor: true
+
