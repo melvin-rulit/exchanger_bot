@@ -71,7 +71,7 @@
             "@php artisan ide-helper:meta",
             "@php artisan ide-helper:models -W --write-mixin -M"
         ],
-        "analyse": "php -d memory_limit=512M vendor/bin/phpstan analyse"
+        "analyse": "php -d memory_limit=512M vendor/bin/phpstan analyse -vvv"
     },
     "extra": {
         "laravel": {
