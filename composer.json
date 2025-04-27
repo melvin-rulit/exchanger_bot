@@ -37,8 +37,9 @@
         "files": [
             "app/Helpers/Logs/Helpers.php",
             "app/Helpers/LocaleLanguageHelper.php",
-            "app/Helpers/StringHelper.php",
-            "app/Helpers/config_string.php"
+            "app/Helpers/NumberHelper.php",
+            "app/Helpers/PhotoHelper.php",
+            "app/Helpers/StringHelper.php"
         ]
     },
     "autoload-dev": {

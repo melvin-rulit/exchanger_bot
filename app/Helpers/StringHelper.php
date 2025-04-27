@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Helpers;
-
-class StringHelper
-{
-    public static function generateRandomDigits($length = 5): int
+if (!function_exists('ensure_string')) {
+    function ensure_string(string $key): string
     {
-        $characters = '0123456789';
-        $number = substr(str_shuffle(str_repeat($characters, $length)), 0, $length);
+        $value = config($key);
 
-        return (int) $number;
+        if (!is_string($value)) {
+            throw new \UnexpectedValueException("'{$key}' must return string.");
+        }
+
+        return $value;
     }
 }
