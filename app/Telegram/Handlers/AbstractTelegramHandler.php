@@ -15,11 +15,10 @@ use App\Telegram\Route\CallbackMenuRouter;
 use App\Telegram\Route\CallbackRouter;
 use App\Telegram\Traits\HandlesImageDownload;
 use App\Telegram\Traits\SavePhoto;
-use App\Telegram\Traits\SendsMessages;
 
 abstract class AbstractTelegramHandler
 {
-    use SendsMessages, SavePhoto, HandlesImageDownload;
+    use SavePhoto, HandlesImageDownload;
 
     protected string $url;
 
