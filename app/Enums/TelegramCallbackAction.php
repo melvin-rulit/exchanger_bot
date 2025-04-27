@@ -4,10 +4,12 @@ namespace App\Enums;
 
 enum TelegramCallbackAction: string
 {
-    case SelectLanguage   = 'select_language';
+
     case SelectCountry  = 'select_country';
     case SelectBank     = 'select_bank';
+    case InputAmount     = 'input_amount';
     case SelectCurrency     = 'select_currency';
+
 
     // Back
     case SelectCountryBack = 'select_country_back';
@@ -16,4 +18,5 @@ enum TelegramCallbackAction: string
 
     // Go To
     case ToMain           = 'to_main';
+    case SelectLanguage   = 'select_language';
 }
