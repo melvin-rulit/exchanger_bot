@@ -2,12 +2,13 @@
 
 namespace App\DTO;
 
-use App\Telegram\Traits\ToArrayTrait;
+use App\Telegram\Traits\SerializeTrait;
 use App\DTO\Contracts\TelegramDataInterface;
+use JsonSerializable;
 
-abstract class BaseTelegramDTO implements TelegramDataInterface
+abstract class BaseTelegramDTO implements TelegramDataInterface, JsonSerializable
 {
-    use ToArrayTrait;
+    use SerializeTrait;
 
     abstract public static function fromWebhook(array $data): self;
 }
