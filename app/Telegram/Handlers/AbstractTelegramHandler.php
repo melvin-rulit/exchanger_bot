@@ -10,6 +10,7 @@ use App\Services\ClientService\ClientsService;
 use App\Services\CredentialService\CredentialService;
 use App\Services\OrderService\OrderService;
 use App\Services\RedisSessionService;
+use App\Services\TelegramBotService\TelegramMessageService;
 use App\Telegram\Route\CallbackMenuRouter;
 use App\Telegram\Route\CallbackRouter;
 use App\Telegram\Traits\HandlesImageDownload;
@@ -23,6 +24,7 @@ abstract class AbstractTelegramHandler
     protected string $url;
 
     public function __construct(
+        protected TelegramMessageService $telegramMessageService,
         protected ChatService $chatService,
         protected ClientsService $clientsService,
         protected OrderService $orderService,
@@ -34,6 +36,6 @@ abstract class AbstractTelegramHandler
         protected CallbackRouter $callbackRouter,
         protected CallbackMenuRouter $callbackMenuRouter
     ) {
-        $this->url = config('telegram.telegram_bot.api_url') . config('telegram.telegram_bot.token');
+        $this->url = ensure_string(config('telegram.telegram_bot.api_url')) . ensure_string(config('telegram.telegram_bot.token'));
     }
 }

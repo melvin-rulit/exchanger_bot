@@ -3,7 +3,7 @@
 namespace App\Services\TelegramBotService;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use App\Exceptions\TelegramApiException;
 
 class TelegramMessageService
 {
@@ -12,10 +12,13 @@ class TelegramMessageService
 
     public function __construct()
     {
-        $this->url = config('telegram.telegram_bot.api_url') . config('telegram.telegram_bot.token');
+        $this->url = ensure_string(config('telegram.telegram_bot.api_url')) . ensure_string(config('telegram.telegram_bot.token'));
     }
 
-    public function sendMessage(int|string $chatId, string $message): bool
+    /**
+     * @throws TelegramApiException
+     */
+    public function sendMessage(int|string $chatId, string $message): void
     {
         $response = Http::post("{$this->url}/sendMessage", [
             'chat_id' => $chatId,
@@ -23,9 +26,15 @@ class TelegramMessageService
             'parse_mode' => 'HTML',
         ]);
 
-        return $response->successful();
+        if (!$response->successful()) {
+            throw new TelegramApiException('Ошибка отправки сообщения: ' . $response->body());
+        }
     }
-    public function sendMessageWithButtons(int|string $chatId, string $message, $keyboard, int $messageId = null): bool
+
+    /**
+     * @throws TelegramApiException
+     */
+    public function sendMessageWithButtons(int|string $chatId, string $message, $keyboard, int $messageId = null): void
     {
         $response = Http::post("{$this->url}/sendMessage", [
             'chat_id' => $chatId,
@@ -34,7 +43,9 @@ class TelegramMessageService
             'parse_mode' => 'HTML',
         ]);
 
-        return $response->successful();
+        if (!$response->successful()) {
+            throw new TelegramApiException('Ошибка отправки сообщения с кнопками: ' . $response->body());
+        }
     }
 
     public function editMessage(int|string $chatId, int $messageId, string $message, ?array $keyboard = null): bool
@@ -76,14 +87,19 @@ class TelegramMessageService
         return $response->successful();
     }
 
-    public function deleteMessage(int|string $chatId, int $messageId): bool
+    /**
+     * @throws TelegramApiException
+     */
+    public function deleteMessage(int|string $chatId, int $messageId): void
     {
         $response = Http::post($this->url . "/deleteMessage", [
             'chat_id' => $chatId,
             'message_id' => $messageId,
         ]);
 
-        return $response->successful();
+        if (!$response->successful()) {
+            throw new TelegramApiException('Ошибка удаления сообщения: ' . $response->body());
+        }
     }
 
     public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): bool
