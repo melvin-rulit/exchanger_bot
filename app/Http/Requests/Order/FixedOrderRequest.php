@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Order;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateOrderMessageRequest extends FormRequest
+class FixedOrderRequest extends BaseRequest
 {
     /**
      * Определяет, авторизован ли пользователь на выполнение запроса.
@@ -17,6 +17,18 @@ class CreateOrderMessageRequest extends FormRequest
     }
 
     /**
+     * Laravel будет валидировать и данные из маршрута.
+     *
+     * @return array<string, string>
+     */
+    public function validationData(): array
+    {
+        return array_merge($this->all(), [
+            'orderId' => $this->route('orderId'),
+        ]);
+    }
+
+    /**
      * Правила валидации для запроса.
      *
      * @return array<string, mixed>
@@ -24,7 +36,7 @@ class CreateOrderMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message' => 'required',
+            'orderId' => 'required|integer',
         ];
     }
 
@@ -36,18 +48,22 @@ class CreateOrderMessageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'message.required' => 'Пожалуйста, введите сообщение.'
+            'orderId.required' => 'orderId обязательный параметр',
+            'orderId.integer' => 'orderId должен быть целым числом',
         ];
     }
 
     /**
      * Чистое получение свойств.
-     *
-     * @return <string, string>
      */
-    public function getMessage(): string
+    public function getOrderId(): int
     {
-        return $this->input('message');
+        return (int) $this->input('selectedOrder.id');
+    }
+
+    public function getStatus(): string
+    {
+        return $this->input('selectedOrder.status');
     }
     protected function failedValidation(Validator $validator)
     {

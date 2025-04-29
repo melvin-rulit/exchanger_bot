@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Order;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateOrderMessageRequest extends FormRequest
+class UpdateClientNameRequest extends BaseRequest
 {
     /**
      * Определяет, авторизован ли пользователь на выполнение запроса.
@@ -24,7 +24,7 @@ class CreateOrderMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message' => 'required',
+            'first_name' => 'required|string|max:25',
         ];
     }
 
@@ -36,19 +36,31 @@ class CreateOrderMessageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'message.required' => 'Пожалуйста, введите сообщение.'
+            'first_name.required' => 'Пожалуйста, введите имя клиента.',
+            'first_name.string' => 'Имя клиента должно быть строкой.',
+            'first_name.max' => 'Имя клиента не должно превышать 25 символов.',
         ];
     }
 
     /**
      * Чистое получение свойств.
-     *
-     * @return <string, string>
      */
-    public function getMessage(): string
+    public function getClientName(): string
     {
-        return $this->input('message');
+        return $this->input('first_name');
     }
+
+//    /**
+//     * Атрибуты для человеко читаемых ошибок если нет     public function messages(): array.
+//     *
+//     * @return array<string, string>
+//     */
+//    public function attributes(): array
+//    {
+//        return [
+//            'first_name' => 'Имя клиента',
+//        ];
+//    }
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
