@@ -1,12 +1,10 @@
 <?php
 
 if (!function_exists('ensure_string')) {
-    function ensure_string(string $key): string
+    function ensure_string(mixed $value): string
     {
-        $value = config($key);
-
         if (!is_string($value)) {
-            throw new \UnexpectedValueException("'{$key}' must return string.");
+            throw new \UnexpectedValueException("'{$value}' must return string.");
         }
 
         return $value;

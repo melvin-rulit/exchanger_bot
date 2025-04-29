@@ -8,8 +8,8 @@ if (!function_exists('setAppLanguage')) {
 }
 
 if (!function_exists('getAppLanguage')) {
-    function getAppLanguage($language): void
+    function getAppLanguage(): string
     {
-        Log::alert(app()->getLocale());
+        return app()->getLocale();
     }
 }
