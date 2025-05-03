@@ -9,6 +9,6 @@ enum MenuLevelStatus:string
     case Consultant = 'consultant_input';
     case Amount = 'amount_input';
     case Currency = 'currency_input';
-
+    case Requisite = 'requisite_input';
     case Screenshot = 'send_screenshot';
 }
