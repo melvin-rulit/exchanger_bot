@@ -12,13 +12,18 @@ final class SuccessResponse extends JsonResponse
      */
     protected string $message;
 
-    public function __construct(string $message = '', string $dataKey = 'data', array $data = null, int $status = 200)
+    public function __construct(string $message = '', ?string $dataKey = 'data', array $data = null, int $status = 200)
     {
-        parent::__construct([
-                'success' => true,
-                'error' => null,
-                'message' => $message,
-                $dataKey => $data,
-            ], $status);
+        $response = [
+            'success' => true,
+            'error' => null,
+            'message' => $message,
+        ];
+
+        if ($dataKey && $data !== null) {
+            $response[$dataKey] = $data;
+        }
+
+        parent::__construct($response, $status);
     }
 }
