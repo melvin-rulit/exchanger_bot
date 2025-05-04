@@ -10,5 +10,6 @@ return [
     'enter_the_amount_screenshot' => 'And to complete attach the screenshot of payment',
     'consultation' => 'Ask a question to our employee',
     'invalid_amount' => 'Please enter a valid amount (only numbers).',
+    'wait_requisite' => 'Wait for you will send requisite',
     'get_language' => 'Select the language',
 ];

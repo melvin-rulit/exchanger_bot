@@ -10,5 +10,6 @@ return [
     'enter_the_amount_screenshot' => 'И для завершения прикрепите скриншот оплаты',
     'consultation' => 'Задайте вопрос нашему сотруднику',
 //    'invalid_amount' => 'Please enter a valid amount (only numbers).',
+    'wait_requisite' => 'Подождите, мы отправим вам реквизит',
     'get_language' => 'Выберите язык',
 ];
