@@ -115,7 +115,7 @@ export default {
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
-    max-width: 400px;
+    max-width: 600px;
     padding: 15px;
     border-radius: 6px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
