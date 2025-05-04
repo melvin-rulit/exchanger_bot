@@ -14,13 +14,13 @@ class KeyboardFactory
                 //    ['text' => __('buttons.transfer')],
                 //],
                 [
-                    ['text' => __('buttons.get_requisite')],
+                    ['text' => '💳 ' . __('buttons.get_requisite')],
                 ],
                 [
                     ['text' => '👩‍💻 ' . __('buttons.consultation')],
                 ],
                 [
-                    ['text' => __('buttons.change_language')],
+                    ['text' => '🌐 ' . __('buttons.change_language')],
                 ],
             ],
             'resize_keyboard' => true,
@@ -62,8 +62,20 @@ class KeyboardFactory
     {
         return [
             [
-                'text' => __('buttons.back'), 'callback_data' => $callbackData
+                'text' => '◀️ '. __('buttons.back'), 'callback_data' => $callbackData
             ]
+        ];
+    }
+    public static function toBackMenu(): array
+    {
+        return [
+            'keyboard' => [
+                [
+                    ['text' => __('buttons.back_menu')],
+                ],
+            ],
+            'resize_keyboard' => true,
+            'one_time_keyboard' => true,
         ];
     }
     public static function toCancel(): array
@@ -76,6 +88,14 @@ class KeyboardFactory
             ],
             'resize_keyboard' => true,
             'one_time_keyboard' => true,
+        ];
+    }
+    public static function toConsultation($callbackData): array
+    {
+        return [
+            [
+                'text' => '❓ '. __('buttons.consultation_question'), 'callback_data' => $callbackData
+            ]
         ];
     }
 }
