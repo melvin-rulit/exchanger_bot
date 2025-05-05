@@ -3,7 +3,7 @@
 namespace App\Services\Web;
 
 use App\Services\ClientService\ClientsService;
-use App\Services\RedisSessionService;
+use App\Services\RedisService\RedisSessionService;
 use App\Services\TelegramBotService\TelegramMessageService;
 
 abstract class BaseWebService
