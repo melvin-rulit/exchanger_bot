@@ -20,5 +20,6 @@ enum TelegramCallbackAction: string
 
     // Go To
     case ToMain           = 'to_main';
+    case Cancel           = 'cancel';
     case ToConsultation   = 'to_consultation_';
 }
