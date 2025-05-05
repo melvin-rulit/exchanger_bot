@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Client;
+use App\Services\RedisService\RedisSessionService;
 
 abstract class BaseService
 {
