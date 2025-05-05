@@ -20,6 +20,7 @@ class OrderMessagesResource extends BaseTypedResource
             'id' => $model->id,
             'message' => $model->message,
             'sender_type' => $model->sender_type,
+            'image_url'    => $model->getImageUrl(),
             'created_at' => $model->created_at,
             ];
     }
