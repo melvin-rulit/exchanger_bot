@@ -78,17 +78,24 @@ class KeyboardFactory
             'one_time_keyboard' => true,
         ];
     }
-    public static function toCancel(): array
+    public static function toCancel(bool $inlineType = false): array
     {
-        return [
-            'keyboard' => [
+        if ($inlineType) {
+            return [
                 [
-                    ['text' => __('buttons.cancel')],
+                    'text' => '❌ '. __('buttons.cancel'), 'callback_data' => TelegramCallbackAction::Cancel->value
+                ]
+            ];
+        }
+            return [
+                'keyboard' => [
+                    [
+                        ['text' => __('buttons.cancel')],
+                    ],
                 ],
-            ],
-            'resize_keyboard' => true,
-            'one_time_keyboard' => true,
-        ];
+                'resize_keyboard' => true,
+                'one_time_keyboard' => true,
+            ];
     }
     public static function toConsultation($callbackData): array
     {
