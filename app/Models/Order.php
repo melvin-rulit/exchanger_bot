@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+/**
+ * @mixin IdeHelperOrder
+ */
 class Order extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
@@ -32,6 +35,7 @@ class Order extends Model implements HasMedia
     {
         return $this->belongsTo(Client::class);
     }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -40,5 +44,10 @@ class Order extends Model implements HasMedia
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+    public function getImageUrl(): ?string
+    {
+        $media = $this->getFirstMedia('amount_check');
+        return $media ? $media->getUrl() : null;
     }
 }

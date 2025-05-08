@@ -3,18 +3,47 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Message extends Model
+/**
+ * @mixin IdeHelperMessage
+ */
+class Message extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
-    protected $fillable = ['chat_id', 'order_id', 'user_id', 'sender_type', 'message'];
+    protected $fillable = ['chat_id', 'order_id', 'user_id', 'client_id', 'sender_type', 'message', 'message_group', 'created_at'];
 
-    public static function getTodayMessagesOnlyForConsultationByGroup()
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('chat_screenshot');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('screenshot')
+            ->width(368)
+            ->height(232);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public static function getTodayMessagesOnlyForConsultationByGroup(): Collection
     {
         return self::whereIn('id', function ($query) {
             $query->select(DB::raw('MAX(id)'))
@@ -28,10 +57,12 @@ class Message extends Model
             ->get();
     }
 
-    public static function getTodayMessagesOnlyForConsultation($chat_id)
+    public static function getTodayMessagesOnlyForConsultationChat($chat_id): Collection
     {
         return self::where('chat_id', $chat_id)
+            ->whereNull('order_id')
             ->whereDate('created_at', Carbon::today())
+            ->with('media')
             ->get();
     }
 
@@ -40,5 +71,11 @@ class Message extends Model
         return self::where('id', $message_id)
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
             ->value('chat_id');
+    }
+
+    public function getImageUrl(): ?string
+    {
+        $media = $this->getFirstMedia('chat_screenshot');
+        return $media ? $media->getUrl() : null;
     }
 }
