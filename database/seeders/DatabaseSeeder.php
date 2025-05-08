@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Database\Seeders\Country\CountrySeeder;
+use Database\Seeders\Country\CountryBankSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -11,13 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([
+            CountrySeeder::class,
+            BankSeeder::class,
+            CountryBankSeeder::class,
+        ]);
 
-//        User::factory()->create([
-//            'name' => 'Test User',
-//            'email' => 'test@example.com',
-//        ]);
-        $this->call(CountrySeeder::class);
         $this->call(RolesSeeder::class);
         $this->call(SettingsSeeder::class);
     }
