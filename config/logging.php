@@ -149,6 +149,11 @@ return [
             'path' => storage_path('logs/consultant.log'),
             'level' => 'debug',
         ],
+        'database' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/database.log'),
+            'level' => 'debug',
+        ],
     ],
 
 ];
