@@ -20,7 +20,6 @@ class TemplateMessageResource extends BaseTypedResource
 
         return [
             'id' => $model->id,
-//            'user' => UserResource::make($model->user),
             'title' => $model->title,
             'text' => $model->text,
             'category' => $model->category,
