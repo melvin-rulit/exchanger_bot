@@ -4,7 +4,7 @@ namespace App\Exceptions;
 use Exception;
 use Throwable;
 use App\Telegram\Traits\SendErrorsToTelegramTrait;
-use App\Exceptions\AppConfig\ConfigNotFoundException;
+use App\Exceptions\Helpers\InvalidStringValueException;
 
 abstract class BaseReportableException extends Exception
 {
@@ -19,7 +19,7 @@ abstract class BaseReportableException extends Exception
     }
 
     /**
-     * @throws ConfigNotFoundException
+     * @throws InvalidStringValueException
      */
     public function report(): void
     {
