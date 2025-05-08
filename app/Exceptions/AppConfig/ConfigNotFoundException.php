@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Exceptions\Country;
+namespace App\Exceptions\AppConfig;
 
 use Exception;
 use Throwable;
 use App\Telegram\Traits\SendErrorsToTelegramTrait;
-use App\Exceptions\AppConfig\ConfigNotFoundException;
 
-class CountryNotFoundException extends Exception
+class ConfigNotFoundException extends Exception
 {
     use SendErrorsToTelegramTrait;
 
@@ -18,13 +17,8 @@ class CountryNotFoundException extends Exception
         $this->extraData = $extraData;
     }
 
-    /**
-     * @throws ConfigNotFoundException
-     */
     public function report(): void
     {
-        log_error($this->getMessage(), $this->extraData, 'database');
-
-        $this->sendToTelegram($this->getMessage(), $this->extraData);
+        log_error($this->getMessage(), $this->extraData, 'env_config');
     }
 }

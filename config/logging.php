@@ -154,6 +154,11 @@ return [
             'path' => storage_path('logs/database.log'),
             'level' => 'debug',
         ],
+        'env_config' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/env_config.log'),
+            'level' => 'debug',
+        ],
     ],
 
 ];
