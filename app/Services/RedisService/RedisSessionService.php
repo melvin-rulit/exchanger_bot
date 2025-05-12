@@ -4,6 +4,7 @@ namespace App\Services\RedisService;
 
 use App\Enums\Bank\BankField;
 use App\Enums\Amount\AmountField;
+use App\Enums\Wallet\WalletField;
 use App\Enums\Country\CountryField;
 use App\Enums\Requisite\RequisiteField;
 
@@ -103,6 +104,22 @@ class RedisSessionService extends BaseService
     public function forgetRequisiteConsultant(int $chatId): void
     {
         $this->forget(RequisiteField::REQUISITECONSULTANT->value, $chatId);
+    }
+
+    // === WALLET ===
+
+    public function setWalletConsultant(int $chatId, ?int $ttl = null): void
+    {
+        $this->set(WalletField::WALLETCONSULTANT->value, $chatId, true, $ttl);
+    }
+    public function getWalletConsultant(int $chatId): ?bool
+    {
+        $value = $this->get(WalletField::WALLETCONSULTANT->value, $chatId);
+        return $value === null ? null : filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+    public function forgetWalletConsultant(int $chatId): void
+    {
+        $this->forget(WalletField::WALLETCONSULTANT->value, $chatId);
     }
 
 
