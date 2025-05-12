@@ -22,7 +22,16 @@
             :key="index"
             class="flex justify-between items-center border-b py-2 px-3 cursor-pointer hover:bg-gray-100">
             <span>{{ template.text }}</span>
-            <button @click="removeTemplate(template.id)" class="text-red-500 hover:underline">Удалить</button>
+            <span
+              class="flex items-center space-x-1 cursor-pointer"
+              @click="removeTemplate(template.id)"
+              @mouseenter="hoveredTemplateId = template.id"
+              @mouseleave="hoveredTemplateId = null">
+  <Icon :icon="hoveredTemplateId === template.id ? 'fluent-mdl2:remove-from-trash' : 'cil:trash'" width="30" height="30"/>
+  <button class="text-red-500">Удалить</button>
+</span>
+
+
           </li>
         </ul>
       </div>
@@ -59,8 +68,10 @@
 <script>
 import { TemplateService } from '@/services/TemplateMessagesService.js'
 import { handleApiError } from '@/helpers/errors.js'
+import { Icon } from '@iconify/vue'
 
 export default {
+  components: { Icon },
   data() {
     return {
       tabs: ['Личные данные', 'Шаблоны сообщений', 'Настройки уведомлений'],
@@ -69,6 +80,7 @@ export default {
       templates: [],
       alertMessage: '',
       alertType: 'success',
+      hoveredTemplateId: null,
       errors: '',
     };
   },
