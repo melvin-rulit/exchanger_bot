@@ -11,5 +11,6 @@ return [
     'consultation' => 'Задайте вопрос нашему сотруднику',
 //    'invalid_amount' => 'Please enter a valid amount (only numbers).',
     'wait_requisite' => 'Подождите, мы отправим вам реквизит',
+    'wait_wallet' => 'Чек принят и ушел на проверку. Ждем от вас номер кошелька',
     'get_language' => 'Выберите язык',
 ];

@@ -11,5 +11,6 @@ return [
     'consultation' => 'Ask a question to our employee',
     'invalid_amount' => 'Please enter a valid amount (only numbers).',
     'wait_requisite' => 'Wait for you will send requisite',
+    'wait_wallet' => 'The check was accepted and went to check. We are waiting for a wallet number from you',
     'get_language' => 'Select the language',
 ];
