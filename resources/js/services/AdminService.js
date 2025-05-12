@@ -19,9 +19,4 @@ export class AdminService {
         let url = `${this.serverUrl}/admin/user/add`;
         return axios.post(url, user)
     }
-    // static Finances(page)
-    // {
-    //     let url = `${this.serverUrl}/user/profit_stat?page=` + page;
-    //     return axios.get(url)
-    // }
 }
