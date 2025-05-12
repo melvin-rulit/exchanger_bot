@@ -11,4 +11,5 @@ enum MenuLevelStatus:string
     case Currency = 'currency_input';
     case Requisite = 'requisite_input';
     case Screenshot = 'send_screenshot';
+    case Wallet = 'send_wallet';
 }
