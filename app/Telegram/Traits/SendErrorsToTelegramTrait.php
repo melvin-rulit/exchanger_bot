@@ -3,23 +3,20 @@
 namespace App\Telegram\Traits;
 
 use Illuminate\Support\Facades\Http;
-use App\Exceptions\AppConfig\ConfigNotFoundException;
+use App\Exceptions\Helpers\InvalidStringValueException;
 
 trait SendErrorsToTelegramTrait
 {
     /**
-     * @throws ConfigNotFoundException
+     * @throws InvalidStringValueException
      */
     public function sendToTelegram(string $message, ?array $context): void
     {
-        $token = ensure_string(config('telegram.error_notifier_bot.token'));
-        $chatId = ensure_string(config('telegram.error_notifier_bot.chat_id'));
+        $chatId = ensure_string(config('telegram.error_notifier_bot.chat_id'), 'telegram.error_notifier_bot.chat_id');
 
-        if (!$token || !$chatId) {
-           throw new ConfigNotFoundException('Не назначены настройки', 404, null, ['file' => 'SendErrorsToTelegramTrait']);
-        }
-
-        $url = ensure_string(config('telegram.telegram_bot.api_url')) . ensure_string(config('telegram.error_notifier_bot.token')).'/sendMessage';
+        $url = ensure_string(config('telegram.telegram_bot.api_url'), 'telegram.telegram_bot.api_url')
+            . ensure_string(config('telegram.error_notifier_bot.token'), 'telegram.error_notifier_bot.token')
+            . '/sendMessage';
 
         Http::post($url, [
             'chat_id' => $chatId,
