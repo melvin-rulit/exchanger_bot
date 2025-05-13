@@ -1,0 +1,23 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ modelClass }};
+use Illuminate\Http\Request;
+use App\Http\Resources\BaseTypedResource;
+
+/**
+ * @extends BaseTypedResource<{{ modelClass }}>
+ */
+class {{ class }} extends BaseTypedResource
+{
+    public function toArray(Request $request): array
+    {
+       /** @var {{ modelClass }} $model */
+        $model = $this->getResource();
+
+        return [
+            'id' => $model->id,
+        ];
+    }
+}
