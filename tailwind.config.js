@@ -14,11 +14,16 @@ export default {
         extend: {
             animation: {
                 'fade-in': 'fadeIn 0.2s ease-out',
+                'flash': 'flash 1.5s infinite ease-in-out',
             },
             keyframes: {
                 fadeIn: {
                     '0%': { opacity: '0', transform: 'translateY(10px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                flash: {
+                    '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                    '50%': { opacity: '0.3', transform: 'scale(1.1)' },
                 },
             },
             fontFamily: {
