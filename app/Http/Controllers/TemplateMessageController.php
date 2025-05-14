@@ -12,6 +12,7 @@ use App\Exceptions\Templates\TemplatesNotFoundException;
 use App\Http\Requests\Template\NewTemplateMessageRequest;
 use App\Services\Web\TemplateService\TemplateMessageService;
 use App\Http\Requests\Template\DeleteTemplateMessageRequest;
+use App\Http\Requests\Template\UpdateTemplateMessageRequest;
 
 class TemplateMessageController extends Controller
 {
@@ -35,6 +36,16 @@ class TemplateMessageController extends Controller
 
         } catch (TemplateCreateException $e) {
             return new ErrorCreateResponse($e->getMessage());
+        }
+    }
+    public function updateTemplate(UpdateTemplateMessageRequest $request): SuccessResponse|NotFoundResponse
+    {
+        try {
+            $this->templateMessageService->update($request);
+            return new SuccessResponse('Шаблон обновлен');
+
+        } catch (TemplatesNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
         }
     }
 

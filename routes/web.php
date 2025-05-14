@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::group(['prefix' => 'template', 'as' => 'templates.'], function () {
         Route::get('/', [TemplateMessageController::class, 'getTemplates']);
         Route::post('/message/add', [TemplateMessageController::class, 'storeTemplate']);
+        Route::patch('/message/update/{templateId}', [TemplateMessageController::class, 'updateTemplate'])->whereNumber('templateId');
         Route::delete('/message/{template_id}', [TemplateMessageController::class, 'deleteTemplate']);
     });
 

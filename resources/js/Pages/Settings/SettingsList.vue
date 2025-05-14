@@ -16,24 +16,41 @@
       </div>
 
       <div v-else-if="activeTab === 'Шаблоны сообщений'">
-        <ul>
+        <ul v-if="templates.length">
           <li
             v-for="(template, index) in templates"
             :key="index"
             class="flex justify-between items-center border-b py-2 px-3 cursor-pointer hover:bg-gray-100">
-            <span>{{ template.text }}</span>
+            <span v-if="editableTemplateId !== template.id" @click="enableEdit(template)" class="px-4 bg-gray-50 rounded-md shadow-md cursor-pointer">{{ template.text }}</span>
+            <div  v-if="editableTemplateId === template.id" class="flex items-center gap-2">
+              <div class="" >
+                <hollow-dots-spinner
+                  :animation-duration="1000"
+                  :dot-size="15"
+                  :dots-num="1"
+                  color="#4caf50"
+                />
+              </div>
+              <TextInput @enter="updateTemplate(template)" v-model="editableTemplateName" class="h-8 text-sm px-2 py-1" />
+              <button @click.stop="closeTemplateUpdateInput" class="close-btn h-8 w-8 flex items-center justify-center">
+                <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error"/>
+              </button>
+            </div>
+
             <span
+              v-if="editableTemplateId !== template.id"
               class="flex items-center space-x-1 cursor-pointer"
               @click="removeTemplate(template.id)"
               @mouseenter="hoveredTemplateId = template.id"
               @mouseleave="hoveredTemplateId = null">
-  <Icon :icon="hoveredTemplateId === template.id ? 'fluent-mdl2:remove-from-trash' : 'cil:trash'" width="30" height="30"/>
-  <button class="text-red-500">Удалить</button>
-</span>
+              <Icon :icon="hoveredTemplateId === template.id ? 'fluent-mdl2:remove-from-trash' : 'cil:trash'" width="30" height="30"/>
+              <button class="text-red-500">Удалить</button>
+            </span>
 
 
           </li>
         </ul>
+        <div v-else class="no-messages">Нет ни одного шаблона</div>
       </div>
 
       <div v-else-if="activeTab === 'Настройки уведомлений'">
@@ -69,9 +86,12 @@
 import { TemplateService } from '@/services/TemplateMessagesService.js'
 import { handleApiError } from '@/helpers/errors.js'
 import { Icon } from '@iconify/vue'
+import { HollowDotsSpinner } from 'epic-spinners'
+import TextInput from '@/Components/TextInput.vue'
+import { OrdersService } from '@/services/OrdersService.js'
 
 export default {
-  components: { Icon },
+  components: { TextInput, Icon, HollowDotsSpinner },
   data() {
     return {
       tabs: ['Личные данные', 'Шаблоны сообщений', 'Настройки уведомлений'],
@@ -81,6 +101,8 @@ export default {
       alertMessage: '',
       alertType: 'success',
       hoveredTemplateId: null,
+      editableTemplateId: null,
+      editableTemplateName: '',
       errors: '',
     };
   },
@@ -96,6 +118,18 @@ export default {
         this.templates = [];
         if (error.response && error.response.data) {this.errors = handleApiError(error)}
       }
+    },
+    enableEdit(template) {
+      this.editableTemplateName = template.text
+      this.editableTemplateId = template.id
+    },
+    closeTemplateUpdateInput() {
+      this.editableTemplateId = null
+    },
+    async updateTemplate(template) {
+      await TemplateService.updateTemplateMessage(template.id, this.editableTemplateName)
+      this.editableTemplateId = null
+      await this.getTemplatesMessages()
     },
     async addTemplate() {
       if (!this.newTemplate.trim()) {
@@ -144,7 +178,20 @@ input:focus {
   box-shadow: none;
   border-color: inherit;
 }
-
+.icon-error {
+  color: #f44336;
+}
+.setting-row label {
+  flex: 1;
+  font-weight: 500;
+}
+.no-messages {
+  text-align: center;
+  padding: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #888;
+}
 .settings-wrapper {
   width: 100%;
 }
@@ -163,11 +210,6 @@ input:focus {
   justify-content: space-between;
   margin-bottom: 2rem;
   flex-wrap: wrap;
-}
-
-.setting-row label {
-  flex: 1;
-  font-weight: 500;
 }
 
 .setting-input {

@@ -2,13 +2,13 @@
 
 namespace App\Services\Web\TemplateService;
 
-use App\Exceptions\Templates\TemplateCreateException;
 use App\Models\TemplateMessage;
 use App\Services\Web\BaseWebService;
+use Illuminate\Database\Eloquent\Model;
 use App\Exceptions\AuthorizationException;
+use App\Exceptions\Templates\TemplateCreateException;
 use App\Exceptions\Templates\TemplatesNotFoundException;
 use App\Http\Resources\Template\TemplateMessageResource;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TemplateMessageService extends BaseWebService
@@ -41,6 +41,22 @@ class TemplateMessageService extends BaseWebService
         }
 
         return new TemplateMessageResource($newTemplate);
+    }
+
+    /**
+     * @throws TemplatesNotFoundException
+     */
+    public function update($request): void
+    {
+        $template = TemplateMessage::find($request->getIdFromRoute('templateId'));
+
+        if (!$template) {
+            throw new TemplatesNotFoundException('Шаблон не найден или доступ запрещён.');
+        }
+
+        $template->update([
+            'text' => $request->getTemplate(),
+        ]);
     }
 
     /**

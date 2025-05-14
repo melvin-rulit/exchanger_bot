@@ -11,6 +11,10 @@ export class TemplateService {
         let url = `${this.serverUrl}/template/message/add`;
         return axios.post(url, { template })
     }
+    static updateTemplateMessage(templateId, templateMessage) {
+        let url = `${this.serverUrl}/template/message/update/${templateId}`
+        return axios.patch(url, { templateMessage })
+    }
     static delete(templateId) {
         let url = `${this.serverUrl}/template/message/${templateId}`;
         return axios.delete(url, templateId)
