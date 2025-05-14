@@ -6,8 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 abstract class BaseRequest extends FormRequest
 {
-    public function getOrderIdFromRoute(string $key = 'orderId'): int
+    public function getIdFromRoute(string $key): int
     {
-        return (int) $this->route($key);
+        $value = $this->route($key);
+
+        if (!is_numeric($value)) {
+            throw new \InvalidArgumentException("Параметр из маршрута '{$key}' отсутствует или не является действительным числовым значением.");
+        }
+        return (int) $value;
     }
+
 }
