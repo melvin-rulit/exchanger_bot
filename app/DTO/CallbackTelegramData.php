@@ -2,10 +2,12 @@
 
 namespace App\DTO;
 
+
 class CallbackTelegramData extends BaseTelegramDTO
 {
     public function __construct(
         public int|string $text,
+        public array $photos,
         public int $chatId,
         public int $clientBotId,
         public string $firsName,
@@ -22,6 +24,7 @@ class CallbackTelegramData extends BaseTelegramDTO
 
         return new self(
             text: $message['text'] ?? '',
+            photos: $message['photo'] ?? [],
             chatId: $message['chat']['id'] ?? 0,
             clientBotId: $from['id'] ?? 0,
             firsName: $from['first_name'] ?? '',
@@ -30,5 +33,10 @@ class CallbackTelegramData extends BaseTelegramDTO
             messageId: $message['message_id'] ?? 0,
             callbackData: $data['data'] ?? null
         );
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
