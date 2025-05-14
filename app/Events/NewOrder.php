@@ -2,14 +2,12 @@
 
 namespace App\Events;
 
+use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 class NewOrder implements ShouldBroadcast
 {
@@ -19,11 +17,13 @@ class NewOrder implements ShouldBroadcast
      * Create a new event instance.
      */
 
-    public $order;
+    public Order $order;
+    public ?string $eventType;
 
-    public function __construct($order)
+    public function __construct(Order $order, $eventType = null)
     {
         $this->order = $order;
+        $this->eventType = $eventType ?? 'default';
     }
 
 
@@ -38,9 +38,20 @@ class NewOrder implements ShouldBroadcast
             new Channel('new_order'),
         ];
     }
+    public function broadcastWith(): array
+    {
+        return [
+            'order' => [
+                'id' => $this->order->id,
+                'status' => $this->order->status,
+                'is_message' => $this->order->is_message,
+            ],
+            'type' => $this->eventType ?? 'default',
+        ];
+    }
     public function broadcastAs(): string
     {
-        return 'order-new';
+        return 'new_order';
     }
     public function shouldBroadcastNow(): bool
     {
