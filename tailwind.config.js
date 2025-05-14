@@ -1,5 +1,6 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
+import plugin from 'tailwindcss/plugin'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -32,5 +33,22 @@ export default {
         },
     },
 
-    plugins: [forms],
+    plugins: [
+        plugin(function ({ addUtilities }) {
+            addUtilities({
+                '.icon-success': {
+                    color: '#4caf50',
+                },
+                '.icon-error': {
+                    color: '#f44336',
+                },
+                '.icon-danger': {
+                    color: '#ff9800',
+                },
+                '.icon-info': {
+                    color: '#2196f3',
+                },
+            })
+        }),
+        forms],
 };
