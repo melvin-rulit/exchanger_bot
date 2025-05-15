@@ -2,121 +2,60 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\OrderUpdated;
-use App\Http\Requests\Order\CreateOrderMessageRequest;
-use App\Http\Resources\OrderMessagesResource;
-use App\Models\Client;
-use App\Models\Message;
 use App\Models\Order;
-use App\Models\User;
-use App\Services\ClientService\ClientsService;
-use App\Services\TelegramBotService\TelegramMessageService;
-use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Events\OrderUpdated;
+use Illuminate\Http\JsonResponse;
+use App\Http\Responses\ErrorResponse;
+use App\Http\Responses\SuccessResponse;
+use App\Http\Responses\NotFoundResponse;
+use App\Exceptions\TelegramApiException;
+use App\Services\Web\Order\OrderService;
+use App\Http\Requests\Order\GetOrderRequest;
+use App\Services\ClientService\ClientsService;
+use App\Exceptions\User\UserNotFoundException;
+use App\Http\Requests\Order\CloseOrderRequest;
+use App\Http\Requests\Order\FixedOrderRequest;
+use App\Exceptions\Order\OrderNotFoundException;
+use App\Exceptions\Order\OrdersNotFoundException;
+use App\Exceptions\Client\ClientNotFoundException;
+use App\Http\Resources\Order\OrderMessagesResource;
+use App\Http\Requests\Order\UpdateClientNameRequest;
+use App\Http\Requests\Order\UpdateOrderStatusRequest;
+use App\Exceptions\Order\OrderClientNotFoundException;
+use App\Http\Requests\Order\CreateOrderMessageRequest;
+use App\Http\Requests\Order\SetOrderMessageReadRequest;
+use App\Services\TelegramBotService\TelegramMessageService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+
 
 class OrderController extends Controller
 {
-    protected TelegramMessageService $telegramService;
-    protected ClientsService $clientsService;
+public function __construct(protected TelegramMessageService $telegramService, protected ClientsService $clientsService, protected OrderService $orderService){}
 
-    public function __construct(TelegramMessageService $telegramService, ClientsService $clientsService)
+    public function getOrders(): NotFoundResponse|AnonymousResourceCollection
     {
-        $this->telegramService = $telegramService;
-        $this->clientsService = $clientsService;
-    }
-//    public function getOrders(): JsonResponse
-//    {
-//        $orders = Order::with('user')->get();
-//
-//        $prepare_orders = [];
-//
-//        foreach ($orders as $order) {
-//            $media = $order->getMedia('amount_check');
-//
-//            if ($media->count() > 0) {
-//                $media = $media->first();
-//                $order->media = $media->getUrl('screenshot');
-//            }
-//            $order->user;
-//            $order->client;
-//            $prepare_orders[] = $order;
-//        }
-//
-//        return new JsonResponse([
-//            'orders' => $prepare_orders
-//        ]);
-//    }
+        try {
+            return $this->orderService->getOrders();
 
-//    public function getOrders(): JsonResponse
-//    {
-//        $orders = Order::with(['user', 'client'])->get(); // Загружаем сразу user и client
-//
-//        $prepare_orders = $orders->map(function ($order) {
-//            $media = $order->getMedia('amount_check');
-//
-//            if ($media->count() > 0) {
-//                $media = $media->first();
-//                $order->media = $media->getUrl('screenshot');
-//            }
-//
-//            return $order;
-//        });
-//
-//        // Сортируем так, чтобы "success" был в конце
-//        $sorted_orders = $prepare_orders->sortBy(function ($order) {
-//            return $order->status === 'success' ? 1 : 0;
-//        })->values(); // `values()` сбрасывает ключи массива
-//
-//        return new JsonResponse([
-//            'orders' => $sorted_orders
-//        ]);
-//    }
-
-    public function getOrders(): JsonResponse
-    {
-        $orders = Order::with(['user', 'client'])
-            ->whereDate('created_at', Carbon::today())
-            ->orderByRaw("FIELD(status, 'new', 'active', 'success')")
-            ->get();
-
-        $prepare_orders = $orders->map(function ($order) {
-            $media = $order->getMedia('amount_check');
-
-            if ($media->count() > 0) {
-                $media = $media->first();
-                $order->media = $media->getUrl('screenshot');
-            }
-
-            return $order;
-        });
-
-        return new JsonResponse([
-            'orders' => $prepare_orders
-        ]);
-    }
-    public function getOrder(int $id, Request $request): JsonResponse|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
-    {
-      $order = order::with('messages')->where('id', $id)->first();
-
-        if ($order) {
-            $order->is_message = false;
-            $order->save();
-
-            return OrderMessagesResource::collection($order->messages);
+        } catch (OrdersNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
         }
+    }
+    public function getOrder(GetOrderRequest $request): JsonResponse|AnonymousResourceCollection
+    {
+        try {
+            $order = $this->orderService->getOrder($request);
+            return OrderMessagesResource::collection($order->messages);
 
-        return response()->json(['error' => 'Messages not found'], 404);
+        } catch (OrderNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
     }
     public function setOrderMessage($id): JsonResponse
     {
         $order = Order::find($id);
 
-        // Изменяем значение поля is_message
         $order->is_message = !$order->is_message;
         $order->save();
 
@@ -124,135 +63,82 @@ class OrderController extends Controller
 
         return response()->json($order);
     }
-    public function setMessagesOrderRead($id): void
+
+    public function setMessagesOrderRead(SetOrderMessageReadRequest $request): SuccessResponse|NotFoundResponse
     {
-        $order = Order::find($id);
+        try {
+            $this->orderService->setMessagesRead($request);
+            return new SuccessResponse('Сообщение отмечено прочитанным');
 
-        $order->is_message = false;
-        $order->save();
-    }
-
-    public function storeMessage(CreateOrderMessageRequest  $request, $orderId)
-    {
-        $order = Order::find($orderId);
-
-        $created_message = Message::create([
-            'chat_id' => $order->chat_id,
-            'order_id' => $orderId,
-            'user_id' => auth()->user()->id,
-            'sender_type' => 'user',
-            'message' => $request->getMessage(),
-        ]);
-
-        $this->telegramService->sendMessage($order->chat_id, $request->getMessage());
-
-        return response()->json($created_message);
-    }
-
-    public function updateOrder(Request $request): JsonResponse
-    {
-        $order = Order::findOrFail($request->selectedOrder['id']);
-        $user = User::findOrFail($request->selectedUser['id']);
-
-        $order->user()->associate($user);
-        $order->status = 'active';
-        $order->save();
-
-        return response()->json(['message' => 'Заказ обновлён', 'order' => $order]);
-    }
-
-    public function closeOrder(Request $request): JsonResponse
-    {
-        $client = $request->selectedOrder['client'];
-        $language = $this->clientsService->getClientLanguage($client['bot_id']);
-        $status = '';
-
-        switch ($language) {
-            case 'ru':
-                $status = 'На главную';
-                break;
-            case 'en':
-                $status = 'to_main';
-                break;
+        } catch (OrderNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
         }
-
-        Client::where('id', $client['id'])
-            ->update(['status' => $status]);
-
-        $order = Order::findOrFail($request->selectedOrder['id']);
-        $user = User::findOrFail($request->selectedUser['id']);
-
-        $this->sendWebhookUpdate($order->chat_id, 'start');
-
-        $order->status = 'success';
-        $order->save();
-
-        $order->setRelation('user', $user);
-
-        return response()->json(['message' => 'Заказ завершен', 'order' => $order]);
-    }
-    public function fixOrder(int $orderId): JsonResponse
-    {
-        $order = Order::find($orderId);
-
-        if (!$order) {
-            return response()->json(['message' => 'Заказ не найден'], 404);
-        }
-
-        $order->update(['is_pinned' => !$order->is_pinned]);
-
-        return response()->json([
-            'message' => $order->is_pinned ? 'Заказ закреплен' : 'Закрепление снято',
-            'order' => $order
-        ]);
     }
 
-    public function sendWebhookUpdate($chatId, $command): string
+    public function storeMessage(CreateOrderMessageRequest $request): NotFoundResponse|ErrorResponse|SuccessResponse
     {
-        $webhookUrl= '';
-        Artisan::call('telegram:get-webhook-info');
+        try {
+            $message = $this->orderService->storeMessage($request);
+            return new SuccessResponse('Сообщение сохранено', 'order', ['message' => new OrderMessagesResource($message)]);
 
-        // Получаем вывод команды
-        $output = Artisan::output();
-
-        // Парсим JSON из строки (удаляем лишний текст)
-        preg_match('/\{.*\}/s', $output, $matches);
-        $jsonData = $matches[0] ?? null;
-
-        if ($jsonData) {
-            $webhookInfo = json_decode($jsonData, true);
-
-            if (isset($webhookInfo['result']['url']) && !empty($webhookInfo['result']['url'])) {
-                $webhookUrl = $webhookInfo['result']['url'];
-            }
+        } catch (TelegramApiException $e) {
+            return new ErrorResponse($e->getMessage());
+        } catch (OrderNotFoundException|OrderClientNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
         }
-        $fakeUpdate = [
-            "update_id" => rand(100000000, 999999999),
-            "message" => [
-                "message_id" => rand(1, 10000),
-                "from" => [
-                    "id" => $chatId,
-                    "is_bot" => false,
-                    "first_name" => "User",
-                    "username" => "test_user"
-                ],
-                "chat" => [
-                    "id" => $chatId,
-                    "first_name" => "User",
-                    "username" => "test_user",
-                    "type" => "private"
-                ],
-                "date" => time(),
-                "text" => "/$command"
-            ]
-        ];
+    }
 
-        $response = Http::post($webhookUrl, $fakeUpdate);
+    public function attachUserToOrder(Request $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $user = $this->orderService->attachUserToOrder($request);
+            return new SuccessResponse('Менеджер закреплен', 'assigned_user', ['user_id' => $user->id]);
 
-        if ($response->successful()) {
-            return "✅ Команда '/$command' отправлена через Webhook!";
-        } else {
-            return "❌ Ошибка: " . $response->body();
+        } catch (UserNotFoundException|OrderNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+
+    public function updateStatus(UpdateOrderStatusRequest $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $status = $this->orderService->changeStatus($request);
+            return new SuccessResponse('Статус обновлен', 'order', ['status' => $status]);
+
+        } catch (OrderNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+
+    public function closeOrder(CloseOrderRequest $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $order = $this->orderService->closeOrder($request);
+            return new SuccessResponse('Заказ завершен.', 'update', ['order' => $order]);
+
+        } catch (OrderNotFoundException|UserNotFoundException|ClientNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+
+    public function updateClientName(UpdateClientNameRequest $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $this->orderService->updateClientName($request);
+            return new SuccessResponse('Имя клиента успешно обновлено.');
+
+        } catch (OrderClientNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+    public function fixOrder(FixedOrderRequest $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $order = $this->orderService->fixOrder($request);
+            return new SuccessResponse($order->is_pinned ? 'Заказ закреплен' : 'Закрепление снято', 'order', ['fixed' => $order]);
+
+        } catch (OrderNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
         }
     }
 
