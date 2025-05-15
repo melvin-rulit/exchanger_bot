@@ -16,6 +16,7 @@ export default {
             animation: {
                 'fade-in': 'fadeIn 0.2s ease-out',
                 'flash': 'flash 1.5s infinite ease-in-out',
+                'fade-bounce': 'fadeBounce 1.2s infinite ease-in-out',
             },
             keyframes: {
                 fadeIn: {
@@ -25,6 +26,10 @@ export default {
                 flash: {
                     '0%, 100%': { opacity: '1', transform: 'scale(1)' },
                     '50%': { opacity: '0.3', transform: 'scale(1.1)' },
+                },
+                fadeBounce: {
+                    '0%, 100%': { opacity: '1' },
+                    '50%': { opacity: '0' },
                 },
             },
             fontFamily: {
