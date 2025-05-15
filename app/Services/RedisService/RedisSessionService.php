@@ -55,7 +55,7 @@ class RedisSessionService extends BaseService
     }
     public function forgetCountryConsultant(int $chatId): void
     {
-        $this->forget(AmountField::AmountConsultant->value, $chatId);
+        $this->forget(CountryField::COUNTRYCONSULTANT->value, $chatId);
     }
 
     // === BANK ===
