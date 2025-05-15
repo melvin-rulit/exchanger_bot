@@ -6,6 +6,7 @@ use App\Models\Message;
 use Illuminate\Http\Request;
 use App\Http\Resources\User\UserResource;
 use App\Http\Resources\BaseTypedResource;
+use App\Http\Resources\Client\ClientResource;
 
 class ChatMessageResource extends BaseTypedResource
 {
@@ -26,6 +27,7 @@ class ChatMessageResource extends BaseTypedResource
             'sender_type'  => $model->sender_type,
             'image_url'    => $model->getImageUrl(),
             'created_at'   => $model->created_at,
+            'client'       => new ClientResource($model->client),
         ];
     }
 }
