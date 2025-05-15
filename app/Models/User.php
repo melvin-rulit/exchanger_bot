@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Observers\UserObserver;
 use Laravel\Sanctum\HasApiTokens;
 use Database\Factories\UserFactory;
 use Spatie\Permission\Traits\HasRoles;
@@ -9,6 +10,9 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+#[ObservedBy([UserObserver::class])]
 
 /**
  * @mixin IdeHelperUser
