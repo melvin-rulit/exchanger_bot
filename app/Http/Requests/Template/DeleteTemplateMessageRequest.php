@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Order;
+namespace App\Http\Requests\Template;
 
 use App\Http\Requests\BaseRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateOrderMessageRequest extends BaseRequest
+class DeleteTemplateMessageRequest extends BaseRequest
 {
     /**
      * Определяет, авторизован ли пользователь на выполнение запроса.
@@ -17,6 +17,18 @@ class CreateOrderMessageRequest extends BaseRequest
     }
 
     /**
+     * Laravel будет валидировать и данные из маршрута.
+     *
+     * @return array<string, string>
+     */
+    public function validationData(): array
+    {
+        return array_merge($this->all(), [
+            'template_id' => $this->route('template_id'),
+        ]);
+    }
+
+    /**
      * Правила валидации для запроса.
      *
      * @return array<string, mixed>
@@ -24,8 +36,7 @@ class CreateOrderMessageRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'message' => 'required',
-            'isRequisite' => 'required|boolean',
+            'template_id' => 'required|integer',
         ];
     }
 
@@ -37,25 +48,19 @@ class CreateOrderMessageRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'message.required' => 'Пожалуйста, введите сообщение.',
-            'isRequisite.required' => 'Тип сообщения должен отправляться.',
-            'isRequisite.boolean' => 'Тип сообщения должен быть bool.'
+            'template_id.required' => 'ID шаблона обязателен.',
+            'template_id.integer' => 'ID шаблона должен быть числом.',
         ];
     }
 
     /**
      * Чистое получение свойств.
-     *
-     * @return <string, string>
      */
-    public function getMessage(): string
+    public function getTemplateId(): string
     {
-        return $this->input('message');
+        return (string) $this->route('template_id');
     }
-    public function getIsRequisite(): string
-    {
-        return $this->input('isRequisite');
-    }
+
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([

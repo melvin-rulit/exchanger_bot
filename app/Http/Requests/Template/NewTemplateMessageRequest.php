@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Order;
+namespace App\Http\Requests\Template;
 
 use App\Http\Requests\BaseRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateOrderMessageRequest extends BaseRequest
+class NewTemplateMessageRequest extends BaseRequest
 {
     /**
      * Определяет, авторизован ли пользователь на выполнение запроса.
@@ -24,8 +24,7 @@ class CreateOrderMessageRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'message' => 'required',
-            'isRequisite' => 'required|boolean',
+            'template' => 'required',
         ];
     }
 
@@ -37,25 +36,18 @@ class CreateOrderMessageRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'message.required' => 'Пожалуйста, введите сообщение.',
-            'isRequisite.required' => 'Тип сообщения должен отправляться.',
-            'isRequisite.boolean' => 'Тип сообщения должен быть bool.'
+            'template.required' => 'Название шаблона обязателен.',
         ];
     }
 
     /**
      * Чистое получение свойств.
-     *
-     * @return <string, string>
      */
-    public function getMessage(): string
+    public function getTemplate(): string
     {
-        return $this->input('message');
+        return (string) $this->input('template');
     }
-    public function getIsRequisite(): string
-    {
-        return $this->input('isRequisite');
-    }
+
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
