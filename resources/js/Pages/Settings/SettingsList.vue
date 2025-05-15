@@ -21,7 +21,7 @@
             v-for="(template, index) in templates"
             :key="index"
             class="flex justify-between items-center border-b py-2 px-3 cursor-pointer hover:bg-gray-100">
-            <span v-if="editableTemplateId !== template.id" @click="enableEdit(template)" class="px-4 bg-gray-50 rounded-md shadow-md cursor-pointer">{{ template.text }}</span>
+            <span v-if="editableTemplateId !== template.id" @click="enableEdit(template)" class="px-4 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer">{{ template.text }}</span>
             <div  v-if="editableTemplateId === template.id" class="flex items-center gap-2">
               <div class="" >
                 <hollow-dots-spinner
@@ -31,7 +31,7 @@
                   color="#4caf50"
                 />
               </div>
-              <TextInput @enter="updateTemplate(template)" v-model="editableTemplateName" class="h-8 text-sm px-2 py-1" />
+              <TextInput @enter="updateTemplate(template)" v-model="editableTemplateName" class="h-8 text-sm px-2 py-1 text-gray-800" width-class="w-[1680px]"/>
               <button @click.stop="closeTemplateUpdateInput" class="close-btn h-8 w-8 flex items-center justify-center">
                 <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error"/>
               </button>
@@ -39,11 +39,11 @@
 
             <span
               v-if="editableTemplateId !== template.id"
-              class="flex items-center space-x-1 cursor-pointer"
+              class="flex items-center space-x-1 cursor-pointer text-gray-800"
               @click="removeTemplate(template.id)"
               @mouseenter="hoveredTemplateId = template.id"
               @mouseleave="hoveredTemplateId = null">
-              <Icon :icon="hoveredTemplateId === template.id ? 'fluent-mdl2:remove-from-trash' : 'cil:trash'" width="30" height="30"/>
+              <Icon :icon="hoveredTemplateId === template.id ? 'fluent-mdl2:remove-from-trash' : 'cil:trash'" width="25" height="25"/>
               <button class="text-red-500">Удалить</button>
             </span>
 
