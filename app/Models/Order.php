@@ -20,7 +20,7 @@ class Order extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = ['chat_id', 'client_id', 'user_id', 'amount', 'currency_name', 'status'];
+    protected $fillable = ['chat_id', 'client_id', 'user_id', 'amount', 'currency_name', 'status', 'is_requisite'];
 
     public function registerMediaCollections(): void
     {
@@ -48,9 +48,17 @@ class Order extends Model implements HasMedia
     {
         return $this->hasMany(Message::class);
     }
+
     public function getImageUrl(): ?string
     {
         $media = $this->getFirstMedia('amount_check');
         return $media ? $media->getUrl() : null;
+    }
+
+    public function setIsRequisite(): void
+    {
+        self::update([
+            'is_requisite' => true
+        ]);
     }
 }
