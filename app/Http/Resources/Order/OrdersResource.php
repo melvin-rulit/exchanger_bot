@@ -27,6 +27,7 @@ class OrdersResource extends BaseTypedResource
             'status' => $model->status,
             'is_message' => $model->is_message,
             'is_pinned' => $model->is_pinned,
+            'is_requisite' => $model->is_requisite,
             'image_url'    => $model->getImageUrl(),
             'created_at' => $model->created_at,
             ];
