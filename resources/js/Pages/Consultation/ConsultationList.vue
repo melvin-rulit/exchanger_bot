@@ -3,7 +3,7 @@
       <div class="table-container">
 
         <table class="w-full whitespace-nowrap">
-            <thead class="head_table">
+            <thead v-if="messages.length" class="head_table text-gray-800">
             <tr tabindex="0" class="focus:outline-none h-10 rounded">
                 <td>
                   <div class="flex pl-6">
@@ -20,23 +20,38 @@
                   <p class="font-semibold mr-2"></p>
                 </div>
               </td>
+              <td>
+                <div class="flex">
+                  <p class="font-semibold pl-2">Клиент</p>
+                </div>
+              </td>
             </tr>
             </thead>
+
             <tbody v-if="messages.length">
-            <tr v-for="message of messages" tabindex="0" @click="showModalShowChat(message.id)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
+
+            <tr v-for="message of messages" tabindex="0" @click="showModalShowChat(message.id, message.client)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
                 <td class="pl-4">
-                    <div class="flex items-center">
-                        <Icon icon="wpf:message-outline" width="26" height="26" :class="{'flashing-icon': !message.is_message}"/>
+                    <div class="flex items-center text-gray-800">
+                        <Icon icon="wpf:message-outline" width="26" height="26" :class="{'animate-fade-bounce': !message.is_message}"/>
                     </div>
                 </td>
               <td class="">
                 <div class="flex items-center">
-                  <p class="text-sm leading-none text-gray-600 ml-2">{{ message.message }}</p>
+                  <p v-if="message.messages !== null" class="text-sm leading-none text-gray-600 ml-2">{{ message.messages }}</p>
+                  <img v-else :src="message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
                 </div>
               </td>
               <td class="">
                 <div class="flex items-center">
-                  <p class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColorClass"/> Чат закрыт клиентом</p>
+                  <p v-if="message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColorClass"/> Чат закрыт клиентом</p>
+                </div>
+              </td>
+              <td class="">
+                <div class="flex items-center">
+                  <span class="px-4 bg-gray-50 text-gray-800 rounded-md shadow-md">
+{{ message.client.first_name }}
+</span>
                 </div>
               </td>
             </tr>
@@ -55,6 +70,7 @@
       <ModalShowChat
         :is-active="isModalChatShow"
         :messageId="messageId"
+        :client="client"
         @close="closeModalShowChat"
       />
     </div>
@@ -66,6 +82,7 @@ import { Icon } from '@iconify/vue';
 import ModalShowChat from '@/Pages/Consultation/Chats/Modal/ModalShowChat.vue'
 import { ConsultationService } from '@/services/ConsultationService.js'
 import { OrdersService } from '@/services/OrdersService.js'
+import { useConsultationStore } from '@/stores/consultationStore'
 
 export default {
     components: { Icon, ConsultationService, ModalShowChat},
@@ -73,6 +90,7 @@ export default {
         return {
             messages: '',
             messageId: '',
+            client: '',
             form: {
                 dateFrom: '',
                 dateTo: '',
@@ -93,17 +111,21 @@ export default {
             isModalChatShow: false,
         }
     },
+  setup() {
+    const consultationStore = useConsultationStore()
+    return { consultationStore }
+  },
     mounted() {
       this.getTodayMessages()
       this.checkNewMessagesUpdate()
 
-      // this.notificationAudio = new Audio('/audio/new_sms_consultant.wav');
-      // document.addEventListener('click', () => {
-      //   this.notificationAudio.play().then(() => {
-      //     this.notificationAudio.pause();
-      //     this.notificationAudio.currentTime = 0;
-      //   }).catch(() => {});
-      // }, { once: true });
+      this.notificationAudio = new Audio('/audio/new_sms_consultant.wav');
+      document.addEventListener('click', () => {
+        this.notificationAudio.play().then(() => {
+          this.notificationAudio.pause();
+          this.notificationAudio.currentTime = 0;
+        }).catch(() => {});
+      }, { once: true });
     },
     computed: {
       iconColorClass() {
@@ -125,10 +147,10 @@ export default {
         },
     },
     methods: {
-      getTodayMessages: function () {
-        ConsultationService.getMessages().then(response => {
-          this.messages = response.data.last_message
-        })
+      async getTodayMessages() {
+        const response = await ConsultationService.getMessages()
+        this.messages = response.data
+        this.consultationStore.setMessages(this.messages)
       },
         checkNewMessagesUpdate() {
             const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
@@ -147,12 +169,10 @@ export default {
                 this.getTodayMessages()
             });
         },
-        translateStatus(status) {
-            return this.statusTranslations[status] || status;
-        },
-        showModalShowChat($messageId) {
+        showModalShowChat($messageId, $client) {
             this.isModalChatShow = true;
             this.messageId = $messageId
+            this.client = $client
             this.setMessagesRead()
         },
       setMessagesRead() {
@@ -166,6 +186,7 @@ export default {
     },
 }
 </script>
+
 <style lang="scss">
 .main {
   min-height: 93vh;
@@ -177,7 +198,6 @@ export default {
   overflow-y: auto;
   background-color: white;
 }
-
 .filters_block {
     margin-bottom: 10px;
 
@@ -193,41 +213,11 @@ export default {
     cursor: pointer;
   border-bottom: 1px solid rgba(0, 0, 0, .05);
 }
-/* Цвет иконки в зависимости от типа */
-.icon-success {
-  color: #4caf50;
-}
-
-.icon-error {
-  color: #f44336;
-}
-
-.icon-danger {
-  color: #ff9800;
-}
-
-.icon-info {
-  color: #2196f3;
-}
 .no-messages {
   text-align: center;
   padding: 20px;
   font-size: 16px;
   font-weight: bold;
   color: #888;
-}
-.flashing-icon {
-  animation: flash 1.5s infinite; /* Анимация будет повторяться бесконечно */
-}
-@keyframes flash {
-  0% {
-    opacity: 1; /* Полная видимость */
-  }
-  50% {
-    opacity: 0; /* Иконка пропадает (мигает) */
-  }
-  100% {
-    opacity: 1; /* Возвращается в норму */
-  }
 }
 </style>
