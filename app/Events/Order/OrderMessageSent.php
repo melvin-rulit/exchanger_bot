@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Order;
 
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
@@ -9,23 +9,16 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class OrderUpdated implements ShouldBroadcast
+class OrderMessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    /**
-     * Create a new event instance.
-     */
-
     public Order $order;
-    public ?string $eventType;
 
-    public function __construct(Order $order, $eventType = null)
+    public function __construct(Order $order)
     {
         $this->order = $order;
-        $this->eventType = $eventType ?? 'default';
     }
-
 
     /**
      * Get the channels the event should broadcast on.
@@ -35,21 +28,12 @@ class OrderUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('update_order'),
-        ];
-    }
-    public function broadcastWith(): array
-    {
-        return [
-            'order' => [
-                'id' => $this->order->id
-            ],
-            'type' => $this->eventType ?? 'default',
+            new Channel('send_message'),
         ];
     }
     public function broadcastAs(): string
     {
-        return 'order-updated';
+        return 'send_message';
     }
     public function shouldBroadcastNow(): bool
     {

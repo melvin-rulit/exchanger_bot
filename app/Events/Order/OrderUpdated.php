@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Order;
 
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
@@ -9,7 +9,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class OrderClosed implements ShouldBroadcast
+class OrderUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -35,7 +35,7 @@ class OrderClosed implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('order_closed'),
+            new Channel('update_order'),
         ];
     }
     public function broadcastWith(): array
@@ -49,7 +49,7 @@ class OrderClosed implements ShouldBroadcast
     }
     public function broadcastAs(): string
     {
-        return 'order_closed';
+        return 'order-updated';
     }
     public function shouldBroadcastNow(): bool
     {
