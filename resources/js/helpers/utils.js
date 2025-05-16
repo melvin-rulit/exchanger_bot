@@ -1,3 +1,4 @@
 export const range = (start, end) => {
-    return [...Array(end).keys()].map(el => el + start)
+    if (end < start) return []
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i)
 }
