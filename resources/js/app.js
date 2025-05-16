@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { createPinia } from 'pinia'
+import { useUserStore } from './stores/user';
 
 const appName = import.meta.env.VITE_APP_NAME || '';
 const pinia = createPinia()
@@ -18,11 +19,23 @@ await createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .use(ZiggyVue)
-            .use(pinia)
-            .mount(el);
+        //     return createApp({ render: () => h(App, props) })
+        //         .use(plugin)
+        //         .use(ZiggyVue)
+        //         .use(pinia)
+        //         .mount(el);
+        // },
+        const vueApp = createApp({ render: () => h(App, props) });
+
+        vueApp.use(plugin).use(ZiggyVue).use(pinia);
+
+        // ✅ Установи пользователя в store
+        const userStore = useUserStore();
+        if (props.initialPage.props.auth?.user) {
+            userStore.setUser(props.initialPage.props.auth.user);
+        }
+
+        return vueApp.mount(el);
     },
     progress: {
         color: '#4B5563',
