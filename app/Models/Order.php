@@ -48,7 +48,10 @@ class Order extends Model implements HasMedia
     {
         return $this->hasMany(Message::class);
     }
-
+    public function pinnedMessages(): HasMany
+    {
+        return $this->hasMany(UserPinnedMessage::class, 'order_id');
+    }
     public function getImageUrl(): ?string
     {
         $media = $this->getFirstMedia('amount_check');
