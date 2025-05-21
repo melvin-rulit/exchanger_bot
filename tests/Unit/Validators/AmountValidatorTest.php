@@ -3,8 +3,8 @@
 namespace Tests\Unit\Validators;
 
 use Tests\TestCase;
-use App\Validators\AmountValidator;
 use App\DTO\CallbackTelegramData;
+use App\Validators\AmountValidator;
 
 class AmountValidatorTest extends TestCase
 {
