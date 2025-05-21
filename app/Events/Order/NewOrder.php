@@ -40,13 +40,10 @@ class NewOrder implements ShouldBroadcast
     }
     public function broadcastWith(): array
     {
+        $orderWithRelations = $this->order->load('client');
+
         return [
-            'order' => [
-                'id' => $this->order->id,
-                'status' => $this->order->status,
-                'is_message' => $this->order->is_message,
-                'is_requisite' => $this->order->is_requisite,
-            ],
+            'order' => $orderWithRelations,
             'type' => $this->eventType ?? 'default',
         ];
     }

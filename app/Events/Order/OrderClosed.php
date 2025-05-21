@@ -40,10 +40,10 @@ class OrderClosed implements ShouldBroadcast
     }
     public function broadcastWith(): array
     {
+        $orderWithRelations = $this->order->load('client');
+
         return [
-            'order' => [
-                'id' => $this->order->id
-            ],
+            'order' => $this->order,
             'type' => $this->eventType ?? 'default',
         ];
     }
