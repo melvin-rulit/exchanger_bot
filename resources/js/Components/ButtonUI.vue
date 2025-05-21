@@ -8,12 +8,10 @@
 <script>
 export default {
     props: {
-        // Текст кнопки, обязательный параметр
         buttonText: {
             type: String,
             required: false,
         },
-        // Цвет по умолчанию
         color: {
             type: String,
             default: "blue",
@@ -21,22 +19,18 @@ export default {
                 return ['blue', 'white', 'grey', 'red', 'green'].includes(value);
             }
         },
-        // Ширина по умолчанию
         width: {
             type: String,
             default: "auto",
         },
-        // Настройка padding по умолчанию
         padding: {
             type: String,
             default: "10px 40px",
         },
-        // Размер шрифта по умолчанию
         fontSize: {
             type: String,
             default: "12px",
         },
-        // Настройка font-weight по умолчанию
         fontWeight: {
             type: String,
             default: "600",
@@ -46,7 +40,6 @@ export default {
         default: false
       },
     },
-    // Определяет класс кнопки в зависимости от выбранного цвета
     computed: {
         colorClass() {
             return this.color === "blue" ? "blue-button" :
@@ -56,7 +49,6 @@ export default {
                         "red-button";
         },
     },
-    // Обработчик клика на кнопку, генерирует событие "click"
     methods: {
         handleClick() {
             this.$emit("click");
