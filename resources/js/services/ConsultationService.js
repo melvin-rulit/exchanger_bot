@@ -3,8 +3,12 @@ import axios from "axios";
 export class ConsultationService {
     static serverUrl = import.meta.env.VITE_BASE_URL;
 
-    static getMessages() {
-        let url = `${this.serverUrl}/consultation/messages`;
+    // static getMessages() {
+    //     let url = `${this.serverUrl}/consultation/messages`;
+    //     return axios.get(url);
+    // }
+    static getMessages(query = '', page = 1) {
+        const url = `${this.serverUrl}/consultation/messages?query=${encodeURIComponent(query)}&page=${page}`;
         return axios.get(url);
     }
     static getTodayMessages(message_id) {
