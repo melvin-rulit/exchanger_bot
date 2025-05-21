@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\User\UserResource;
 use App\Http\Resources\BaseTypedResource;
 use App\Http\Resources\Client\ClientResource;
+use App\Http\Resources\User\PinedChat\PinedChatsResource;
 
 
 class OrdersResource extends BaseTypedResource
@@ -30,6 +31,7 @@ class OrdersResource extends BaseTypedResource
             'is_requisite' => $model->is_requisite,
             'image_url'    => $model->getImageUrl(),
             'created_at' => $model->created_at,
+            'pinned_messages' => PinedChatsResource::collection($this->whenLoaded('pinnedMessages')),
             ];
     }
 }

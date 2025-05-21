@@ -23,6 +23,8 @@ class UserResource extends BaseTypedResource
             'email' => $model->email,
             'last_login_at' => $model->last_login_at,
             'enabled' => $model->enabled,
+            'is_locked' => $model->is_locked,
+            'lock_password' => $model->lock_password,
             'role' => $model->getRoleNames(),
         ];
     }
