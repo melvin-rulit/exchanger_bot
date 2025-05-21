@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * @mixin IdeHelperMessage
@@ -43,7 +44,7 @@ class Message extends Model implements HasMedia
         return $this->belongsTo(Client::class);
     }
 
-    public static function getTodayMessagesOnlyForConsultationByGroup(): Collection
+    public static function getTodayMessagesOnlyForConsultationByGroup(): LengthAwarePaginator
     {
         return self::whereIn('id', function ($query) {
             $query->select(DB::raw('MAX(id)'))
@@ -54,7 +55,7 @@ class Message extends Model implements HasMedia
                 ->groupBy('chat_id');
         })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(16);
     }
 
     public static function getTodayMessagesOnlyForConsultationChat($chat_id): Collection
