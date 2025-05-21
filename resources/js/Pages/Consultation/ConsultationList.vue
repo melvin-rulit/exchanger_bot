@@ -49,9 +49,7 @@
               </td>
               <td class="">
                 <div class="flex items-center">
-                  <span class="px-4 bg-gray-50 text-gray-800 rounded-md shadow-md">
-{{ message.client.first_name }}
-</span>
+                  <span class="px-4 bg-gray-50 text-gray-800 rounded-md shadow-md">{{ message.client.first_name }}</span>
                 </div>
               </td>
             </tr>
@@ -67,30 +65,82 @@
         </table>
       </div>
 
+      <div class="flex justify-between items-center rounded-lg shadow">
+        <div class="w-[450px] text-sm sm:text-base font-medium text-gray-700">
+          <Pagination
+            :total="messageMeta.total"
+            :limit="messageMeta.per_page"
+            :currentPage="messageMeta.current_page"
+            @page-change="getTodayMessages"
+          />
+        </div>
+
+        <div v-if="startFunction" class="text-sm sm:text-base font-medium text-white">
+          <div class="flex items-center gap-3 mt-5">
+            <Icon icon="arcticons:filterbox" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
+            <Icon icon="lsicon:find-outline" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
+            <Icon icon="bi:calendar-date" width="41" height="41" class="hover:text-gray-400 cursor-pointer" />
+            <Icon icon="material-symbols-light:app-registration-outline-rounded" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
+            <Icon @click="clickShowLockScreen" icon="hugeicons:lock-sync-01" width="45" height="45" class="hover:text-gray-400 cursor-pointer"/>
+
+            <AlertForNotification :message="alertMessage" :type="alertType" @clearMessages="clearAlertMessage" ref="alertComponent">
+              <template #buttons>
+                <div class="pl-4">
+                  <ButtonUI @click="alertButtonFunction" type="submit" color="green">{{alertButtonName}}</ButtonUI>
+                </div>
+              </template>
+            </AlertForNotification>
+
+          </div>
+        </div>
+
+        <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-4">
+          <PinChatsInOrderList
+            v-for="chat in pinnedChats"
+            :key="chat.id"
+            :orderFullInfo="order"
+            :order="chat.order"
+          />
+        </div>
+      </div>
+
       <ModalShowChat
         :is-active="isModalChatShow"
         :messageId="messageId"
         :client="client"
         @close="closeModalShowChat"
       />
+
+      <ModalLock
+        :is-active="isModalLockShow"
+        @unlocked="unLockScreen"
+      />
     </div>
 </template>
 
 <script>
-import Pusher from 'pusher-js';
+import { usePusher } from '@/helpers/usePusher'
+import { useSound } from '@/helpers/useSound'
 import { Icon } from '@iconify/vue';
 import ModalShowChat from '@/Pages/Consultation/Chats/Modal/ModalShowChat.vue'
 import { ConsultationService } from '@/services/ConsultationService.js'
-import { OrdersService } from '@/services/OrdersService.js'
 import { useConsultationStore } from '@/stores/consultationStore'
+import AlertForNotification from '@/Components/AlertForNotification.vue'
+import PinChatsInOrderList from '@/Pages/Order/Chats/PinedChats/PinChatsInOrderList.vue'
+import ButtonUI from '@/Components/ButtonUI.vue'
+import Pagination from '@/Components/Pagination.vue'
+import { UserService } from '@/services/UserService.js'
+import { useUserStore } from '@/stores/userStore.js'
+import ModalLock from '@/Components/ModalLock.vue'
 
 export default {
-    components: { Icon, ConsultationService, ModalShowChat},
+    components: {ModalLock, Pagination, ButtonUI, PinChatsInOrderList, AlertForNotification, Icon, ConsultationService, ModalShowChat},
     data: function () {
         return {
             messages: '',
             messageId: '',
             client: '',
+            pinnedChats: [],
             form: {
                 dateFrom: '',
                 dateTo: '',
@@ -100,6 +150,9 @@ export default {
                 active: 'Активный',
                 deleted: 'Удален',
             },
+            consultantChannel: null,
+            messageMeta: {},
+            currentPage: 1,
             query: '',
             type: 'error',
             limit: 5,
@@ -107,25 +160,28 @@ export default {
             errors: '',
             message: null,
             loading: false,
+            startFunction: true,
             showFilter: false,
             isModalChatShow: false,
+            isModalLockShow: false,
         }
     },
   setup() {
+    const { playSound, stopSound} = useSound()
     const consultationStore = useConsultationStore()
-    return { consultationStore }
+    const userStore = useUserStore()
+    return { playSound, stopSound, consultationStore, userStore }
   },
-    mounted() {
-      this.getTodayMessages()
-      this.checkNewMessagesUpdate()
 
-      this.notificationAudio = new Audio('/audio/new_sms_consultant.wav');
-      document.addEventListener('click', () => {
-        this.notificationAudio.play().then(() => {
-          this.notificationAudio.pause();
-          this.notificationAudio.currentTime = 0;
-        }).catch(() => {});
-      }, { once: true });
+    async mounted() {
+      const { pusher } = usePusher()
+      this.pusher = pusher
+
+      await this.userStore.fetchUser()
+      await this.getTodayMessages()
+      this.checkNewMessagesUpdate()
+      await this.getPinedChat()
+      await this.showLockScreen()
     },
     computed: {
       iconColorClass() {
@@ -147,24 +203,35 @@ export default {
         },
     },
     methods: {
-      async getTodayMessages() {
-        const response = await ConsultationService.getMessages()
-        this.messages = response.data
+      async getPinedChat() {
+        try {
+          const response = await UserService.getPinedChat();
+          this.pinnedChats = response.data.data;
+        } catch (error) {
+          this.errors = error.response?.data?.errors || 'Ошибка загрузки данных';
+        }finally {
+
+        }
+      },
+      async getTodayMessages(page = 1, query = '') {
+        const response = await ConsultationService.getMessages(query, page)
+        this.messages = response.data.data
+        this.messageMeta = response.data.meta;
+        this.currentPage = page;
         this.consultationStore.setMessages(this.messages)
       },
         checkNewMessagesUpdate() {
-            const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
-                cluster: 'eu', logToConsole: true,
-            })
-            const channel = pusher.subscribe('consultation');
+            this.consultantChannel = this.pusher.subscribe('consultation');
 
-            channel.bind('new_message', (data) => {
+            this.consultantChannel.bind('new_message', (data) => {
               if (!this.isModalChatShow){
-                let audio = new Audio('/audio/new_sms_consultant_2.wav');
-                audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+                this.playSound('new_sms.mp3')
+                // let audio = new Audio('/audio/new_sms_consultant_2.wav');
+                // audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
               }else{
-                let audio = new Audio('/audio/new_sms_consultant_chat.mp3');
-                audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
+                this.playSound('new_sms.mp3')
+                // let audio = new Audio('/audio/new_sms_consultant_chat.mp3');
+                // audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
               }
                 this.getTodayMessages()
             });
@@ -175,6 +242,45 @@ export default {
             this.client = $client
             this.setMessagesRead()
         },
+      async clickShowLockScreen() {
+
+        if (await this.userStore.getUserLockPassword(this.$page.props.auth.user.id) === null){
+          this.triggerErrorAlert('Вы не задали пароль для этого действия', 'Установить', this.setScreenLockPassword);
+          return
+        }
+        const is_lock = await this.userStore.getUserLockScreen(this.$page.props.auth.user.id)
+
+        if (!is_lock){
+          await this.saveIsLock()
+        }
+        this.isModalLockShow = true
+      },
+      async showLockScreen() {
+        const is_locked = await this.userStore.getUserLockScreen(this.$page.props.auth.user.id)
+
+        if (!is_locked){
+          return
+        }
+
+        this.isModalLockShow = true
+      },
+      unLockScreen() {
+        this.isModalLockShow = false
+      },
+      async saveIsLock() {
+        await UserService.saveIsLock()
+      },
+      setScreenLockPassword() {
+        this.startFunction = false
+        this.isVisibleSetPassword = true
+
+      },
+      async closeScreenLockPassword() {
+        this.startFunction = true
+        this.isVisibleSetPassword = false
+        await this.userStore.fetchUser()
+        this.getOrders()
+      },
       setMessagesRead() {
         ConsultationService.setConsultantMessagesRead(this.messageId).then(response => {
         })
