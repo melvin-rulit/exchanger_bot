@@ -1,11 +1,17 @@
 <template>
     <transition name="slide-down">
-        <div v-if="isVisible" :class="['alert', alertTypeClass]">
+        <div v-show="isVisible" :class="['alert', alertTypeClass]">
             <div class="content">
                 <Icon :icon="icon" class="alert-icon" width="26" height="26" :class="iconColorClass" />
                 <p>{{ message }}</p>
-              <div class="pl-4"><ButtonUI type="submit" color="green">Перейти</ButtonUI></div>
-              <div class="pl-4"><ButtonUI @click="closeAlert" type="submit" color="red">Закрыть</ButtonUI></div>
+
+              <div class="buttons pl-4">
+                <slot name="buttons"></slot>
+              </div>
+                <div class="buttons pl-4">
+                  <ButtonUI @click="closeAlert" type="submit" color="red">Закрыть</ButtonUI>
+                </div>
+
             </div>
         </div>
     </transition>
@@ -109,13 +115,13 @@ export default {
     z-index: 1000;
     text-align: center;
     font-size: 16px;
-    opacity: 0.9;
     margin-top: 2em;
     background-color: #fff;
 
     p {
         margin: 0 0 0 1em;
         font-weight: 500;
+      color: black;
     }
 
     &-success {
