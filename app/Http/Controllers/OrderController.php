@@ -4,21 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
-use App\Events\OrderUpdated;
 use Illuminate\Http\JsonResponse;
+use App\Events\Order\OrderUpdated;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\SuccessResponse;
 use App\Http\Responses\NotFoundResponse;
-use App\Exceptions\TelegramApiException;
 use App\Services\Web\Order\OrderService;
+use App\Exceptions\TelegramApiException;
 use App\Http\Requests\Order\GetOrderRequest;
-use App\Services\ClientService\ClientsService;
+use App\Http\Resources\Order\OrdersResource;
 use App\Exceptions\User\UserNotFoundException;
 use App\Http\Requests\Order\CloseOrderRequest;
 use App\Http\Requests\Order\FixedOrderRequest;
+use App\Services\ClientService\ClientsService;
 use App\Exceptions\Order\OrderNotFoundException;
-use App\Exceptions\Order\OrdersNotFoundException;
 use App\Exceptions\Client\ClientNotFoundException;
+use App\Exceptions\Order\OrdersNotFoundException;
 use App\Http\Resources\Order\OrderMessagesResource;
 use App\Http\Requests\Order\UpdateClientNameRequest;
 use App\Http\Requests\Order\UpdateOrderStatusRequest;
@@ -36,7 +37,8 @@ public function __construct(protected TelegramMessageService $telegramService, p
     public function getOrders(): NotFoundResponse|AnonymousResourceCollection
     {
         try {
-            return $this->orderService->getOrders();
+            $orders = $this->orderService->getOrders();
+            return OrdersResource::collection($orders);
 
         } catch (OrdersNotFoundException $e) {
             return new NotFoundResponse($e->getMessage());
