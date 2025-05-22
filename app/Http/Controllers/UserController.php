@@ -87,15 +87,10 @@ class UserController extends Controller
             return new NotFoundResponse($e->getMessage());
         }
     }
-    public function getPinnedChat(): AnonymousResourceCollection|NotFoundResponse
+    public function getPinnedChat(): AnonymousResourceCollection
     {
-        try {
-            $pinnedChat = $this->userWebService->getPinnedChat();
-            return PinedChatsResource::collection($pinnedChat);
-
-        } catch (PinnedChatsNotFoundException $e) {
-            return new NotFoundResponse($e->getMessage());
-        }
+        $pinnedChat = $this->userWebService->getPinnedChat();
+        return PinedChatsResource::collection($pinnedChat);
     }
     public function pinChat(PinChatRequest $request): PinedChatsResource|ErrorResponse|NotFoundResponse
     {
