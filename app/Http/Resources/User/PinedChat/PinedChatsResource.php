@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\UserPinnedMessage;
 use App\Http\Resources\BaseTypedResource;
 use App\Http\Resources\Order\OrdersResource;
+use App\Http\Resources\Client\ClientResource;
 
 class PinedChatsResource extends BaseTypedResource
 {
@@ -27,6 +28,7 @@ class PinedChatsResource extends BaseTypedResource
         return [
             'id' => $model->id,
             'order' => OrdersResource::make($model->order),
+            'client' => ClientResource::make($model->client),
             'is_active' => $model->is_active,
             'is_pinned' => $this->forceIsPinned ? $model->is_pinned : false,
         ];
