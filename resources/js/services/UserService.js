@@ -17,9 +17,28 @@ export class UserService {
         let url = `${this.serverUrl}/users/managers`;
         return axios.get(url)
     }
-    // static getUserStatistic()
-    // {
-    //     let url = `${this.serverUrl}/user/statistics`;
-    //     return axios.get(url)
-    // }
+    static sendPasswordForUnlock(password) {
+        let url = `${this.serverUrl}/users/unlocked/send_password`
+        return axios.patch(url, {password})
+    }
+    static saveIsLock() {
+        let url = `${this.serverUrl}/users/locked`
+        return axios.patch(url, {})
+    }
+    static saveIsLockPassword(password) {
+        let url = `${this.serverUrl}/users/locked/set_password`
+        return axios.patch(url, {password})
+    }
+    static getPinedChat() {
+        let url = `${this.serverUrl}/users/pined/chat`
+        return axios.get(url)
+    }
+    static pinChat(orderId, clientId) {
+        let url = `${this.serverUrl}/users/pin/chat`
+        return axios.post(url, {orderId, clientId})
+    }
+    static unPinChat(chatId) {
+        let url = `${this.serverUrl}/users/un_pin/chat`
+        return axios.patch(url, {chatId})
+    }
 }

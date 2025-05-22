@@ -3,9 +3,9 @@ import axios from 'axios'
 export class OrdersService {
     static serverUrl = import.meta.env.VITE_BASE_URL
 
-    static getOrders(query) {
-        let url = `${this.serverUrl}/orders?query=` + query
-        return axios.get(url)
+    static getOrders(query = '', page = 1) {
+        const url = `${this.serverUrl}/orders?query=${encodeURIComponent(query)}&page=${page}`;
+        return axios.get(url);
     }
     static getOrder(orderId) {
         let url = `${this.serverUrl}/orders/get_order/${orderId}`
