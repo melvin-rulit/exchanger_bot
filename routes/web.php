@@ -57,6 +57,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [UserController::class, 'getUsers']);
         Route::get('/managers', [UserController::class, 'getManagers']);
         Route::get('/me', [UserController::class, 'getAuthUser']);
+        Route::patch('/locked', [UserController::class, 'lockScreen']);
+        Route::patch('/unlocked/send_password', [UserController::class, 'sendPasswordForUnlock']);
+        Route::patch('/locked/set_password', [UserController::class, 'setPasswordForLock']);
+        Route::get('/pined/chat', [UserController::class, 'getPinnedChat']);
+        Route::post('/pin/chat', [UserController::class, 'pinChat']);
+        Route::patch('/un_pin/chat', [UserController::class, 'unPinChat']);
     });
 
     Route::group(['prefix' => 'template', 'as' => 'templates.'], function () {
