@@ -7,12 +7,15 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\Client;
 use App\Models\Message;
+use App\Telegram\Traits\HandlesFile;
 use App\Services\Web\BaseWebService;
 use App\Exceptions\TelegramApiException;
 use App\Exceptions\User\UserNotFoundException;
 use App\Services\ClientService\ClientsService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Exceptions\Order\OrderNotFoundException;
+use App\Exceptions\Images\MediaLibraryException;
 use App\Exceptions\Order\OrdersNotFoundException;
 use App\Services\RedisService\RedisSessionService;
 use App\Exceptions\Client\ClientNotFoundException;
@@ -22,7 +25,7 @@ use App\Services\TelegramBotService\TelegramMessageService;
 
 class OrderService extends BaseWebService
 {
-    use SendsFakeWebhookCommandTrait;
+    use SendsFakeWebhookCommandTrait, HandlesFile;
 
     public function __construct(RedisSessionService $redis, TelegramMessageService $telegramMessageService, ClientsService $clientsService, protected ClientTransferService $clientTransferService)
     {
@@ -34,11 +37,11 @@ class OrderService extends BaseWebService
      */
     public function getOrders(): LengthAwarePaginator
     {
-        $orders = Order::with(['user', 'client', 'pinnedMessages'])
+        return Order::with(['user', 'client', 'pinnedMessages'])
             ->whereDate('created_at', Carbon::today())
             ->where(function ($query) {
                 $query
-                    ->whereNotIn('status', ['active', 'success'])
+                    ->whereNotIn('status', ['active', 'success', 'closed'])
                     ->orWhere(function ($q) {
                         $q->where('status', 'active')
                             ->where(function ($subQuery) {
@@ -47,7 +50,11 @@ class OrderService extends BaseWebService
                             });
                     })
                     ->orWhere(function ($q) {
-                        $q->where('status', 'success')
+                        $q->where('status', ['success'])
+                            ->where('user_id', auth()->id());
+                    })
+                    ->orWhere(function ($q) {
+                        $q->where('status', 'closed')
                             ->where('user_id', auth()->id());
                     });
             })
@@ -60,13 +67,8 @@ class OrderService extends BaseWebService
             ELSE 1
         END
     ")
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->paginate(16);
-
-        if ($orders->isEmpty()) {
-            throw new OrdersNotFoundException('По заданной выборке заказов не найдено');
-        }
-        return $orders;
     }
 
     /**
@@ -161,6 +163,39 @@ class OrderService extends BaseWebService
 
     /**
      * @throws OrderNotFoundException
+     * @throws MediaLibraryException
+     */
+    public function storeMessageWithPhoto($request)
+    {
+        if (!$order = Order::with('user')->find($request->getIdFromRoute('orderId'))) {
+            throw new OrderNotFoundException("Заказ с ID {$request->getIdFromRoute('orderId')} не найден.");
+        }
+
+        $created_message = Message::create([
+            'chat_id' => $order->chat_id,
+            'order_id' => $request->getIdFromRoute('orderId'),
+            'user_id' => auth()->user()->id,
+            'sender_type' => 'user',
+            'message' => null,
+        ]);
+
+        $imageContent = file_get_contents($request->file('photo')->getRealPath());
+        $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $created_message, 'chat_screenshot');
+
+        $media = $created_message->getFirstMedia('chat_screenshot');
+        $filePath = $media->getPath();
+
+        try {
+            $this->telegramMessageService->sendPhoto($order->chat_id, new \CURLFile($filePath), $request->getCaption());
+        } catch (TelegramApiException|ConnectionException $e) {
+
+        }
+
+        return $created_message;
+    }
+
+    /**
+     * @throws OrderNotFoundException
      */
     public function setMessagesRead($request): void
     {
@@ -178,9 +213,13 @@ class OrderService extends BaseWebService
      */
     public function closeOrder($request)
     {
-        if (!Client::where('id', $request->getClientId())->update(['status' => __('buttons.to_main')])) {
+        $client = Client::find($request->getClientId());
+
+        if (! $client) {
             throw new ClientNotFoundException("Клиент с ID {$request->getClientId()} не найден.");
         }
+
+        $client->update(['status' => __('buttons.to_main')]);
 
         if (!$order = Order::find($request->getOrderId())) {
             throw new OrderNotFoundException("Заказ с ID {$request->getOrderId()} не найден.");
@@ -190,12 +229,13 @@ class OrderService extends BaseWebService
             throw new UserNotFoundException("Пользователь с ID {$request->getUserId()} не найден.");
         }
 
-        // Отправка сообщение, как буд-то это было сделано клиентом в чате для возврата в главное меню
-        //TODO сделать проверку если клиент уже в главном меню, то ничего не делать
-        $this->sendWebhookCommand($order->chat_id, 'start');
+        if ($client->status !== __('buttons.to_main')) {
+            // Отправка сообщение, как буд-то это было сделано клиентом в чате для возврата в главное меню
+            $this->sendWebhookCommand($order->chat_id, 'start');
 
-        $order->setRelation('user', $user);
-        return $order;
+            $order->setRelation('user', $user);
+            return $order;
+        }
     }
 
     /**

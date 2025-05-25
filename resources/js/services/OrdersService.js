@@ -19,6 +19,17 @@ export class OrdersService {
         let url = `${this.serverUrl}/orders/send_message/${orderId}`
         return axios.post(url, { message, isRequisite})
     }
+    static sendOrderMessagesWithImage(orderId, photoFile, caption) {
+        let url = `${this.serverUrl}/orders/send_photo/${orderId}`
+
+        let formData = new FormData()
+        formData.append('photo', photoFile)
+        formData.append('caption', caption)
+
+        return axios.post(url, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+    }
     static assignExecutor(form) {
         let url = `${this.serverUrl}/orders/assign_executor`;
         return axios.put(url, form)

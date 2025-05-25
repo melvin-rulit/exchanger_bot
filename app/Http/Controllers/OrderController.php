@@ -18,6 +18,7 @@ use App\Http\Requests\Order\CloseOrderRequest;
 use App\Http\Requests\Order\FixedOrderRequest;
 use App\Services\ClientService\ClientsService;
 use App\Exceptions\Order\OrderNotFoundException;
+use App\Exceptions\Images\MediaLibraryException;
 use App\Exceptions\Client\ClientNotFoundException;
 use App\Exceptions\Order\OrdersNotFoundException;
 use App\Http\Resources\Order\OrderMessagesResource;
@@ -27,6 +28,7 @@ use App\Exceptions\Order\OrderClientNotFoundException;
 use App\Http\Requests\Order\CreateOrderMessageRequest;
 use App\Http\Requests\Order\SetOrderMessageReadRequest;
 use App\Services\TelegramBotService\TelegramMessageService;
+use App\Http\Requests\Order\CreateOrderMessageWithPhotoRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 
@@ -90,11 +92,24 @@ public function __construct(protected TelegramMessageService $telegramService, p
         }
     }
 
+    public function storeMessageWithPhoto(CreateOrderMessageWithPhotoRequest $request): NotFoundResponse|ErrorResponse|SuccessResponse
+    {
+        try {
+            $message = $this->orderService->storeMessageWithPhoto($request);
+            return new SuccessResponse('Сообщение с фотографией сохранено', 'order', ['message' => new OrderMessagesResource($message)]);
+
+        } catch (MediaLibraryException $e) {
+            return new ErrorResponse('Не удалось сохранить изображение: ' . $e->getMessage());
+        } catch (OrderNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+
     public function attachUserToOrder(Request $request): NotFoundResponse|SuccessResponse
     {
         try {
             $user = $this->orderService->attachUserToOrder($request);
-            return new SuccessResponse('Менеджер закреплен', 'assigned_user', ['user_id' => $user->id]);
+            return new SuccessResponse('Менеджер закреплен', 'assigned_user', ['user' => $user]);
 
         } catch (UserNotFoundException|OrderNotFoundException $e) {
             return new NotFoundResponse($e->getMessage());

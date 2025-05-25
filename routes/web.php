@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}', [OrderController::class, 'setOrderMessage']);
         Route::patch('/set_read_messages/{orderId}', [OrderController::class, 'setMessagesOrderRead'])->whereNumber('orderId');
         Route::get('/get_order/{orderId}', [OrderController::class, 'getOrder'])->whereNumber('orderId');
+        Route::post('/send_photo/{orderId}', [OrderController::class, 'storeMessageWithPhoto'])->whereNumber('orderId');
         Route::post('/send_message/{orderId}', [OrderController::class, 'storeMessage'])->whereNumber('orderId');
         Route::put('/assign_executor', [OrderController::class, 'attachUserToOrder']);
         Route::put('/close_order', [OrderController::class, 'closeOrder']);
@@ -58,11 +59,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/managers', [UserController::class, 'getManagers']);
         Route::get('/me', [UserController::class, 'getAuthUser']);
         Route::patch('/locked', [UserController::class, 'lockScreen']);
+        Route::patch('/toggle/notification', [UserController::class, 'lockScreen']);
         Route::patch('/unlocked/send_password', [UserController::class, 'sendPasswordForUnlock']);
         Route::patch('/locked/set_password', [UserController::class, 'setPasswordForLock']);
         Route::get('/pined/chat', [UserController::class, 'getPinnedChat']);
         Route::post('/pin/chat', [UserController::class, 'pinChat']);
         Route::patch('/un_pin/chat', [UserController::class, 'unPinChat']);
+        Route::patch('/toggle/notification', [UserController::class, 'toggleNotification']);
     });
 
     Route::group(['prefix' => 'template', 'as' => 'templates.'], function () {
