@@ -5,6 +5,7 @@ namespace App\Http\Resources\User;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Resources\BaseTypedResource;
+use App\Http\Resources\User\Settings\UserSettingsResource;
 
 class UserResource extends BaseTypedResource
 {
@@ -19,13 +20,12 @@ class UserResource extends BaseTypedResource
         return [
             'id' => $model->id,
             'name' => $model->name,
-            'login' => $model->login,
             'email' => $model->email,
-            'last_login_at' => $model->last_login_at,
             'enabled' => $model->enabled,
             'is_locked' => $model->is_locked,
             'lock_password' => $model->lock_password,
             'role' => $model->getRoleNames(),
+            'settings' => UserSettingsResource::collection($this->whenLoaded('settings')),
         ];
     }
 }
