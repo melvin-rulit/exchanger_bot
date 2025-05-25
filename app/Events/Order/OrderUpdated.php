@@ -41,9 +41,7 @@ class OrderUpdated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'order' => [
-                'id' => $this->order->id
-            ],
+            'order' => $this->order,
             'type' => $this->eventType ?? 'default',
         ];
     }
