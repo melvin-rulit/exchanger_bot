@@ -20,7 +20,11 @@ class SettingsSeeder extends Seeder
             ],
             [
                 'key' => 'language',
-                'value' => 'en',
+                'value' => 'en'
+            ],
+            [
+                'key' => 'notification',
+                'value' => null,
             ],
         ];
 
