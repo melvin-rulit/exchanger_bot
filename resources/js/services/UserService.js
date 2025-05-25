@@ -37,8 +37,12 @@ export class UserService {
         let url = `${this.serverUrl}/users/pin/chat`
         return axios.post(url, {orderId, clientId})
     }
-    static unPinChat(chatId) {
+    static unPinChat(orderId, chatId) {
         let url = `${this.serverUrl}/users/un_pin/chat`
-        return axios.patch(url, {chatId})
+        return axios.patch(url, {orderId, chatId})
+    }
+    static toggleNotification(notification) {
+        let url = `${this.serverUrl}/users/toggle/notification`
+        return axios.patch(url, {notification})
     }
 }
