@@ -15,6 +15,17 @@ export class ConsultationService {
         let url = `${this.serverUrl}/consultation/send_message/${messageId}`
         return axios.post(url, { message })
     }
+    static sendConsultantMessagesWithImage(photoFile, caption) {
+        let url = `${this.serverUrl}/consultation/send_photo/`
+
+        let formData = new FormData()
+        formData.append('photo', photoFile)
+        formData.append('caption', caption)
+
+        return axios.post(url, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+    }
     static setConsultantMessagesRead(messageId) {
         let url = `${this.serverUrl}/consultation/set_read_messages/${messageId}`
         return axios.patch(url, messageId)
