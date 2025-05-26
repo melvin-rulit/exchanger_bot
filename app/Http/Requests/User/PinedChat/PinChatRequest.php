@@ -24,7 +24,7 @@ class PinChatRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'orderId' => 'required|integer',
+            'orderId' => 'nullable|integer',
             'clientId' => 'required|integer',
         ];
     }
@@ -37,7 +37,6 @@ class PinChatRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'orderId.required' => 'ID заказа обязателен.',
             'orderId.integer' => 'ID заказа должен быть числом.',
             'clientId.required' => 'ID клиента обязателен.',
             'clientId.integer' => 'ID клиента должен быть числом.',
@@ -51,9 +50,9 @@ class PinChatRequest extends BaseRequest
     {
         return (int) $this->input('orderId');
     }
-    public function getClientId(): int
+    public function getClientId(): int|null
     {
-        return (int) $this->input('clientId');
+        return $this->input('clientId');
     }
 
 
