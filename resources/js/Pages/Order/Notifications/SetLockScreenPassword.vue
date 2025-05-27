@@ -2,7 +2,13 @@
   <transition name="slide-down">
     <div v-if="isActive" class="block">
       <div v-if="showInput" class="flex items-center">
-        <TextInput @enter="sendPassword" v-model="password" class="h-8 text-sm px-2 py-1" width-class="w-[400px]" placeholder="Введите пароль. И по завершению клавишу Enter"/>
+        <hollow-dots-spinner
+          :animation-duration="1000"
+          :dot-size="15"
+          :dots-num="1"
+          color="#4caf50"
+        />
+        <TextInput @enter="sendPassword" v-model="password" class="h-8 text-sm px-2 py-1 ml-4" width-class="w-[400px]" placeholder="Введите пароль. И по завершению клавишу Enter"/>
         <Icon @click="closeAlert" icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error cursor-pointer"/>
       </div>
       <div v-if="successMessage" class="flex items-center">
@@ -18,8 +24,9 @@ import TextInput from '@/Components/TextInput.vue'
 import ButtonUI from '@/Components/ButtonUI.vue'
 import { Icon } from '@iconify/vue'
 import { UserService } from '@/services/UserService.js'
+import { HollowDotsSpinner } from 'epic-spinners'
 export default {
-  components: { ButtonUI, TextInput, Icon },
+  components: { ButtonUI, TextInput, Icon, HollowDotsSpinner },
   props: {
     isActive: {
       type: Boolean,
