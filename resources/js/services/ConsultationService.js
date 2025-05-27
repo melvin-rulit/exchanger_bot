@@ -15,11 +15,12 @@ export class ConsultationService {
         let url = `${this.serverUrl}/consultation/send_message/${messageId}`
         return axios.post(url, { message })
     }
-    static sendConsultantMessagesWithImage(photoFile, caption) {
+    static sendConsultantMessagesWithImage(photoFile, chatId, caption) {
         let url = `${this.serverUrl}/consultation/send_photo/`
 
         let formData = new FormData()
         formData.append('photo', photoFile)
+        formData.append('chatId', chatId)
         formData.append('caption', caption)
 
         return axios.post(url, formData, {
