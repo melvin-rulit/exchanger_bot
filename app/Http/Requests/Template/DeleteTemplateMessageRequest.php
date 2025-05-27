@@ -24,7 +24,7 @@ class DeleteTemplateMessageRequest extends BaseRequest
     public function validationData(): array
     {
         return array_merge($this->all(), [
-            'template_id' => $this->route('template_id'),
+            'templateId' => $this->route('templateId'),
         ]);
     }
 
@@ -36,7 +36,7 @@ class DeleteTemplateMessageRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'template_id' => 'required|integer',
+            'templateId' => 'required|integer',
         ];
     }
 
@@ -48,8 +48,8 @@ class DeleteTemplateMessageRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'template_id.required' => 'ID шаблона обязателен.',
-            'template_id.integer' => 'ID шаблона должен быть числом.',
+            'templateId.required' => 'ID шаблона обязателен.',
+            'templateId.integer' => 'ID шаблона должен быть числом.',
         ];
     }
 
@@ -58,7 +58,7 @@ class DeleteTemplateMessageRequest extends BaseRequest
      */
     public function getTemplateId(): string
     {
-        return (string) $this->route('template_id');
+        return (string) $this->route('templateId');
     }
 
     protected function failedValidation(Validator $validator)

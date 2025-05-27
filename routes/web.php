@@ -50,9 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::group(['prefix' => 'consultation', 'as' => 'consultation.'], function () {
         Route::get('/messages', [CunsultationController::class, 'getMessages']);
         Route::get('/today_messages/{message_id}', [CunsultationController::class, 'getTodayMessages']);
-        Route::post('/send_message/{message_id}', [CunsultationController::class, 'storeMessage']);
+        Route::post('/send_message/{messageId}', [CunsultationController::class, 'storeMessage'])->whereNumber('messageId');
         Route::post('/send_photo', [CunsultationController::class, 'storeMessageWithPhoto']);
-        Route::patch('/set_read_messages/{message_id}', [CunsultationController::class, 'setMessagesOrderRead']);
+        Route::patch('/set_read_messages/{messageId}', [CunsultationController::class, 'setMessagesConsultantRead'])->whereNumber('messageId');
     });
 
     Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [TemplateMessageController::class, 'getTemplates']);
         Route::post('/message/add', [TemplateMessageController::class, 'storeTemplate']);
         Route::patch('/message/update/{templateId}', [TemplateMessageController::class, 'updateTemplate'])->whereNumber('templateId');
-        Route::delete('/message/{template_id}', [TemplateMessageController::class, 'deleteTemplate']);
+        Route::delete('/message/{templateId}', [TemplateMessageController::class, 'deleteTemplate'])->whereNumber('templateId');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
