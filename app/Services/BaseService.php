@@ -22,7 +22,7 @@ abstract class BaseService
     {
         return Client::where('bot_id', $clientBotId)->first();
     }
-    public function setStatus($clientBotId, $status): void
+    public function setStatus($clientBotId, $status): true
     {
         $client = $this->getClientByBotId($clientBotId);
 
@@ -30,6 +30,7 @@ abstract class BaseService
             $client->status = $status;
             $client->save();
         }
+        return true;
     }
     public function getClientStatus($clientBotId)
     {
