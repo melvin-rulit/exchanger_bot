@@ -13,7 +13,7 @@ trait SavePhoto
      * @throws TelegramApiException
      * @throws MediaLibraryException
      */
-    public function savePhotoToConsultant(array $photo, int $clientId, int $chatId, string $message_group, ?int $orderId = null): void
+    public function savePhoto(array $photo, int $clientId, int $chatId, string $message_group, ?int $orderId = null): void
     {
         $response = $this->getTelegramFileContent($photo['file_id']);
 
