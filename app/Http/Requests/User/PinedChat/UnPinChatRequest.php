@@ -24,7 +24,8 @@ class UnPinChatRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'chatId' => 'required|integer',
+            'chatId' => 'nullable|integer',
+            'orderId' => 'nullable|integer',
         ];
     }
 
@@ -38,15 +39,26 @@ class UnPinChatRequest extends BaseRequest
         return [
             'chatId.required' => 'ID чата обязателен.',
             'chatId.integer' => 'ID чата должен быть числом.',
+            'orderId.integer' => 'ID заказа должен быть числом.',
         ];
     }
 
     /**
      * Чистое получение свойств.
      */
-    public function getChatId(): int
+    public function getChatId(): int|null
     {
+        if (! $this->filled('chatId')) {
+            return null;
+        }
         return (int) $this->input('chatId');
+    }
+    public function getOrderId(): int|null
+    {
+        if (! $this->filled('orderId')) {
+            return null;
+        }
+        return $this->input('orderId');
     }
 
     protected function failedValidation(Validator $validator)
