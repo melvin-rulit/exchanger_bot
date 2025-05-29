@@ -229,13 +229,14 @@ class OrderService extends BaseWebService
             throw new UserNotFoundException("Пользователь с ID {$request->getUserId()} не найден.");
         }
 
-        if ($client->status !== __('buttons.to_main')) {
+        if ( $this->clientsService->setClientMainInput($client->bot_id, __('buttons.to_main'))) {
             // Отправка сообщение, как буд-то это было сделано клиентом в чате для возврата в главное меню
             $this->sendWebhookCommand($order->chat_id, 'start');
 
             $order->setRelation('user', $user);
-            return $order;
         }
+
+        return $order;
     }
 
     /**
@@ -249,7 +250,9 @@ class OrderService extends BaseWebService
             throw new OrderNotFoundException("Заказ с ID {$request->getIdFromRoute('orderId')} не найден.");
         }
 
-        $order->update(['is_pinned' => !$order->is_pinned]);
+        $order->is_pinned = !$order->is_pinned;
+        $order->save();
+
         return $order;
     }
 }
