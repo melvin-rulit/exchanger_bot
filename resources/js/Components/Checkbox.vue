@@ -1,34 +1,56 @@
-<script setup>
-import { computed } from 'vue';
+<template>
+  <label class="inline-flex items-center gap-2">
+    <input
+      type="checkbox"
+      class="rounded"
+      :checked="isChecked"
+      @change="toggleCheck"
+    />
+    <span class="text-white">{{ label }}</span>
+  </label>
+</template>
 
-const emit = defineEmits(['update:checked']);
+<script setup>
+import { computed } from 'vue'
+
+const emit = defineEmits(['update:checked'])
 
 const props = defineProps({
-    checked: {
-        type: [Array, Boolean],
-        required: true,
-    },
-    value: {
-        default: null,
-    },
-});
+  checked: {
+    type: [Array, Boolean],
+    required: false,
+  },
+  value: {
+    type: [String, Number, Boolean],
+    default: null,
+  },
+  label: {
+    type: String,
+    required: true,
+  },
+})
 
-const proxyChecked = computed({
-    get() {
-        return props.checked;
-    },
+const isChecked = computed(() => {
+  if (Array.isArray(props.checked)) {
+    return props.checked.includes(props.value)
+  } else {
+    return props.checked
+  }
+})
 
-    set(val) {
-        emit('update:checked', val);
-    },
-});
+function toggleCheck(e) {
+  const isChecked = e.target.checked
+
+  if (Array.isArray(props.checked)) {
+    let newValue = [...props.checked]
+    if (isChecked && !newValue.includes(props.value)) {
+      newValue.push(props.value)
+    } else if (!isChecked && newValue.includes(props.value)) {
+      newValue = newValue.filter(v => v !== props.value)
+    }
+    emit('update:checked', newValue)
+  } else {
+    emit('update:checked', isChecked)
+  }
+}
 </script>
-
-<template>
-    <input
-        type="checkbox"
-        :value="value"
-        v-model="proxyChecked"
-        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
-    />
-</template>
