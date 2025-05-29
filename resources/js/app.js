@@ -19,12 +19,6 @@ await createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        //     return createApp({ render: () => h(App, props) })
-        //         .use(plugin)
-        //         .use(ZiggyVue)
-        //         .use(pinia)
-        //         .mount(el);
-        // },
         const vueApp = createApp({ render: () => h(App, props) });
 
         vueApp.use(plugin).use(ZiggyVue).use(pinia);
