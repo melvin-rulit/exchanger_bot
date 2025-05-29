@@ -137,6 +137,14 @@ class RedisSessionService extends BaseService
     {
         $this->forget('message_group_in_consultation', $chatId);
     }
+    public function setMessageIdForConsultationFromClient(int $chatId, int $messageId, ?int $ttl = null): void
+    {
+        $this->set('message_id', $chatId, $messageId, $ttl);
+    }
+    public function getLastMessageIdFromClient(int $chatId): ?int
+    {
+        return $this->get('message_id', $chatId);
+    }
     public function setClientInConsultation(int $chatId, ?int $ttl = null): void
     {
         $this->set('client_in_consultation', $chatId, true, $ttl);
