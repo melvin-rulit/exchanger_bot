@@ -7,12 +7,13 @@
     :disabled="disabled"
     class="text-sm px-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-400"
     :class="widthClass"
-    v-model="model"
+    :value="model"
     ref="input"
     @keydown="onKeyDown"
+    @input="handleInput"
+    @beforeinput="preventInvalidInput"
   />
 </template>
-
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
@@ -36,12 +37,39 @@ const {
 } = defineProps<Props>()
 
 const emit = defineEmits(['enter'])
+
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter') emit('enter')
 }
 
 const model = defineModel<string>()
 const input = ref<HTMLInputElement | null>(null)
+
+function handleInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  let value = target.value.replace(/\s/g, '')
+  if (value.length > 10) value = value.slice(0, 10)
+  model.value = value
+}
+
+function preventInvalidInput(e: InputEvent) {
+  const inputEl = e.target as HTMLInputElement
+
+  // Разрешаем все input-типы кроме вставки текста
+  if (e.inputType !== 'insertText') return
+
+  const current = inputEl.value
+  const selectionStart = inputEl.selectionStart || 0
+  const selectionEnd = inputEl.selectionEnd || 0
+  const inserted = e.data || ''
+  const next = current.slice(0, selectionStart) + inserted + current.slice(selectionEnd)
+
+  // Блокируем пробелы и длину > 9
+  if (/\s/.test(inserted) || next.length > 10) {
+    e.preventDefault()
+  }
+}
+
 
 onMounted(() => {
   if (autofocus && input.value) {
@@ -51,11 +79,3 @@ onMounted(() => {
 
 defineExpose({ focus: () => input.value?.focus() })
 </script>
-
-
-<style>
-input::placeholder {
-  color: #9ca3af;
-  opacity: 0.8;
-}
-</style>

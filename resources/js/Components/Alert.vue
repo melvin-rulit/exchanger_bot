@@ -161,24 +161,6 @@ export default {
         align-items: center;
     }
 }
-
-/* Цвет иконки в зависимости от типа */
-.icon-success {
-    color: #4caf50;
-}
-
-.icon-error {
-    color: #f44336;
-}
-
-.icon-danger {
-    color: #ff9800;
-}
-
-.icon-info {
-    color: #2196f3;
-}
-
 .progress-bar {
     height: 4px;
     transition: width 0.1s linear;
@@ -186,12 +168,4 @@ export default {
     margin-top: 1em;
 }
 
-.slide-down-enter-active, .slide-down-leave-active {
-    transition: all 0.3s ease;
-}
-
-.slide-down-enter, .slide-down-leave-to {
-    transform: translateX(100%);
-    opacity: 0;
-}
 </style>

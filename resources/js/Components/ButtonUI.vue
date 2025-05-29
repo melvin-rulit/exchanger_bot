@@ -29,7 +29,7 @@ export default {
         },
         fontSize: {
             type: String,
-            default: "12px",
+            default: "13px",
         },
         fontWeight: {
             type: String,
@@ -70,10 +70,10 @@ button {
     /* Стили для синей кнопки */
     &.blue-button {
         background: #2c7be5;
-        transition: background-image 0.5s, border-color 0.5s;
+        transition: background-image 0.3s, border-color 0.3s;
         &:hover {
             background: #2362b7;
-            transition: 0.5s;
+            transition: 0.3s;
         }
     }
 
@@ -82,11 +82,11 @@ button {
         background: #ffffff;
         color: black;
         border: 1px solid #b1c2d9;
-        transition: background-image 0.5s, border-color 0.5s;
+        transition: background-image 0.3s, border-color 0.3s;
         &:hover {
             background-color: #f9fbfd;
             border-color: #d2ddec;
-            transition: 0.5s;
+            transition: 0.3s;
         }
     }
 
@@ -94,31 +94,31 @@ button {
     &.grey-button {
         background: #0d121c40;
         border-color: #b9b9b950;
-        transition: background-image 1s, border-color 0.5s;
+        transition: background-image 0.3s, border-color 0.3s;
         &:hover {
             border-color: #b9b9b990;
             background-image: radial-gradient(15em circle at 50% 60px,#b9b9b950,transparent 40%);
-            transition: 0.5s;
+            transition: 0.3s;
         }
     }
 
     /* Стили для красной кнопки */
     &.red-button {
         background: #ff4d4d; /* Красный цвет */
-        transition: background-image 0.5s, border-color 0.5s;
+        transition: background-image 0.3s, border-color 0.3s;
         &:hover {
             background: #e60000; /* Темнее при наведении */
-            transition: 0.5s;
+            transition: 0.3s;
         }
     }
 
     /* Стили для зеленой кнопки */
     &.green-button {
         background: #4caf50; /* Зеленый цвет */
-        transition: background-image 0.5s, border-color 0.5s;
+        transition: background-image 0.3s, border-color 0.3s;
         &:hover {
             background: #43A047; /* Темнее при наведении */
-            transition: 0.5s;
+            transition: 0.3s;
         }
     }
 }
