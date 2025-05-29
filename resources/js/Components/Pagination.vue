@@ -65,7 +65,6 @@ export default {
         return {
           'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700': !disabled,
           'opacity-100 cursor-not-allowed bg-white': disabled,
-          'dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white': true,
         }
       }
 
@@ -73,7 +72,6 @@ export default {
         'text-blue-600 bg-white hover:bg-gray-100 text-gray-700': !disabled && !active,
         'bg-gray-100 font-bold': active,
         'opacity-50 cursor-not-allowed': disabled,
-        'dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white': true,
       }
     }
 
