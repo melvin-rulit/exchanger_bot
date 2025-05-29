@@ -91,7 +91,7 @@ img {
   object-fit: contain;
 }
 .shadow-lg {
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(9px);
   background-color: rgba(0, 0, 0, 0.9);
 }
 .flex {
