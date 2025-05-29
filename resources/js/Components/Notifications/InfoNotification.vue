@@ -12,7 +12,7 @@
 
 <script>
 import { Icon } from "@iconify/vue";
-import ButtonUI from '@/Components/ButtonUI.vue'
+import ButtonUI from '@/Components/Button/ButtonUI.vue'
 
 export default {
   components: {ButtonUI, Icon},
