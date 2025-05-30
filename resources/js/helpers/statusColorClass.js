@@ -1,15 +1,15 @@
 export function getStatusColorClass(status) {
     switch (status) {
         case 'new':
-            return 'text-[#38b0b0]'
+            return 'text-cyan-600'
         case 'active':
-            return 'text-[#F93827]'
+            return 'text-red-500'
         case 'success':
-            return 'text-[#DBDBDB]'
+            return 'text-gray-400'
         case 'closed':
-            return 'text-[#DBDBDB]'
+            return 'text-gray-400'
         case 'deleted':
-            return 'text-[#FF0000]'
+            return 'text-red-500'
         default:
             return 'text-black'
     }
