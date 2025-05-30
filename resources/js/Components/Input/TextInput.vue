@@ -25,6 +25,8 @@ interface Props {
   disabled?: boolean
   autofocus?: boolean
   widthClass?: string
+  limitLength?: boolean
+  maxLength?: number
 }
 
 const {
@@ -33,6 +35,8 @@ const {
   readonly = false,
   disabled = false,
   autofocus = false,
+  limitLength = false,
+  maxLength = 10,
   widthClass = 'w-full'
 } = defineProps<Props>()
 
@@ -48,14 +52,15 @@ const input = ref<HTMLInputElement | null>(null)
 function handleInput(e: Event) {
   const target = e.target as HTMLInputElement
   let value = target.value.replace(/\s/g, '')
-  if (value.length > 10) value = value.slice(0, 10)
+  if (limitLength && value.length > maxLength) {
+    value = value.slice(0, maxLength)
+  }
   model.value = value
 }
-
 function preventInvalidInput(e: InputEvent) {
-  const inputEl = e.target as HTMLInputElement
+  if (!limitLength) return
 
-  // Разрешаем все input-типы кроме вставки текста
+  const inputEl = e.target as HTMLInputElement
   if (e.inputType !== 'insertText') return
 
   const current = inputEl.value
@@ -64,13 +69,10 @@ function preventInvalidInput(e: InputEvent) {
   const inserted = e.data || ''
   const next = current.slice(0, selectionStart) + inserted + current.slice(selectionEnd)
 
-  // Блокируем пробелы и длину > 9
-  if (/\s/.test(inserted) || next.length > 10) {
+  if (/\s/.test(inserted) || next.length > maxLength) {
     e.preventDefault()
   }
 }
-
-
 onMounted(() => {
   if (autofocus && input.value) {
     input.value.focus()
