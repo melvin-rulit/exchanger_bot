@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import TextInput from '@/Components/TextInput.vue'
-import ButtonUI from '@/Components/ButtonUI.vue'
+import TextInput from '@/Components/Input/TextInput.vue'
+import ButtonUI from '@/Components/Button/ButtonUI.vue'
 import { Icon } from '@iconify/vue'
 import { UserService } from '@/services/UserService.js'
 import { HollowDotsSpinner } from 'epic-spinners'

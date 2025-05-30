@@ -87,8 +87,7 @@ import { TemplateService } from '@/services/TemplateMessagesService.js'
 import { handleApiError } from '@/helpers/errors.js'
 import { Icon } from '@iconify/vue'
 import { HollowDotsSpinner } from 'epic-spinners'
-import TextInput from '@/Components/TextInput.vue'
-import { OrdersService } from '@/services/OrdersService.js'
+import TextInput from '@/Components/Input/TextInput.vue'
 
 export default {
   components: { TextInput, Icon, HollowDotsSpinner },
