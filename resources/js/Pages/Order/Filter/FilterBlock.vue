@@ -1,5 +1,4 @@
 <template>
-  <transition name="slide-down">
     <div v-if="isActive" class="block">
 
       <div class="flex gap-10">
@@ -22,7 +21,6 @@
       </div>
 
     </div>
-  </transition>
 </template>
 
 <script>
@@ -70,14 +68,6 @@ export default {
   position: fixed;
   bottom: 35px;
   left: 37%;
-}
-.slide-down-enter-active, .slide-down-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-down-enter, .slide-down-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
 }
 </style>
 
