@@ -17,6 +17,7 @@ export default {
                 'fade-in': 'fadeIn 0.2s ease-out',
                 'flash': 'flash 1.5s infinite ease-in-out',
                 'fade-bounce': 'fadeBounce 1.2s infinite ease-in-out',
+                'slide-right': 'slideRight 0.3s ease-in-out',
             },
             keyframes: {
                 fadeIn: {
@@ -30,6 +31,16 @@ export default {
                 fadeBounce: {
                     '0%, 100%': { opacity: '1' },
                     '50%': { opacity: '0' },
+                },
+                slideRight: {
+                    '0%': {
+                        transform: 'translateX(100%)',
+                        opacity: '0',
+                    },
+                    '100%': {
+                        transform: 'translateX(0)',
+                        opacity: '1',
+                    },
                 },
             },
             fontFamily: {
