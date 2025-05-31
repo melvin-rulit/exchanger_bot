@@ -1,4 +1,5 @@
 <template>
+  <label v-if="isTitle" class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">{{title}}</label>
   <input
     :placeholder="placeholder"
     :autofocus="autofocus"
@@ -20,6 +21,8 @@ import { onMounted, ref } from 'vue'
 
 interface Props {
   placeholder?: string
+  title?: string
+  isTitle?: boolean
   type?: string
   readonly?: boolean
   disabled?: boolean
@@ -27,16 +30,20 @@ interface Props {
   widthClass?: string
   limitLength?: boolean
   maxLength?: number
+  trimWhitespace?: boolean
 }
 
 const {
   placeholder,
+  title,
+  isTitle = false,
   type = 'text',
   readonly = false,
   disabled = false,
   autofocus = false,
   limitLength = false,
   maxLength = 10,
+  trimWhitespace = false,
   widthClass = 'w-full'
 } = defineProps<Props>()
 
@@ -51,12 +58,19 @@ const input = ref<HTMLInputElement | null>(null)
 
 function handleInput(e: Event) {
   const target = e.target as HTMLInputElement
-  let value = target.value.replace(/\s/g, '')
+  let value = target.value
+
+  if (trimWhitespace) {
+    value = value.replace(/\s/g, '')
+  }
+
   if (limitLength && value.length > maxLength) {
     value = value.slice(0, maxLength)
   }
+
   model.value = value
 }
+
 function preventInvalidInput(e: InputEvent) {
   if (!limitLength) return
 
