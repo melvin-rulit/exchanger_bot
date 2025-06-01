@@ -22,6 +22,7 @@ class ClientResource extends BaseTypedResource
             'first_name' => $model->first_name,
             'bot_id' => $model->bot_id,
             'status' => $model->status,
+            'image_url'    => $model->getImageUrl(),
         ];
     }
 }
