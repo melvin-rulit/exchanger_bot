@@ -1,39 +1,3 @@
-// export function useSound() {
-//     const audios = new Map()
-//
-//     const playSound = (file) => {
-//
-//         if (audios.has(file)) {
-//             const existingAudio = audios.get(file)
-//             existingAudio.pause()
-//             existingAudio.currentTime = 0
-//             audios.delete(file)
-//         }
-//
-//         const audio = new Audio(`/audio/${file}`)
-//         audios.set(file, audio)
-//         audio.play().catch(err => console.error('Ошибка воспроизведения:', err))
-//
-//         audio.onended = () => {
-//             audios.delete(file)
-//         }
-//     }
-//
-//     const stopSound = (file) => {
-//         if (audios.has(file)) {
-//             const audio = audios.get(file)
-//             audio.pause()
-//             audio.currentTime = 0
-//             audios.delete(file)
-//         }
-//     }
-//
-//     return {
-//         playSound,
-//         stopSound,
-//     }
-// }
-
 export function useSound() {
     // Map: ключ — имя файла, значение — массив аудио объектов
     const audios = new Map()
@@ -54,7 +18,7 @@ export function useSound() {
         instances.set(id, { file, audio })
 
         audio.onended = () => {
-            // Удаляем из массива и instances по окончании
+
             const arr = audios.get(file)
             if (arr) {
                 const index = arr.indexOf(audio)
@@ -64,7 +28,7 @@ export function useSound() {
             instances.delete(id)
         }
 
-        return id // Возвращаем id экземпляра звука
+        return id
     }
 
     const stopSoundById = (id) => {
@@ -75,7 +39,6 @@ export function useSound() {
         audio.pause()
         audio.currentTime = 0
 
-        // Удаляем из Map аудио объектов
         const arr = audios.get(file)
         if (arr) {
             const index = arr.indexOf(audio)
@@ -94,7 +57,6 @@ export function useSound() {
         })
         audios.delete(file)
 
-        // Удаляем все инстансы с этим файлом
         for (const [id, instance] of instances.entries()) {
             if (instance.file === file) {
                 instances.delete(id)
