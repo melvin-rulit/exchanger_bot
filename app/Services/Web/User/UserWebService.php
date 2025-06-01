@@ -2,12 +2,15 @@
 
 namespace App\Services\Web\User;
 
-use App\Exceptions\User\Chat\PinnedChatsNotFoundException;
+
+use App\Exceptions\Images\MediaLibraryException;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\UserPinnedMessage;
 use Illuminate\Support\Collection;
 use App\Services\Web\BaseWebService;
+use App\Telegram\Traits\HandlesFile;
+use App\Exceptions\User\UserNotFoundException;
 use App\Exceptions\User\UsersNotFoundException;
 use App\Exceptions\User\AuthUserNotFoundException;
 use App\Exceptions\User\ManagersNotFoundException;
@@ -17,12 +20,14 @@ use App\Exceptions\LockScreen\LockPasswordMismatchException;
 
 class UserWebService extends BaseWebService
 {
+    use HandlesFile;
+
     /**
      * @throws UsersNotFoundException
      */
     public function getUsers(): Collection
     {
-        $users = User::all();
+        $users = User::with('settings')->get();
 
         if ($users->isEmpty()) {
             throw new UsersNotFoundException;
@@ -31,6 +36,7 @@ class UserWebService extends BaseWebService
         return $users;
     }
 
+
     /**
      * @throws ManagersNotFoundException
      */
@@ -38,7 +44,7 @@ class UserWebService extends BaseWebService
     {
         $managers = User::role('менеджер')->get();
 
-        if ($managers->isEmpty()) {
+        if (!$managers) {
             throw new ManagersNotFoundException;
         }
 
@@ -48,9 +54,9 @@ class UserWebService extends BaseWebService
     /**
      * @throws AuthUserNotFoundException
      */
-    public function getAuthUser(): User
+    public function getAuthUser()
     {
-        $user = auth()->user();
+        $user = User::with('settings')->find(auth()->id());
 
         if (!$user) {
             throw new AuthUserNotFoundException();
@@ -111,18 +117,12 @@ class UserWebService extends BaseWebService
         ]);
     }
 
-    /**
-     * @throws PinnedChatsNotFoundException
-     */
     public function getPinnedChat(): Collection
     {
-        $pinnedChat = UserPinnedMessage::whereDate('created_at', Carbon::today())->get();
-
-        if ($pinnedChat->isEmpty()) {
-            throw new PinnedChatsNotFoundException;
-        }
-
-        return $pinnedChat;
+        return UserPinnedMessage::whereDate('created_at', Carbon::today())
+            ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'asc')
+            ->get();
     }
 
     /**
@@ -141,7 +141,7 @@ class UserWebService extends BaseWebService
             [
                 'user_id' => auth()->id(),
                 'client_id' => $request->getClientId(),
-                'order_id' => $request->getOrderId(),
+                'order_id' => $request->getOrderId()?: null,
             ],
             [
                 'is_active' => true,
@@ -162,18 +162,68 @@ class UserWebService extends BaseWebService
      */
     public function unPinChat($request)
     {
-        $pinnedChat = UserPinnedMessage::find($request->getChatId());
+        $chatId  = $request->getChatId();
+        $orderId = $request->getOrderId();
+
+        if ($chatId !== null) {
+            $pinnedChat = UserPinnedMessage::find($chatId);
+        } elseif ($orderId !== null) {
+            $pinnedChat = UserPinnedMessage::where('order_id', $orderId)->first();
+        } else {
+            throw new PinChatFailedException('Нельзя определить, что откреплять: нет ни chatId, ни orderId');
+        }
 
         if (!$pinnedChat) {
             throw new PinnedChatNotFoundException();
         }
 
-        $deletedChat = $pinnedChat->delete();
-
-        if (!$deletedChat) {
+        if (!$pinnedChat->delete()) {
             throw new PinChatFailedException();
         }
 
         return $pinnedChat;
+    }
+
+    public function toggleNotification($request)
+    {
+        $user = auth()->user();
+
+        $user->settings()->updateExistingPivot($request->getSettingId(), [
+            'is_active' => !$request->getSettingIsActive(),
+        ]);
+
+        return !$request->getSettingIsActive();
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function update($request): void
+    {
+        $user = User::find($request->getIdFromRoute('userId'));
+
+        if (!$user) {
+            throw new UserNotFoundException();
+        }
+
+        $user->update([
+            'name' => $request->getName(),
+        ]);
+    }
+
+    /**
+     * @throws MediaLibraryException
+     * @throws AuthUserNotFoundException
+     */
+    public function storeUserPhoto($request): void
+    {
+        $user = auth()->user();
+
+        if (!$user instanceof User) {
+            throw new AuthUserNotFoundException();
+        }
+
+        $imageContent = file_get_contents($request->file('photo')->getRealPath());
+        $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $user, 'user_avatar');
     }
 }
