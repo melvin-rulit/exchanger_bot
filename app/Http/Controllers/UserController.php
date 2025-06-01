@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\Images\MediaLibraryException;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\SuccessResponse;
 use App\Http\Responses\NotFoundResponse;
 use App\Http\Resources\User\UserResource;
 use App\Services\Web\User\UserWebService;
+use App\Exceptions\User\UserNotFoundException;
 use App\Exceptions\User\UsersNotFoundException;
 use App\Http\Requests\User\UnlockScreenRequest;
 use App\Exceptions\User\AuthUserNotFoundException;
@@ -14,10 +16,12 @@ use App\Exceptions\User\ManagersNotFoundException;
 use App\Http\Requests\User\PinedChat\PinChatRequest;
 use App\Exceptions\User\Chat\PinChatFailedException;
 use App\Http\Requests\User\PinedChat\UnPinChatRequest;
+use App\Http\Requests\User\Settings\UpdateUserRequest;
+use App\Http\Requests\User\Settings\NotificationRequest;
 use App\Http\Requests\User\SetLockScreenPasswordRequest;
+use App\Http\Requests\User\Settings\SaveUserPhotoRequest;
 use App\Http\Resources\User\PinedChat\PinedChatsResource;
 use App\Exceptions\User\Chat\PinnedChatNotFoundException;
-use App\Exceptions\User\Chat\PinnedChatsNotFoundException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class UserController extends Controller
@@ -114,6 +118,40 @@ class UserController extends Controller
         } catch (PinChatFailedException $e) {
             return new ErrorResponse($e->getMessage());
         } catch (PinnedChatNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+
+    public function toggleNotification(NotificationRequest $request)
+    {
+        try {
+            $isActive = $this->userWebService->toggleNotification($request);
+            return new SuccessResponse('Настройка изменена', 'notification', ['is_active' => $isActive]);
+        } catch (PinChatFailedException $e) {
+            return new ErrorResponse($e->getMessage());
+        }
+    }
+
+    public function updateUser(UpdateUserRequest $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $this->userWebService->update($request);
+            return new SuccessResponse('Пользователь обновлен');
+
+        } catch (UserNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+
+    public function storePhoto(SaveUserPhotoRequest $request): ErrorResponse|SuccessResponse|NotFoundResponse
+    {
+        try {
+            $this->userWebService->storeUserPhoto($request);
+            return new SuccessResponse('Изображение сохранено');
+
+        } catch (MediaLibraryException $e) {
+            return new ErrorResponse('Не удалось сохранить изображение: ' . $e->getMessage());
+        } catch (AuthUserNotFoundException $e) {
             return new NotFoundResponse($e->getMessage());
         }
     }
