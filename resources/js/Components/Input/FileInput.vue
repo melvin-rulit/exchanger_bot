@@ -40,6 +40,7 @@ export default {
     },
     change(e) {
       this.$emit('update:modelValue', e.target.files[0])
+      this.$emit('change', e.target.files[0])
     },
     remove() {
       this.$emit('update:modelValue', null)
