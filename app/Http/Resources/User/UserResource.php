@@ -25,6 +25,7 @@ class UserResource extends BaseTypedResource
             'is_locked' => $model->is_locked,
             'lock_password' => $model->lock_password,
             'role' => $model->getRoleNames(),
+            'image_url'    => $model->getImageUrl(),
             'settings' => UserSettingsResource::collection($this->whenLoaded('settings')),
         ];
     }
