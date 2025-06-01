@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Observers\UserObserver;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\MediaLibrary\HasMedia;
 use Database\Factories\UserFactory;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -18,12 +21,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * @mixin IdeHelperUser
  */
-class User extends Authenticatable
+class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, InteractsWithMedia;
 
     public mixed $first_name;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('user_avatar');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('screenshot')
+            ->width(368)
+            ->height(232);
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -72,5 +87,9 @@ class User extends Authenticatable
         return $this->belongsToMany(Setting::class, 'user_settings')->withPivot('is_active');
     }
 
-
+    public function getImageUrl(): ?string
+    {
+        $media = $this->getFirstMedia('user_avatar');
+        return $media ? $media->getUrl() : null;
+    }
 }
