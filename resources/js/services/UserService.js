@@ -12,6 +12,10 @@ export class UserService {
         let url = `${this.serverUrl}/users`;
         return axios.get(url)
     }
+    static updateUser(userId, userForm) {
+        let url = `${this.serverUrl}/users/current_user/update/${userId}`
+        return axios.patch(url, { userForm })
+    }
     static getManagers()
     {
         let url = `${this.serverUrl}/users/managers`;
@@ -44,5 +48,15 @@ export class UserService {
     static toggleNotification(notification) {
         let url = `${this.serverUrl}/users/toggle/notification`
         return axios.patch(url, {notification})
+    }
+    static sendPhoto(photoFile) {
+        let url = `${this.serverUrl}/users/send_photo/`
+
+        let formData = new FormData()
+        formData.append('photo', photoFile)
+
+        return axios.post(url, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
     }
 }
