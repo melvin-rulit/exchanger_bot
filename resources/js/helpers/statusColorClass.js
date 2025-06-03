@@ -1,7 +1,7 @@
 export function getStatusColorClass(status) {
     switch (status) {
         case 'new':
-            return 'text-cyan-600'
+            return 'text-green-600'
         case 'active':
             return 'text-red-500'
         case 'success':
