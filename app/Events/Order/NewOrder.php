@@ -17,20 +17,13 @@ class NewOrder implements ShouldBroadcast
      * Create a new event instance.
      */
 
-    public Order $order;
-    public ?string $eventType;
-
-    public function __construct(Order $order, $eventType = null)
-    {
-        $this->order = $order;
-        $this->eventType = $eventType ?? 'default';
-    }
+    public function __construct(public Order $order, public ?string $eventType = null){}
 
 
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {
