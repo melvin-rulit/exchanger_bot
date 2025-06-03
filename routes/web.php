@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [UserController::class, 'getUsers']);
         Route::get('/managers', [UserController::class, 'getManagers']);
         Route::get('/me', [UserController::class, 'getAuthUser']);
+        Route::patch('/current_user/update/{userId}', [UserController::class, 'updateUser'])->whereNumber('userId');
         Route::patch('/locked', [UserController::class, 'lockScreen']);
         Route::patch('/toggle/notification', [UserController::class, 'lockScreen']);
         Route::patch('/unlocked/send_password', [UserController::class, 'sendPasswordForUnlock']);
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pin/chat', [UserController::class, 'pinChat']);
         Route::patch('/un_pin/chat', [UserController::class, 'unPinChat']);
         Route::patch('/toggle/notification', [UserController::class, 'toggleNotification']);
+        Route::post('/send_photo', [UserController::class, 'storePhoto']);
     });
 
     Route::group(['prefix' => 'template', 'as' => 'templates.'], function () {
