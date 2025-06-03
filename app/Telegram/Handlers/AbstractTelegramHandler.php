@@ -16,7 +16,6 @@ use App\Telegram\Traits\LoadTelegramBotService;
 use App\Telegram\Route\CallbackMenuReturnRouter;
 use App\Services\RedisService\RedisFieldService;
 use App\Services\RedisService\RedisSessionService;
-use App\Services\ActionService\CountryActionService;
 use App\Services\CredentialService\CredentialService;
 use App\Exceptions\Helpers\InvalidStringValueException;
 use App\Services\TelegramBotService\TelegramMessageService;
@@ -38,7 +37,6 @@ abstract class AbstractTelegramHandler
         protected ClientsService $clientsService,
         protected OrderService $orderService,
         protected CredentialService $credentialService,
-        protected CountryActionService $countryActionService,
         protected RedisSessionService $redis,
         protected RedisFieldService $redisField,
         protected ConsultationMessageHandler $consultationMessageHandler,
