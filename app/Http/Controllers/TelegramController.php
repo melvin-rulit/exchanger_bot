@@ -2,22 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\TelegramBotService\TelegramBotServiceInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Artisan;
+use App\Services\TelegramBotService\TelegramBotServiceInterface;
+
+
 
 class TelegramController extends Controller
 {
-    protected TelegramBotServiceInterface $TelegramBotService;
-
-    public function __construct(TelegramBotServiceInterface $TelegramBotService)
-    {
-        $this->TelegramBotService = $TelegramBotService;
-    }
+    public function __construct(protected TelegramBotServiceInterface $telegramBotService){}
 
     public function handleWebhook(Request $request): void
     {
-        $data = $request->json()->all();
-        $this->TelegramBotService->getWebchook($data);
+        $this->telegramBotService->getWebchook($request->all());
+    }
+
+    public function getWebhookInfo(): JsonResponse
+    {
+        // Запускаем artisan-команду и получаем результат
+        Artisan::call('telegram:get-webhook-info');
+
+        $output = Artisan::output();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $output
+        ]);
     }
 }
