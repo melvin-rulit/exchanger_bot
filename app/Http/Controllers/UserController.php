@@ -132,11 +132,11 @@ class UserController extends Controller
         }
     }
 
-    public function updateUser(UpdateUserRequest $request): NotFoundResponse|SuccessResponse
+    public function updateUser(UpdateUserRequest $request): NotFoundResponse|UserResource
     {
         try {
-            $this->userWebService->update($request);
-            return new SuccessResponse('Пользователь обновлен');
+            $user = $this->userWebService->update($request);
+            return new UserResource($user);
 
         } catch (UserNotFoundException $e) {
             return new NotFoundResponse($e->getMessage());
