@@ -182,6 +182,8 @@ class OrderService extends BaseWebService
         $imageContent = file_get_contents($request->file('photo')->getRealPath());
         $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $created_message, 'chat_screenshot');
 
+        $created_message->refresh();
+
         $media = $created_message->getFirstMedia('chat_screenshot');
         $filePath = $media->getPath();
 
