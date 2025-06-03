@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Menu;
 
-use App\Helpers\StringHelper;
 use App\DTO\ConsultationData;
-use App\Services\RedisSessionService;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
+use App\Services\RedisService\RedisSessionService;
 use App\Services\TelegramBotService\TelegramMessageService;
 
 
@@ -21,7 +20,7 @@ class StartConsultationAction
             $messageGroup = $this->redis->getMessageGroupForConsultation($data->chatId);
 
             if (!$messageGroup) {
-                $messageGroup = StringHelper::generateRandomDigits(6);
+                $messageGroup = generateRandomDigits(6);
                 $this->redis->setMessageGroupForConsultation($data->chatId, $messageGroup, 0);
 
                 if (!$this->redis->getMessageGroupForConsultation($data->chatId)) {
