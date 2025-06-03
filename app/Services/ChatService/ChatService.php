@@ -5,6 +5,7 @@ namespace App\Services\ChatService;
 use App\Models\Order;
 use App\Models\Message;
 use App\Events\Order\OrderMessageSent;
+use App\Events\Consultation\ConsultationClosed;
 use App\Exceptions\Services\MessageNotFoundException;
 use App\Events\Consultation\ClientConsultationMessageSent;
 
@@ -33,6 +34,8 @@ class ChatService
 
         $message->is_close = true;
         $message->save();
+
+            broadcast( new ConsultationClosed());
     }
 
     public function prepareSaveMessage(int $chatId ,int $clientId, ?int $messageGroup = null, ?string $photoFileId = null, ?string $message = null, ?int $saveOrderId = null): ?Message {
