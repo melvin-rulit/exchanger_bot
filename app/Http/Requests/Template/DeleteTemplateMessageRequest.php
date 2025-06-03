@@ -53,14 +53,6 @@ class DeleteTemplateMessageRequest extends BaseRequest
         ];
     }
 
-    /**
-     * Чистое получение свойств.
-     */
-    public function getTemplateId(): string
-    {
-        return (string) $this->route('templateId');
-    }
-
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([

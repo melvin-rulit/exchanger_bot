@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Consultation;
 
-use Carbon\Carbon;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
-class CreateConsultantMessageRequest extends FormRequest
+class CreateConsultantMessageRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -16,19 +18,55 @@ class CreateConsultantMessageRequest extends FormRequest
     }
 
     /**
+     * Laravel будет валидировать и данные из маршрута.
+     *
+     * @return array<string, string>
+     */
+    public function validationData(): array
+    {
+        return array_merge($this->all(), [
+            'messageId' => $this->route('messageId'),
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, ValidationRule|array|string>
      */
     public function rules(): array
     {
         return [
             'message' => 'required|string',
+            'messageId' => 'required|integer',
+        ];
+    }
+
+    /**
+     * Кастомные сообщения об ошибках валидации.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'messageId.required' => 'messageId обязательный параметр',
+            'messageId.integer' => 'messageId должен быть целым числом',
+            'message.required' => 'Текст сообщения обязателен',
+            'message.string' => 'Текст должен быть строкой',
         ];
     }
 
     public function getMessage(): string
     {
         return $this->input('message');
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'errors' => $validator->errors(),
+        ], 422));
     }
 }
