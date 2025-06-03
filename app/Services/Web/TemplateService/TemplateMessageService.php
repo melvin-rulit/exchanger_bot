@@ -66,7 +66,7 @@ class TemplateMessageService extends BaseWebService
     public function delete($request): AnonymousResourceCollection
     {
         $template = TemplateMessage::where('user_id', auth()->id())
-            ->where('id', $request->getTemplateId())
+            ->where('id', $request->getIdFromRoute('templateId'))
             ->first();
 
         if (!$template) {
