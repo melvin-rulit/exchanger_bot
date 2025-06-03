@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Menu;
 
 use App\DTO\LanguageSelectionData;
+use App\Exceptions\TelegramApiException;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
 use App\Services\TelegramBotService\TelegramMessageService;
@@ -11,6 +12,10 @@ class StartLanguageAction
 {
 
     public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService) {}
+
+    /**
+     * @throws TelegramApiException
+     */
     public function execute(LanguageSelectionData $data): void
     {
         $this->clientsService->setClientChangeLanguageInput($data->clientId, null, true);
@@ -21,21 +26,5 @@ class StartLanguageAction
         $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId );
         $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -1);
         $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -2);
-
-
-//        $this->telegramMessageService->sendMessage($chatId, <<<HTML
-//<b>Добро пожаловать!</b>
-//
-//Выберите <i>язык</i> интерфейса или <a href="https://example.com">узнайте больше</a>.
-//
-//<code>Это монокод</code>
-//
-//<pre>
-//А это блок кода
-//    с отступами
-//</pre>
-//HTML
-//        );
-
     }
 }
