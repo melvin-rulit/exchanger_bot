@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <div class="main h-[600px] relative">
     <div class="flex justify-center space-x-14 border-b mt-5 mb-4 tabs">
       <button
@@ -11,8 +11,63 @@
     </div>
 
     <div class="tab-content p-10 rounded h-[calc(100%-4rem)] overflow-y-auto pb-24">
-      <div v-if="activeTab === 'Личные данные'">
-        <p>Форма редактирования профиля и пароля...</p>
+      <div class="flex flex-col" v-if="activeTab === 'Личные данные'">
+
+        <div class="flex items-center gap-2">
+          <div class="justify-center w-full pt-6 bg-white mt-8">
+            <div class="flex justify-center flex-wrap gap-20">
+
+              <div class="w-[336px] h-[140px]">
+                <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша фотография в системе</h6>
+                  <img v-if="currentUser.image_url" @click="triggerFileInput" :src="currentUser.image_url" class="w-20 mt-3 mx-auto cursor-pointer"  alt=""/>
+                  <img v-else @click="triggerFileInput" src="/Images/User/no_avatar.svg" alt="Аватар по умолчанию" class="w-20 mx-auto cursor-pointer">
+
+                  <file-input
+                    ref="fileInputRef"
+                    v-model="form.photo_path"
+                    :error="errors"
+                    type="file"
+                    accept="image/*"
+                    @change="onFileChange"
+                  />
+                </div>
+              </div>
+
+
+              <div class="w-[336px] h-[140px]">
+                <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя в системе</h6>
+                  <div class="flex items-center gap-2 mt-3 flex-col">
+                    <span v-if="editableUserId !== currentUser.id" @click="enableEdit(currentUser, 'userType')" class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ currentUser.name }}</span>
+                    <div  v-if="editableUserId === currentUser.id" class="flex items-center gap-2">
+                      <div>
+                        <hollow-dots-spinner
+                          :animation-duration="1000"
+                          :dot-size="15"
+                          :dots-num="1"
+                          color="#4caf50"
+                        />
+                      </div>
+                      <TextInput @enter="updateUser(form)" v-model="form.editableUserName" class="h-8 text-sm px-2 py-1 text-gray-800" width-class="w-[180px]"/>
+                      <button @click.stop="closeUpdateInput('userType')" class="close-btn h-8 w-8 flex items-center justify-center">
+                        <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error"/>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="w-[336px] h-[140px]">
+                <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 border-t">
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя в системе:</h6>
+                  <p class="text-gray-800 text-base">Еще одна карточка</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <div v-else-if="activeTab === 'Шаблоны сообщений'">
@@ -20,8 +75,8 @@
           <li
             v-for="(template, index) in templates"
             :key="index"
-            class="flex justify-between items-center border-b py-2 px-3 cursor-pointer hover:bg-gray-100">
-            <span v-if="editableTemplateId !== template.id" @click="enableEdit(template)" class="px-4 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer">{{ template.text }}</span>
+            class="flex justify-between items-center py-2 px-3 cursor-pointer hover:bg-gray-100">
+            <span v-if="editableTemplateId !== template.id" @click="enableEdit(template, 'templateType')" class="px-4 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer">{{ template.text }}</span>
             <div  v-if="editableTemplateId === template.id" class="flex items-center gap-2">
               <div class="" >
                 <hollow-dots-spinner
@@ -32,7 +87,7 @@
                 />
               </div>
               <TextInput @enter="updateTemplate(template)" v-model="editableTemplateName" class="h-8 text-sm px-2 py-1 text-gray-800" width-class="w-[1680px]"/>
-              <button @click.stop="closeTemplateUpdateInput" class="close-btn h-8 w-8 flex items-center justify-center">
+              <button @click.stop="closeUpdateInput('templateType')" class="close-btn h-8 w-8 flex items-center justify-center">
                 <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error"/>
               </button>
             </div>
@@ -66,14 +121,14 @@
       <div class="flex w-full rounded overflow-hidden border">
         <input
           v-model="newTemplate"
+          @keydown.enter="addTemplate"
           type="text"
           placeholder="Введите новый шаблон сообщения"
           class="border p-2 w-full rounded-l-md custom-input"
         />
         <button
           @click="addTemplate"
-          class="bg-blue-500 text-white p-2 rounded-r-md"
-        >
+          class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-md">
           Добавить
         </button>
       </div>
@@ -84,51 +139,97 @@
 
 <script>
 import { TemplateService } from '@/services/TemplateMessagesService.js'
+import { UserService } from '@/services/UserService.js'
 import { handleApiError } from '@/helpers/errors.js'
 import { Icon } from '@iconify/vue'
 import { HollowDotsSpinner } from 'epic-spinners'
+import { useUserStore } from '@/stores/userStore.js'
 import TextInput from '@/Components/Input/TextInput.vue'
+import FileInput from '@/Components/Input/FileInput.vue'
+import { resizeImage } from '@/utils/imageResizer.js'
 
 export default {
-  components: { TextInput, Icon, HollowDotsSpinner },
+  components: { FileInput, TextInput, UserService, Icon, HollowDotsSpinner },
   data() {
     return {
       tabs: ['Личные данные', 'Шаблоны сообщений', 'Настройки уведомлений'],
       activeTab: 'Личные данные',
       newTemplate: '',
       templates: [],
+      form: {
+        editableUserName: '',
+        photo_path: null,
+        previewUrl: null,
+      },
+      currentUser: [],
       alertMessage: '',
       alertType: 'success',
       hoveredTemplateId: null,
+      editableUserId: null,
       editableTemplateId: null,
       editableTemplateName: '',
       errors: '',
     };
   },
+  setup() {
+    const userStore = useUserStore()
+    return { userStore }
+  },
   mounted() {
+    this.getUser()
     this.getTemplatesMessages()
   },
   methods: {
+    async getUser() {
+      try {
+        const response = await UserService.currentUser();
+
+        this.currentUser = response.data.data;
+      } catch (error) {
+        this.errors = handleApiError(error)
+      }
+    },
     async getTemplatesMessages() {
       try {
         const response = await TemplateService.getTemplateMessages();
         this.templates = Array.isArray(response.data.template.messages) ? response.data.template.messages: [];
       } catch (error) {
         this.templates = [];
-        if (error.response && error.response.data) {this.errors = handleApiError(error)}
+        this.errors = handleApiError(error)
       }
     },
-    enableEdit(template) {
-      this.editableTemplateName = template.text
-      this.editableTemplateId = template.id
+    enableEdit(object, type) {
+      switch (type) {
+        case 'templateType':
+          this.editableTemplateName = object.text
+          this.editableTemplateId = object.id
+          return
+        case 'userType':
+          this.form.editableUserName = object.name
+          this.editableUserId = object.id
+          return
+      }
     },
-    closeTemplateUpdateInput() {
-      this.editableTemplateId = null
+    closeUpdateInput(type) {
+      switch (type) {
+        case 'templateType':
+          this.editableTemplateId = null
+          return
+        case 'userType':
+          this.editableUserId = null
+          return
+      }
     },
-    async updateTemplate(template) {
-      await TemplateService.updateTemplateMessage(template.id, this.editableTemplateName)
-      this.editableTemplateId = null
-      await this.getTemplatesMessages()
+    async updateUser(userForm) {
+      try {
+        const response = await UserService.updateUser(this.editableUserId, userForm);
+        this.editableUserId = null
+        this.currentUser = response.data.data;
+        this.userStore.setCurrentUser(response.data.data)
+      } catch (error) {
+        this.templates = [];
+        this.errors = handleApiError(error)
+      }
     },
     async addTemplate() {
       if (!this.newTemplate.trim()) {
@@ -143,6 +244,11 @@ export default {
         this.newTemplate = '';
       }
     },
+    async updateTemplate(template) {
+      await TemplateService.updateTemplateMessage(template.id, this.editableTemplateName)
+      this.editableTemplateId = null
+      await this.getTemplatesMessages()
+    },
     async removeTemplate($templateId) {
       try {
         const response = await TemplateService.delete($templateId);
@@ -151,7 +257,32 @@ export default {
         if (error.response && error.response.data) {this.errors = handleApiError(error)}
       }
     },
-  }
+    triggerFileInput() {
+      this.$refs.fileInputRef.browse()
+    },
+
+    async onFileChange(file) {
+      if (!file || !file.type?.startsWith('image/')) return
+
+      this.form.previewUrl = URL.createObjectURL(file)
+
+      try {
+        this.form.photo_path = await resizeImage(file)
+        await this.savePhoto()
+      } catch (error) {
+        this.errors = handleApiError(error)
+      }
+    },
+    async savePhoto() {
+      try {
+        const response = await UserService.sendPhoto(this.form.photo_path);
+        await this.getUser()
+        this.form.photo_path = null;
+      } catch (error) {
+        this.errors = handleApiError(error)
+      }
+    },
+  },
 }
 </script>
 
@@ -190,45 +321,5 @@ input:focus {
   font-size: 16px;
   font-weight: bold;
   color: #888;
-}
-.settings-wrapper {
-  width: 100%;
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 0.5rem;
-}
-
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.setting-input {
-  flex: 2;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  min-width: 250px;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.btn:hover {
-  background-color: #2563eb;
 }
 </style>
