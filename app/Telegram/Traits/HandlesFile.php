@@ -63,10 +63,12 @@ trait HandlesFile
      * Сохраняет файл в Media Library (Spatie) из объекта Response
      * @throws MediaLibraryException
      */
-    public function saveImageToModelFromResponse(string $imageContent, string $fileName, $model, string $collection = 'default'): void
+    public function saveImageToModelFromResponse(string $imageContent, string $fileName, $model, string $collection = 'default', bool $forceDelete = true): void
     {
         try {
-            $this->deleteIssetImages($model, $collection);
+            if ($forceDelete && $model->getMedia($collection)->isNotEmpty()) {
+                $this->deleteIssetImages($model, $collection);
+            }
 
             $model->addMediaFromString($imageContent)
                 ->usingFileName($fileName)
