@@ -45,7 +45,7 @@
               </div>
             </div>
 
-            <div class=" sm:ms-6 sm:flex sm:items-center">
+            <div class="sm:ms-6 sm:flex sm:items-center">
 
               <div class="relative group">
                 <div class="text-white cursor-pointer sm:ms-6 sm:flex sm:items-center">
@@ -54,13 +54,13 @@
                 </div>
               </div>
 
-              <span class="text-white font-weight-bolder font-size-base d-none d-md-inline mr-3 uppercase"
+              <span v-if="userStore.currentUser" class="text-white font-weight-bolder font-size-base d-none d-md-inline mr-3 uppercase"
                     type="button" data-drawer-target="drawer-right-example"
                     data-drawer-show="drawer-right-example" data-drawer-placement="right"
-                    aria-controls="drawer-right-example">{{ $page.props.auth.user.name }}</span>
-              <span class="d-none d-md-block">
+                    aria-controls="drawer-right-example">{{ userStore.currentUser.name }}</span>
+              <span v-if="userStore.currentUser" class="d-none d-md-block">
                             <span class="px-2 py-0.5 text-xs font-bold bg-green-100 rounded-md shadow-md">
-                        {{ $page.props.auth.role }}
+                        {{ userStore.currentUser.role[0] }}
                             </span>
               </span>
               <div class="relative group">
@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, computed, defineProps } from 'vue'
+import { ref, onMounted } from 'vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
@@ -104,9 +104,15 @@ import { Link } from '@inertiajs/vue3'
 import { Icon } from '@iconify/vue'
 import { router } from '@inertiajs/vue3'
 import { useOrdersStore } from '@/stores/ordersStore'
+import { UserService } from '@/services/UserService.js'
+import { useUserStore } from '@/stores/userStore.js'
 import { useConsultationStore } from '@/stores/consultationStore'
 import ConsultationListWatcher from '@/Pages/Consultation/Watcher/ConsultationListWatcher.vue'
 import { getFormattedDate } from '@/utils/dateFormatter.js'
+import { handleApiError } from '@/helpers/errors.js'
+
+const currentUser = ref(null)
+const errors = ref(null)
 const logout = () => {
   router.post(route('logout'))
 }
@@ -117,8 +123,21 @@ const settings = () => {
 const hasNewConsultMessages = ref(true)
 const today = ref(getFormattedDate())
 const ordersStore = useOrdersStore()
+const userStore = useUserStore()
 const consultationStore = useConsultationStore()
 
+async function getUser() {
+  try {
+    const response = await UserService.currentUser()
+    userStore.setCurrentUser(response.data.data)
+  } catch (error) {
+    errors.value = handleApiError(error)
+  }
+}
+
+onMounted(() => {
+  getUser()
+})
 </script>
 
 <style scoped>
