@@ -16,9 +16,7 @@ export default {
       channel.bind('new_message', async (data) => {
         playSound('new_sms.mp3')
         try {
-          const response = await ConsultationService.getMessages('', 1)
-          consultationStore.setMessages(response.data.data)
-          eventBus.emit('newMessage', response.data.data)
+          eventBus.emit('newMessage')
         } catch (e) {
           console.error('Ошибка при обновлении сообщений:', e)
         }
