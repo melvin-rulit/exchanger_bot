@@ -198,7 +198,7 @@ class UserWebService extends BaseWebService
     /**
      * @throws UserNotFoundException
      */
-    public function update($request): void
+    public function update($request)
     {
         $user = User::find($request->getIdFromRoute('userId'));
 
@@ -209,6 +209,8 @@ class UserWebService extends BaseWebService
         $user->update([
             'name' => $request->getName(),
         ]);
+
+        return $user;
     }
 
     /**
