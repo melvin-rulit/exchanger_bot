@@ -3,15 +3,19 @@
 namespace App\Handlers\Callback;
 
 use Illuminate\Support\Facades\App;
-use App\Services\RedisSessionService;
+use App\Exceptions\TelegramApiException;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
+use App\Services\RedisService\RedisSessionService;
 use App\Services\TelegramBotService\TelegramMessageService;
 
 class LanguageCallbackHandler
 {
     public function __construct(protected ClientsService $clientsService,protected TelegramMessageService $telegramMessageService, protected RedisSessionService $redisSessionService) {}
 
+    /**
+     * @throws TelegramApiException
+     */
     public function handle(string $languageCode, int $clientBotId, int|string $chatId, int $messageId): void {
 
         $isSetLanguage = $this->clientsService->setClientChangeLanguageInput($clientBotId, $languageCode, false);
