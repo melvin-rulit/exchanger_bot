@@ -8,9 +8,19 @@ const soundInstances = new Map()
 
 
 export function useReminder() {
+    // const remindManager = (orderId) => {
+    //     if (!attentionOrders.value.includes(orderId)) {
+    //         attentionOrders.value.push(orderId)
+    //         const soundId = playSound('alarm.ogg')
+    //         soundInstances.set(orderId, soundId)
+    //     }
+    // }
+
     const remindManager = (orderId) => {
+        console.log('remindManager called with orderId:', orderId)
         if (!attentionOrders.value.includes(orderId)) {
             attentionOrders.value.push(orderId)
+            console.log('attentionOrders updated:', attentionOrders.value)
             const soundId = playSound('alarm.ogg')
             soundInstances.set(orderId, soundId)
         }
@@ -37,7 +47,7 @@ export function useReminder() {
     const scheduleReminder = (reminder) => {
         const timeLeft = reminder.remindAt - Date.now()
         if (timeLeft <= 0) {
-            remindManager(reminder.orderId)
+            removeReminder(reminder.orderId)
             return
         }
         setTimeout(() => {
