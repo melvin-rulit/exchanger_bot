@@ -3,7 +3,7 @@
       <div class="table-container">
 
         <table class="w-full whitespace-nowrap">
-            <thead v-if="messages.length" class="head_table text-gray-800">
+            <thead class="head_table text-gray-800">
             <tr tabindex="0" class="focus:outline-none h-10 rounded">
                 <td>
                   <div class="flex pl-6">
@@ -12,7 +12,7 @@
                 </td>
               <td>
                 <div class="flex">
-                  <p class="font-semibold mr-2">Последнее сообщение</p>
+                  <p class="font-semibold mr-2">Последнее сообщение клиента</p>
                 </div>
               </td>
               <td>
@@ -30,7 +30,7 @@
 
             <tbody v-if="messages.length">
 
-            <tr v-for="message of messages" tabindex="0" @click="showModalShowChat(message.id, message.client)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
+            <tr v-for="message of messages" tabindex="0" @click="showModalChat(message, message.client)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
                 <td class="pl-4">
                     <div class="flex items-center text-gray-800">
                         <Icon icon="wpf:message-outline" width="26" height="26" :class="{'animate-fade-bounce': !message.is_message}"/>
@@ -44,7 +44,7 @@
               </td>
               <td class="">
                 <div class="flex items-center">
-                  <p v-if="message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColorClass"/> Чат закрыт клиентом</p>
+                  <p v-if="message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColor"/> Чат закрыт клиентом</p>
                 </div>
               </td>
               <td class="">
@@ -59,14 +59,28 @@
 
           <tbody v-else>
           <tr>
-            <td colspan="2" class="no-messages">Нет сообщений</td>
+            <td class="absolute top-[50%] left-[47%]">
+              <hollow-dots-spinner
+                v-if="isLoadingSpiner"
+                :animation-duration="1000"
+                :dot-size="20"
+                :dots-num="3"
+                color="#4caf50"
+              />
+            </td>
+            <td v-if="!messages.length && !isLoadingSpiner" class="absolute top-[47%] left-[47%] text-xl text-muted">На сегодня нет сообщений</td>
           </tr>
           </tbody>
+
         </table>
       </div>
 
       <div class="flex justify-between items-center rounded-lg shadow">
-        <div class="w-[450px] text-sm sm:text-base font-medium text-gray-700">
+
+      </div>
+
+      <div class="flex justify-between items-center rounded-lg shadow h-[20px]">
+        <div class="w-[450px] text-sm sm:text-base font-medium text-gray-700 mt-16">
           <Pagination
             :total="messageMeta.total"
             :limit="messageMeta.per_page"
@@ -76,37 +90,44 @@
         </div>
 
         <div v-if="startFunction" class="text-sm sm:text-base font-medium text-white">
-          <div class="flex items-center gap-3 mt-5">
-            <Icon icon="arcticons:filterbox" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
+          <div class="flex items-center gap-3 mt-20">
+            <Icon icon="system-uicons:bell-ringing" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
+            <Icon @click="toggleNotification(notificationSettings)" v-if="notificationSettings && !notificationSettings.is_active" icon="system-uicons:bell-disabled" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
             <Icon icon="lsicon:find-outline" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
-            <Icon icon="bi:calendar-date" width="41" height="41" class="hover:text-gray-400 cursor-pointer" />
+            <flat-pickr
+              v-model="date"
+              ref="calendar"
+              :config="flatpickrConfig"
+              @on-close=""
+              class="invisible absolute z-10 ml-[110px] mb-4"
+            />
+            <Icon @click="openCalendar" icon="bi:calendar-date" width="38" height="38" :class="['hover:text-gray-400 cursor-pointer',isCalendarOpen ? 'text-gray-400' : '']"/>
             <Icon icon="material-symbols-light:app-registration-outline-rounded" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
             <Icon @click="clickShowLockScreen" icon="hugeicons:lock-sync-01" width="45" height="45" class="hover:text-gray-400 cursor-pointer"/>
-
-            <AlertForNotification :message="alertMessage" :type="alertType" @clearMessages="clearAlertMessage" ref="alertComponent">
-              <template #buttons>
-                <div class="pl-4">
-                  <ButtonUI @click="alertButtonFunction" type="submit" color="green">{{alertButtonName}}</ButtonUI>
-                </div>
-              </template>
-            </AlertForNotification>
-
           </div>
         </div>
 
-        <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-4">
-          <PinChatsInOrderList
-            v-for="chat in pinnedChats"
+        <AlertForNotification :message="alertMessage" :type="alertType" @clearMessages="clearAlertMessage" ref="alertComponent">
+          <template #buttons>
+            <div class="pl-4">
+              <ButtonUI @click="alertButtonFunction" type="submit" color="green">{{alertButtonName}}</ButtonUI>
+            </div>
+          </template>
+        </AlertForNotification>
+
+        <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-20">
+          <PinChatsInConsultantList
+            v-for="chat in pinnedChats.filter(chat => !chat.order)"
             :key="chat.id"
-            :orderFullInfo="order"
-            :order="chat.order"
+            :chat = chat
+            :onClick="() => showModalChat(chat)"
           />
         </div>
       </div>
 
       <ModalShowChat
         :is-active="isModalChatShow"
-        :messageId="messageId"
+        :message="message"
         :client="client"
         @close="closeModalShowChat"
       />
@@ -115,45 +136,71 @@
         :is-active="isModalLockShow"
         @unlocked="unLockScreen"
       />
+
+      <SetLockScreenPassword
+        :is-active="isVisibleSetPassword"
+        @closeModal="closeScreenLockPassword"
+      />
+
     </div>
 </template>
 
 <script>
-import { usePusher } from '@/helpers/usePusher'
+import { eventBus } from '@/utils/eventBus.js'
 import { useSound } from '@/helpers/useSound'
-import { Icon } from '@iconify/vue';
-import ModalShowChat from '@/Pages/Consultation/Chats/Modal/ModalShowChat.vue'
-import { ConsultationService } from '@/services/ConsultationService.js'
-import { useConsultationStore } from '@/stores/consultationStore'
-import AlertForNotification from '@/Components/AlertForNotification.vue'
-import PinChatsInOrderList from '@/Pages/Order/Chats/PinedChats/PinChatsInOrderList.vue'
-import ButtonUI from '@/Components/ButtonUI.vue'
-import Pagination from '@/Components/Pagination.vue'
+import { handleApiError } from '@/helpers/errors.js'
+import { getIconColorClass } from '@/helpers/iconColorClass.js'
 import { UserService } from '@/services/UserService.js'
+import { ConsultationService } from '@/services/ConsultationService.js'
+import ButtonUI from '@/Components/Button/ButtonUI.vue'
+import Pagination from '@/Components/Pagination.vue'
+import ModalLock from '@/Components/Modal/ModalLock.vue'
+import Spiner from '@/Components/Spiner/Spiner.vue'
+import { Icon } from '@iconify/vue';
+import { HollowDotsSpinner } from 'epic-spinners'
+import { useConsultationStore } from '@/stores/consultationStore'
 import { useUserStore } from '@/stores/userStore.js'
-import ModalLock from '@/Components/ModalLock.vue'
+import ModalShowChat from '@/Pages/Consultation/Chats/Modal/ModalShowChat.vue'
+import AlertForNotification from '@/Components/Notifications/AlertForNotification.vue'
+import PinChatsInConsultantList from '@/Pages/Consultation/Chats/PinedChats/PinChatsInConsultantList.vue'
+import SetLockScreenPassword from '@/Pages/Order/Notifications/SetLockScreenPassword.vue'
+import flatPickr from 'vue-flatpickr-component'
+import { Russian } from "flatpickr/dist/l10n/ru.js"
+import 'flatpickr/dist/flatpickr.css';
 
 export default {
-    components: {ModalLock, Pagination, ButtonUI, PinChatsInOrderList, AlertForNotification, Icon, ConsultationService, ModalShowChat},
+    components: { flatPickr, Spiner, SetLockScreenPassword, ModalLock, Pagination, ButtonUI, PinChatsInConsultantList, AlertForNotification, Icon, ConsultationService, ModalShowChat, HollowDotsSpinner},
     data: function () {
         return {
             messages: '',
-            messageId: '',
             client: '',
             pinnedChats: [],
             form: {
                 dateFrom: '',
                 dateTo: '',
             },
-            statusTranslations: {
-                new: 'Новый',
-                active: 'Активный',
-                deleted: 'Удален',
+            date: new Date(),
+            isCalendarOpen: false,
+            flatpickrConfig: {
+              onOpen: () => {
+                this.isCalendarOpen = true;
+              },
+              onClose: () => {
+                this.isCalendarOpen = false;
+              },
+              allowInput: false,
+              altFormat: 'd.m.Y',
+              dateFormat: 'd.m.Y',
+              locale: Russian
             },
-            consultantChannel: null,
+            isLoadingSpiner: true,
             messageMeta: {},
             currentPage: 1,
             query: '',
+            alertMessage: '',
+            alertButtonName: '',
+            alertType: 'success',
+            alertButtonFunction: '',
             type: 'error',
             limit: 5,
             total: 1,
@@ -164,6 +211,7 @@ export default {
             showFilter: false,
             isModalChatShow: false,
             isModalLockShow: false,
+            isVisibleSetPassword: false,
         }
     },
   setup() {
@@ -174,29 +222,16 @@ export default {
   },
 
     async mounted() {
-      const { pusher } = usePusher()
-      this.pusher = pusher
-
+      eventBus.on('newMessage', this.handleNewMessage)
       await this.userStore.fetchUser()
       await this.getTodayMessages()
-      this.checkNewMessagesUpdate()
       await this.getPinedChat()
       await this.showLockScreen()
+      this.spinerLoading()
     },
     computed: {
-      iconColorClass() {
-        switch (this.type) {
-          case 'success':
-            return 'icon-success';
-          case 'error':
-            return 'icon-error';
-          case 'danger':
-            return 'icon-danger';
-          case 'info':
-            return 'icon-info';
-          default:
-            return 'icon-success';
-        }
+      iconColor() {
+        return getIconColorClass(this.type);
       },
         hasFilters() {
             return Object.values(this.form).some(value => value !== '')
@@ -208,9 +243,7 @@ export default {
           const response = await UserService.getPinedChat();
           this.pinnedChats = response.data.data;
         } catch (error) {
-          this.errors = error.response?.data?.errors || 'Ошибка загрузки данных';
-        }finally {
-
+          this.errors = handleApiError(error)
         }
       },
       async getTodayMessages(page = 1, query = '') {
@@ -220,25 +253,14 @@ export default {
         this.currentPage = page;
         this.consultationStore.setMessages(this.messages)
       },
-        checkNewMessagesUpdate() {
-            this.consultantChannel = this.pusher.subscribe('consultation');
-
-            this.consultantChannel.bind('new_message', (data) => {
-              if (!this.isModalChatShow){
-                this.playSound('new_sms.mp3')
-                // let audio = new Audio('/audio/new_sms_consultant_2.wav');
-                // audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
-              }else{
-                this.playSound('new_sms.mp3')
-                // let audio = new Audio('/audio/new_sms_consultant_chat.mp3');
-                // audio.play().catch(err => console.error('Ошибка воспроизведения:', err));
-              }
-                this.getTodayMessages()
-            });
-        },
-        showModalShowChat($messageId, $client) {
+      async handleNewMessage() {
+        if(!this.isModalChatShow) {
+          await this.getTodayMessages()
+        }
+      },
+      showModalChat($message, $client) {
             this.isModalChatShow = true;
-            this.messageId = $messageId
+            this.message = $message
             this.client = $client
             this.setMessagesRead()
         },
@@ -279,45 +301,77 @@ export default {
         this.startFunction = true
         this.isVisibleSetPassword = false
         await this.userStore.fetchUser()
-        this.getOrders()
       },
-      setMessagesRead() {
-        ConsultationService.setConsultantMessagesRead(this.messageId).then(response => {
-        })
+      async setMessagesRead() {
+        try {
+          await ConsultationService.setConsultantMessagesRead(this.message.id);
+        } catch (error) {
+          this.errors = handleApiError(error);
+        }
+      },
+      openCalendar() {
+        if (this.$refs.calendar?.fp) {
+          this.isCalendarOpen = true
+          this.$refs.calendar.fp.open()
+        }
       },
         closeModalShowChat() {
             this.getTodayMessages()
+            this.getPinedChat()
             this.isModalChatShow = false
         },
+      spinerLoading() {
+        if (this.messages) {
+          this.isLoadingSpiner = false
+        }
+      },
+      triggerErrorAlert($message, $buttonName, $buttonFunction) {
+        this.alertMessage = $message;
+        this.alertType = 'error';
+        this.alertButtonName = $buttonName;
+        this.alertButtonFunction = $buttonFunction;
+        this.$refs.alertComponent.showAlert();
+      },
+      clearAlertMessage() {
+        this.alertMessage = '';
+      },
     },
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .main {
-  min-height: 93vh;
+  min-height: 94vh;
   display: flex;
   flex-direction: column;
 }
+
 .table-container {
   flex-grow: 1;
   overflow-y: auto;
+  max-height: calc(94vh - 89px);
   background-color: white;
 }
 .filters_block {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 
-    span{
-        font-size: 11px;
-    }
+  span {
+    font-size: 11px;
+  }
 }
+
 .head_table {
-    background-color: ghostwhite;
+  border-bottom: 1px solid #e5e7eb;
 }
+
 .inside_table {
-    background-color: white;
-    cursor: pointer;
-  border-bottom: 1px solid rgba(0, 0, 0, .05);
+  background-color: white;
+  cursor: pointer;
+  border-bottom: 2px solid rgba(0, 0, 0, .09);
+}
+
+.inside_table:hover {
+  background-color: #f3f4f6;
 }
 .no-messages {
   text-align: center;
