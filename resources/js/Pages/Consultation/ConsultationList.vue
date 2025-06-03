@@ -148,6 +148,7 @@
 <script>
 import { eventBus } from '@/utils/eventBus.js'
 import { useSound } from '@/helpers/useSound'
+import { usePusher } from '@/helpers/usePusher'
 import { handleApiError } from '@/helpers/errors.js'
 import { getIconColorClass } from '@/helpers/iconColorClass.js'
 import { UserService } from '@/services/UserService.js'
@@ -193,6 +194,7 @@ export default {
               dateFormat: 'd.m.Y',
               locale: Russian
             },
+            closeConsultation: null,
             isLoadingSpiner: true,
             messageMeta: {},
             currentPage: 1,
@@ -222,8 +224,11 @@ export default {
   },
 
     async mounted() {
+      const { pusher } = usePusher()
+      this.pusher = pusher
       eventBus.on('newMessage', this.handleNewMessage)
       await this.userStore.fetchUser()
+      this.checkCloseConsultation()
       await this.getTodayMessages()
       await this.getPinedChat()
       await this.showLockScreen()
@@ -257,6 +262,16 @@ export default {
         if(!this.isModalChatShow) {
           await this.getTodayMessages()
         }
+      },
+      checkCloseConsultation() {
+        if (this.closeConsultation) {
+          return;
+        }
+        this.closeConsultation = this.pusher.subscribe('consultation_closed')
+
+        this.closeConsultation.bind('consultation_closed', async (data) => {
+          await this.getTodayMessages()
+        })
       },
       showModalChat($message, $client) {
             this.isModalChatShow = true;

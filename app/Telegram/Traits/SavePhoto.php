@@ -22,6 +22,8 @@ trait SavePhoto
 
             $messageModel = $this->chatService->prepareSaveMessage($chatId, $clientId, $message_group, $photo['file_id'], null, $orderId);
 
+            $this->redis->setMessageIdForConsultationFromClient($chatId, $messageModel->id, 0);
+
             $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $messageModel, 'chat_screenshot');
         }
     }
