@@ -2,47 +2,84 @@
 
 namespace App\Services\ChatService;
 
-use App\Events\ClientConsultationMessageSent;
-use App\Events\OrderUpdated;
-use App\Models\Message;
 use App\Models\Order;
-use Illuminate\Container\Attributes\Log;
+use App\Models\Message;
+use App\Events\Order\OrderMessageSent;
+use App\Exceptions\Services\MessageNotFoundException;
+use App\Events\Consultation\ClientConsultationMessageSent;
 
 class ChatService
 {
-    public function setMessageInput($order_id)
+    public function setMessageInput($orderId): void
     {
-        $order = Order::find($order_id);
+        $order = Order::find($orderId);
 
         if ($order) {
             $order->is_message = true;
             $order->save();
 
-            broadcast(new OrderUpdated($order));
+            broadcast(new OrderMessageSent($order));
         }
-
     }
 
-    public function prepareSaveMessage($message, $chatId, $save_order_id = null)
+    /**
+     * @throws MessageNotFoundException
+     */
+    public function setCloseConsultation($messageId): void
     {
-        if ($save_order_id) {
-            $this->saveMessage($save_order_id, $message, $chatId);
-            $this->setMessageInput($save_order_id);
-        } else {
-            $this->saveMessage($save_order_id, $message, $chatId);
-            broadcast(new ClientConsultationMessageSent($message, $chatId));
+        if (!$message = Message::find($messageId)) {
+            throw new MessageNotFoundException("Заказ с ID {$messageId} не найден.");
         }
 
+        $message->is_close = true;
+        $message->save();
     }
 
-    public function saveMessage($save_order_id, $message, $chatId)
+    public function prepareSaveMessage(int $chatId ,int $clientId, ?int $messageGroup = null, ?string $photoFileId = null, ?string $message = null, ?int $saveOrderId = null): ?Message {
+        if ($photoFileId) {
+            broadcast(new ClientConsultationMessageSent($chatId, $message));
+            if ($saveOrderId) {
+                $this->setMessageInput($saveOrderId);
+                return $this->createEmptyImageMessage($chatId, $clientId, $messageGroup, $saveOrderId);
+            }
+            return $this->createEmptyImageMessage($chatId, $clientId, $messageGroup, null);
+        }
+
+        if ($saveOrderId) {
+            $this->saveMessage($chatId, $clientId, $message, $saveOrderId, $messageGroup);
+            $this->setMessageInput($saveOrderId);
+            return null;
+        }
+
+        $createdMessage = $this->saveMessage($chatId, $clientId, $message, null, $messageGroup);
+        broadcast(new ClientConsultationMessageSent($chatId, $message));
+
+        return $createdMessage;
+    }
+
+    public function saveMessage(int $chatId, int $clientId, ?string $message, ?int $orderId, ?int $messageGroup = null): Message
     {
-        Message::create([
-            'chat_id' => $chatId,
-            'order_id' => $save_order_id,
-            'user_id' => null,
-            'sender_type' => 'client',
-            'message' => $message,
+        return Message::create([
+            'message_group' => $messageGroup,
+            'chat_id'       => $chatId,
+            'order_id'      => $orderId,
+            'client_id'      => $clientId,
+            'user_id'       => null,
+            'sender_type'   => 'client',
+            'message'       => $message,
+        ]);
+    }
+
+    public function createEmptyImageMessage(int $chatId, int $clientId, int $messageGroup, $saveOrderId): Message
+    {
+        return Message::create([
+            'message_group' => $messageGroup,
+            'chat_id'       => $chatId,
+            'order_id'      => $saveOrderId,
+            'client_id'      => $clientId,
+            'user_id'       => null,
+            'sender_type'   => 'client',
+            'message'       => null,
         ]);
     }
 }
