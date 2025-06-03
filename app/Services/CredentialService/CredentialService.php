@@ -2,19 +2,14 @@
 
 namespace App\Services\CredentialService;
 
-use App\Events\ClientConsultationMessageSent;
-use App\Events\OrderUpdated;
 use App\Models\Country;
-use App\Models\Message;
-use App\Models\Order;
-use Illuminate\Container\Attributes\Log;
 
 class CredentialService
 {
-    public function checkAmountInput($amount): ?int
+    public function checkAmountInput($amount): ?string
     {
         $credential = null;
-
+//TODO $this->getCredential(1); передавать правильно id страны, по которым выдаются тот или иной реквизит
         if ($amount > 18000) {
             $credential = $this->getCredential(1);
         }else {
@@ -24,18 +19,14 @@ class CredentialService
         return $credential;
     }
 
-    public function getCredential($country_id)
+    public function getCredential($countryId): ?string
     {
-        $country = Country::find($country_id);
+        $country = Country::find($countryId);
 
-        if ($country) {
-            $credentials = $country->credentials()->first();
-
-            if ($credentials) {
-                return $credentials->value;
-            }
+        if (!$country) {
+            return null;
         }
 
-        return null;
+        return $country->getCredentialValueAttribute();
     }
 }
