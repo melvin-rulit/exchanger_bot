@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Http\Request;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -29,13 +29,31 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        if ($user) {
+
+            $user->load('settings');
+
+            $plainSettings = $user->settings->map(function ($setting) {
+                $arr = $setting->toArray();
+                $arr['is_active'] = $setting->pivot->is_active;
+                $arr['value']     = $setting->pivot->value;
+                unset($arr['pivot']);
+                return $arr;
+            })->toArray();
+
+            $userArray = $user->toArray();
+
+            $userArray['settings'] = $plainSettings;
+            $userArray['image_url'] = $user->getImageUrl();
+        }
+
         return [
             ...parent::share($request),
-
             'auth' => [
-                'user' => $request->user(),
-                'role' => $request->user()? $request->user()->getRoleNames()->first(): null,
-
+                'user' => $userArray ?? null,
+                'role' => $user?->getRoleNames()->first(),
             ],
         ];
     }

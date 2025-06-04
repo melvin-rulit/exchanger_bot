@@ -4,11 +4,10 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
-import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { ZiggyVue } from 'ziggy-js';
 import { createPinia } from 'pinia'
 import { useUserStore } from './stores/userStore';
 
-const appName = import.meta.env.VITE_APP_NAME || '';
 const pinia = createPinia()
 
 await createInertiaApp({
@@ -23,8 +22,12 @@ await createInertiaApp({
 
         vueApp.use(plugin).use(ZiggyVue).use(pinia);
 
-        // ✅ Установи пользователя в store
         const userStore = useUserStore();
+        const initialUser = props.initialPage.props.auth.user || null
+        if (initialUser) {
+            initialUser.role = props.initialPage.props.auth.role
+            userStore.setCurrentUser(props.initialPage.props.auth.user)
+        }
         if (props.initialPage.props.auth?.user) {
             userStore.setUser(props.initialPage.props.auth.user);
         }
