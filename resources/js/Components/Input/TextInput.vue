@@ -1,12 +1,12 @@
 <template>
-  <label v-if="isTitle" class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">{{title}}</label>
+  <label v-if="isTitle" class="block mb-1 text-sm font-medium text-gray-900">{{title}}</label>
   <input
     :placeholder="placeholder"
     :autofocus="autofocus"
     :type="type"
     :readonly="readonly"
     :disabled="disabled"
-    class="text-sm px-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-400"
+    class="text-sm px-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-400 text-gray-900 shadow-md"
     :class="widthClass"
     :value="model"
     ref="input"

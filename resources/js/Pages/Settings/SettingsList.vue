@@ -1,4 +1,4 @@
-<template xmlns="http://www.w3.org/1999/html">
+<template>
   <div class="main h-[600px] relative">
     <div class="flex justify-center space-x-14 border-b mt-5 mb-4 tabs">
       <button
@@ -18,9 +18,10 @@
             <div class="flex justify-center flex-wrap gap-20">
 
               <div class="w-[336px] h-[140px]">
+                {{}}
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
                   <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша фотография в системе</h6>
-                  <img v-if="currentUser.image_url" @click="triggerFileInput" :src="currentUser.image_url" class="w-20 mt-3 mx-auto cursor-pointer"  alt=""/>
+                  <img v-if="userStore.currentUser.image_url" @click="triggerFileInput" :src="userStore.currentUser.image_url" class="w-20 mt-3 mx-auto cursor-pointer"  alt=""/>
                   <img v-else @click="triggerFileInput" src="/Images/User/no_avatar.svg" alt="Аватар по умолчанию" class="w-20 mx-auto cursor-pointer">
 
                   <file-input
@@ -39,8 +40,8 @@
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
                   <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя в системе</h6>
                   <div class="flex items-center gap-2 mt-3 flex-col">
-                    <span v-if="editableUserId !== currentUser.id" @click="enableEdit(currentUser, 'userType')" class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ currentUser.name }}</span>
-                    <div  v-if="editableUserId === currentUser.id" class="flex items-center gap-2">
+                    <span v-if="editableUserId !== userStore.currentUser.id" @click="enableEdit(userStore.currentUser, 'userType')" class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ userStore.currentUser.name }}</span>
+                    <div  v-if="editableUserId === userStore.currentUser.id" class="flex items-center gap-2">
                       <div>
                         <hollow-dots-spinner
                           :animation-duration="1000"
@@ -49,7 +50,7 @@
                           color="#4caf50"
                         />
                       </div>
-                      <TextInput @enter="updateUser(form)" v-model="form.editableUserName" class="h-8 text-sm px-2 py-1 text-gray-800" width-class="w-[180px]"/>
+                      <TextInput @enter="updateUser(form)" v-model="form.editableUserName" class="text-xl" width-class="w-[180px]"/>
                       <button @click.stop="closeUpdateInput('userType')" class="close-btn h-8 w-8 flex items-center justify-center">
                         <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error"/>
                       </button>
@@ -86,7 +87,7 @@
                   color="#4caf50"
                 />
               </div>
-              <TextInput @enter="updateTemplate(template)" v-model="editableTemplateName" class="h-8 text-sm px-2 py-1 text-gray-800" width-class="w-[1680px]"/>
+              <TextInput @enter="updateTemplate(template)" v-model="editableTemplateName" class="h-8 text-sm px-2 py-1" width-class="w-[1680px]"/>
               <button @click.stop="closeUpdateInput('templateType')" class="close-btn h-8 w-8 flex items-center justify-center">
                 <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" class="icon-error"/>
               </button>
@@ -161,7 +162,6 @@ export default {
         photo_path: null,
         previewUrl: null,
       },
-      currentUser: [],
       alertMessage: '',
       alertType: 'success',
       hoveredTemplateId: null,
@@ -176,19 +176,9 @@ export default {
     return { userStore }
   },
   mounted() {
-    this.getUser()
     this.getTemplatesMessages()
   },
   methods: {
-    async getUser() {
-      try {
-        const response = await UserService.currentUser();
-
-        this.currentUser = response.data.data;
-      } catch (error) {
-        this.errors = handleApiError(error)
-      }
-    },
     async getTemplatesMessages() {
       try {
         const response = await TemplateService.getTemplateMessages();
@@ -224,8 +214,12 @@ export default {
       try {
         const response = await UserService.updateUser(this.editableUserId, userForm);
         this.editableUserId = null
-        this.currentUser = response.data.data;
-        this.userStore.setCurrentUser(response.data.data)
+        const updated = response.data.data;
+
+        if (Array.isArray(updated.role)) {
+          updated.role = updated.role[0] ?? '';
+        }
+        this.userStore.setCurrentUser(updated)
       } catch (error) {
         this.templates = [];
         this.errors = handleApiError(error)
@@ -276,7 +270,12 @@ export default {
     async savePhoto() {
       try {
         const response = await UserService.sendPhoto(this.form.photo_path);
-        await this.getUser()
+        const updated = response.data.data;
+
+        if (Array.isArray(updated.role)) {
+          updated.role = updated.role[0] ?? '';
+        }
+        this.userStore.setCurrentUser(updated)
         this.form.photo_path = null;
       } catch (error) {
         this.errors = handleApiError(error)
