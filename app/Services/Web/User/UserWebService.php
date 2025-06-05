@@ -3,7 +3,6 @@
 namespace App\Services\Web\User;
 
 
-use App\Exceptions\Images\MediaLibraryException;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\UserPinnedMessage;
@@ -12,6 +11,7 @@ use App\Services\Web\BaseWebService;
 use App\Telegram\Traits\HandlesFile;
 use App\Exceptions\User\UserNotFoundException;
 use App\Exceptions\User\UsersNotFoundException;
+use App\Exceptions\Images\MediaLibraryException;
 use App\Exceptions\User\AuthUserNotFoundException;
 use App\Exceptions\User\ManagersNotFoundException;
 use App\Exceptions\User\Chat\PinChatFailedException;
@@ -217,7 +217,7 @@ class UserWebService extends BaseWebService
      * @throws MediaLibraryException
      * @throws AuthUserNotFoundException
      */
-    public function storeUserPhoto($request): void
+    public function storeUserPhoto($request): User
     {
         $user = auth()->user();
 
@@ -227,5 +227,7 @@ class UserWebService extends BaseWebService
 
         $imageContent = file_get_contents($request->file('photo')->getRealPath());
         $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $user, 'user_avatar');
+
+        return $user;
     }
 }
