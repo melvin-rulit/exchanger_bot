@@ -5,8 +5,6 @@ namespace App\Services\ChatService;
 use App\Models\Order;
 use App\Models\Message;
 use App\Events\Order\OrderMessageSent;
-use App\Events\Consultation\ConsultationClosed;
-use App\Exceptions\Services\MessageNotFoundException;
 use App\Events\Consultation\ClientConsultationMessageSent;
 
 class ChatService
@@ -23,24 +21,10 @@ class ChatService
         }
     }
 
-    /**
-     * @throws MessageNotFoundException
-     */
-    public function setCloseConsultation($messageId): void
-    {
-        if (!$message = Message::find($messageId)) {
-            throw new MessageNotFoundException("Заказ с ID {$messageId} не найден.");
-        }
-
-        $message->is_close = true;
-        $message->save();
-
-            broadcast( new ConsultationClosed());
-    }
-
     public function prepareSaveMessage(int $chatId ,int $clientId, ?int $messageGroup = null, ?string $photoFileId = null, ?string $message = null, ?int $saveOrderId = null): ?Message {
         if ($photoFileId) {
             broadcast(new ClientConsultationMessageSent($chatId, $message));
+
             if ($saveOrderId) {
                 $this->setMessageInput($saveOrderId);
                 return $this->createEmptyImageMessage($chatId, $clientId, $messageGroup, $saveOrderId);
