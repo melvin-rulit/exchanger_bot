@@ -52,7 +52,5 @@ HTML;
         $order->client()->update([
             'status' => MenuLevelStatus::Screenshot->value,
         ]);
-
-        $this->sendWebhookCommand($order->chat_id, MenuLevelStatus::Screenshot->value);
     }
 }
