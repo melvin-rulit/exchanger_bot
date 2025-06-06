@@ -91,8 +91,8 @@
 
         <div v-if="startFunction" class="text-sm sm:text-base font-medium text-white">
           <div class="flex items-center gap-3 mt-20">
-            <Icon icon="system-uicons:bell-ringing" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
-            <Icon @click="toggleNotification(notificationSettings)" v-if="notificationSettings && !notificationSettings.is_active" icon="system-uicons:bell-disabled" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
+            <Icon @click="toggleNotification(notificationSettings)" v-show="notificationSettings && notificationSettings.is_active" icon="system-uicons:bell-ringing" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
+            <Icon @click="toggleNotification(notificationSettings)" v-show="notificationSettings && !notificationSettings.is_active" icon="system-uicons:bell-disabled" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
             <Icon icon="lsicon:find-outline" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
             <flat-pickr
               v-model="date"
@@ -238,9 +238,9 @@ export default {
       iconColor() {
         return getIconColorClass(this.type);
       },
-        hasFilters() {
-            return Object.values(this.form).some(value => value !== '')
-        },
+      notificationSettings() {
+        return this.userStore.currentUser?.settings?.find(s => s.key === 'notification') || { is_active: false }
+      }
     },
     methods: {
       async getPinedChat() {
@@ -270,7 +270,7 @@ export default {
         this.closeConsultation = this.pusher.subscribe('consultation_closed')
 
         this.closeConsultation.bind('consultation_closed', async (data) => {
-          await this.getTodayMessages()
+          this.closeModalShowChat()
         })
       },
       showModalChat($message, $client) {
@@ -324,16 +324,42 @@ export default {
           this.errors = handleApiError(error);
         }
       },
+      async toggleNotification(notificationSettings) {
+        try {
+          const response = await UserService.toggleNotification(notificationSettings);
+          const newIsActive = response.data.notification.is_active;
+
+          const userStore = useUserStore();
+
+          const settingsArray = userStore.currentUser.settings || [];
+          const idx = settingsArray.findIndex(s => s.id === notificationSettings.id);
+
+          if (idx !== -1) {
+            const updatedSettings = [...settingsArray];
+            updatedSettings[idx] = {
+              ...updatedSettings[idx],
+              is_active: newIsActive
+            };
+
+            userStore.setCurrentUser({
+              ...userStore.currentUser,
+              settings: updatedSettings
+            });
+          }
+        } catch (error) {
+          this.errors = handleApiError(error);
+        }
+      },
       openCalendar() {
         if (this.$refs.calendar?.fp) {
           this.isCalendarOpen = true
           this.$refs.calendar.fp.open()
         }
       },
-        closeModalShowChat() {
-            this.getTodayMessages()
-            this.getPinedChat()
-            this.isModalChatShow = false
+      closeModalShowChat() {
+          this.isModalChatShow = false
+           this.getTodayMessages()
+           this.getPinedChat()
         },
       spinerLoading() {
         if (this.messages) {
