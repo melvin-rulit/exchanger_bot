@@ -8,8 +8,7 @@
 
     <form @submit.prevent="submit">
       <div>
-        <InputLabel for="email" value="Email" />
-
+<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Email</span>
         <TextInput
           id="email"
           type="email"
@@ -24,8 +23,7 @@
       </div>
 
       <div class="mt-4">
-        <InputLabel for="password" value="Пароль" />
-
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Пароль</span>
         <TextInput
           id="password"
           type="password"
@@ -39,28 +37,22 @@
       </div>
 
       <div class="mt-4 block">
-        <label class="flex items-center">
-          <Checkbox name="remember" v-model:checked="form.remember" />
-          <span class="ms-2 text-sm text-gray-600 dark:text-gray-400"
-          >Запомнить меня</span
-          >
-        </label>
+
       </div>
 
       <div class="mt-4 flex items-center justify-end">
-        <Link
-          v-if="canResetPassword"
-          :href="route('password.request')"
-          class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-        >
-          Забыли пароль?
-        </Link>
+<!--        <Link-->
+<!--          v-if="canResetPassword"-->
+<!--          :href="route('password.request')"-->
+<!--          class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"-->
+<!--        >-->
+<!--          Забыли пароль?-->
+<!--        </Link>-->
 
         <PrimaryButton
           class="ms-4"
           :class="{ 'opacity-25': form.processing }"
-          :disabled="form.processing"
-        >
+          :disabled="form.processing">
           Войти
         </PrimaryButton>
       </div>
@@ -99,7 +91,7 @@ const submit = () => {
 };
 </script>
 
-<style>
+<style scoped>
 .bg-login {
   background-image: url('/Images/background.jpg');
   background-size: cover;
