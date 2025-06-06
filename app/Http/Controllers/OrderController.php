@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Events\Order\OrderUpdated;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\SuccessResponse;
 use App\Http\Responses\NotFoundResponse;
@@ -55,17 +53,6 @@ public function __construct(protected TelegramMessageService $telegramService, p
         } catch (OrderNotFoundException $e) {
             return new NotFoundResponse($e->getMessage());
         }
-    }
-    public function setOrderMessage($id): JsonResponse
-    {
-        $order = Order::find($id);
-
-        $order->is_message = !$order->is_message;
-        $order->save();
-
-        broadcast(new OrderUpdated($order));
-
-        return response()->json($order);
     }
 
     public function setMessagesOrderRead(SetOrderMessageReadRequest $request): SuccessResponse|NotFoundResponse

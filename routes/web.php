@@ -23,6 +23,10 @@ Route::get('/dashboard', function () {
     return Inertia::render('Order/Index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/adminOrders', function () {
+    return Inertia::render('Order/Index');
+})->middleware(['auth', 'verified'])->name('adminOrders');
+
 Route::get('/consultation', function () {
     return Inertia::render('Consultation/Index');
 })->middleware(['auth', 'verified'])->name('consultation');
@@ -35,7 +39,6 @@ Route::middleware('auth')->group(function () {
 
     Route::group(['prefix' => 'orders', 'as' => 'orders.'], function () {
         Route::get('/', [OrderController::class, 'getOrders']);
-        Route::patch('/{id}', [OrderController::class, 'setOrderMessage']);
         Route::patch('/set_read_messages/{orderId}', [OrderController::class, 'setMessagesOrderRead'])->whereNumber('orderId');
         Route::get('/get_order/{orderId}', [OrderController::class, 'getOrder'])->whereNumber('orderId');
         Route::post('/send_photo/{orderId}', [OrderController::class, 'storeMessageWithPhoto'])->whereNumber('orderId');
