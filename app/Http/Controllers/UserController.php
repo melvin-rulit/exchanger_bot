@@ -143,11 +143,11 @@ class UserController extends Controller
         }
     }
 
-    public function storePhoto(SaveUserPhotoRequest $request): ErrorResponse|SuccessResponse|NotFoundResponse
+    public function storePhoto(SaveUserPhotoRequest $request): ErrorResponse|UserResource|NotFoundResponse
     {
         try {
-            $this->userWebService->storeUserPhoto($request);
-            return new SuccessResponse('Изображение сохранено');
+            $user = $this->userWebService->storeUserPhoto($request);
+            return new UserResource($user);
 
         } catch (MediaLibraryException $e) {
             return new ErrorResponse('Не удалось сохранить изображение: ' . $e->getMessage());
