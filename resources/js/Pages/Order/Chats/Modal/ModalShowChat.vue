@@ -1,118 +1,317 @@
 <template>
-    <div
-        v-if="isActive"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <Alert ref="alertComponent" :message="alertMessage" :type="alertType" />
+
+    <div v-if="isActive" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 
         <div @click.stop class="relative bg-white chat_container w-96 h-96 rounded-lg  flex flex-col">
 
-            <div class="flex-1 overflow-auto mb-4">
+          <div class="flex justify-between items-center pb-2 border-b border-gray-200">
+            <div class="flex items-center">
+
+              <div v-if="pinedChat && !pinedChat.is_pinned" class="cursor-pointer flex items-center">
+                <Icon @click="pinChat(selectedOrder)" icon="bi:pin-angle" width="26" height="26" class="mr-4 cursor-pointer"/>
+              </div>
+              <div v-if="pinedChat && pinedChat.is_pinned" class="cursor-pointer flex items-center">
+                <Icon @click="unPinChat(null, pinedChat.id)" icon="bi:pin-angle-fill" width="26" height="26" class="mr-4 cursor-pointer"/>
+              </div>
+
+              <div class="text-lg font-semibold">Заказ </div>
+              <span class="ml-2">№{{ orderId}}</span>
+              <div class="flex items-center gap-1 cursor-pointer hover:underline ml-4">
+                <span @click="showModalOrderDetail" class="text-xs text-blue-500">Перейти к заказу</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 w-[370px]">
+              <div v-if="localOrder.client.status === 'send_screenshot' && receiptNotice" class="flex items-start gap-2 p-1 text-sm text-green-800 bg-green-100 border border-green-300 rounded-lg shadow-sm animate-fade-bounce">
+                <svg class="w-5 h-5 mt-0.5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8.364 8.364a1 1 0 01-1.414 0L3.293 11.05a1 1 0 011.414-1.414L8 12.93l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                  <span class="font-medium">К этому заказу клиент выслал чек</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-5">
+
+                <PinChatsInChatModal
+                  v-for="chat in pinnedChats.filter(chat => chat.order && chat.order.user?.id === $page.props.auth.user.id)"
+                  :key="chat.id"
+                  :chats="chat"
+                  :selectedOrderId="orderId"
+                  :pinnedChats="pinnedChats"
+                  :onClick="() => showNextModalChat(chat.order)"
+                />
+
+              <span class="text-xs text-gray-400 ml-5">Сегодня: {{ new Date().toLocaleDateString('ru-RU') }}</span>
+            </div>
+          </div>
+
+
+          <div ref="chatContainer" class="flex-1 overflow-auto mb-4">
+
                 <div v-for="(group, groupIndex) in groupedMessages" :key="'group-' + groupIndex">
                     <div class="flex justify-center my-2">
                         <span class="text-sm ">{{ group.date }}</span>
                     </div>
 
-                    <div v-for="(message, index) in group.messages" :key="'message-' + groupIndex + '-' + index" class="mb-4">
-                        <div :class="message.sender_type === 'user' ? 'flex items-start' : 'flex items-start justify-end'">
-                            <div v-if="message.sender_type === 'user'" class="flex flex-col ml-4">
-                                <div class="p-2 rounded-md shadow-md text-gray-700 bg-blue-100">
-                                    {{ message.message }}
-                                </div>
-                            </div>
-                            <div v-if="message.sender_type === 'client'" class="flex flex-col items-end mr-6">
-                                <div class="bg-white-100 p-2 rounded-md shadow-md text-gray-700">
-                                    {{ message.message }}
-                                </div>
-                            </div>
+                  <div v-for="(message, index) in group.messages" :key="'message-' + groupIndex + '-' + index" class="mb-4">
+                    <div :class="message.sender_type === 'user' ? 'flex items-start' : 'flex items-start justify-end'">
+
+                      <!-- Сообщение от поддержки -->
+                      <div v-if="message.sender_type === 'user'" class="flex items-center gap-2 ml-4">
+                        <div class="flex items-center gap-1 text-xs text-gray-500">
+                          <img v-if="message.user.image_url" :src="message.user.image_url" class="rounded-xl w-6 h-6" alt=""/>
+                          <span>{{ message.user?.name || 'Гость' }} в {{formatTime(message.created_at)}}</span>
                         </div>
+                        <div class="rounded-md shadow-md text-gray-700">
+                          <div class="p-2" v-if="message.message">
+                            {{ message.message }}
+                          </div>
+                          <template v-else-if="message.image_url">
+                            <img @click="showModalScreenshot(message.image_url)" :src="message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
+                          </template>
+                        </div>
+                      </div>
+
+                      <!-- Сообщение от клиента -->
+                      <div v-if="message.sender_type === 'client'" class="flex items-center gap-2 mr-6">
+                        <div class="rounded-md shadow-md text-gray-700">
+                          <div class="p-2" v-if="message.message">
+                            {{ message.message }}
+                          </div>
+                          <template v-else="message.media && message.media.length">
+                            <img @click="showModalScreenshot(message.image_url)" :src="message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
+                          </template>
+                        </div>
+
+                        <div class="flex items-center gap-1 text-xs text-gray-500">
+                          <img v-if="order.client && order.client.image_url" :src="order.client.image_url" class="rounded-xl w-6 h-6"  alt=""/>
+                          <span>{{order.client.first_name}} в {{formatTime(message.created_at)}}</span>
+                        </div>
+
+                      </div>
+
                     </div>
+                  </div>
                 </div>
             </div>
 
             <div class="flex items-center">
+              <div class="mr-4 cursor-pointer">
+
+                <img
+                  v-if="newMessagePhoto.photo_path"
+                  :src="newMessagePhoto.previewUrl"
+                  alt="preview"
+                  class="w-20 h-20 object-cover rounded"
+                  title="выбрать другое"
+                  @click="triggerFileInput"
+                />
+
+                <Icon
+                  v-else
+                  @click="triggerFileInput"
+                  icon="streamline-emojis:paperclip"
+                  width="30"
+                  height="30"
+                />
+
+                <file-input
+                  ref="fileInputRef"
+                  v-model="newMessagePhoto.photo_path"
+                  :error="errors"
+                  type="file"
+                  accept="image/*"
+                />
+              </div>
+
+              <div v-if="!newMessagePhoto.photo_path" class="mr-4 cursor-pointer"> <Icon @click="openTemplates" icon="icon-park-twotone:text-message" width="30" height="30" /></div>
+              <div v-if="!newMessagePhoto.photo_path" class="mr-4 cursor-pointer"> <Icon @click="sendRequisite" icon="wpf:bank-cards" width="30" height="30" /></div>
+
+              <div v-if="showTemplates" class="absolute bottom-20 left-[200px] z-20 bg-white border rounded-lg shadow-lg animate-fade-in">
+                <div class="max-h-60 overflow-y-auto">
+                  <div
+                    v-for="(template, index) in templates"
+                    :key="index"
+                    @click="selectTemplate(template.text)"
+                    class="px-4 py-2 cursor-pointer text-black hover:bg-gray-100">
+                    {{ template.text }}
+                  </div>
+                </div>
+              </div>
+
                 <input
                     v-model="newMessage"
                     @keydown.enter="sendMessages"
                     type="text"
                     class="border p-2 w-full rounded-l-md"
-                    placeholder="Введите сообщение..."/>
+                    :placeholder="inputPlaceholder"/>
                 <button
                     @click="sendMessages"
-                    class="bg-blue-500 text-white p-2 rounded-r-md"
+                    class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-md"
                     aria-label="Send message">Отправить
                 </button>
+
+              <div class="relative group">
+                <div class="sm:ms-6 sm:flex">
+                  <span v-if="newMessage || newMessagePhoto.photo_path" class="text-xs text-[color:theme(colors.gray.400)] rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-[0.1rem] right-[10rem]"> Очистить</span>
+                  <Icon v-if="newMessage || newMessagePhoto.photo_path" @click="clearInput" class="cursor-pointer absolute bottom-[-1rem] right-[8rem]" icon="fluent:text-clear-formatting-32-light" width="32" height="32" />
+                </div>
+              </div>
             </div>
+
             <button
                 @click.stop="close"
-                class="absolute top-4 right-4 p-2 text-black">
+                class="absolute top-4 right-4 p-2 text-black close-btn">
               <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
             </button>
         </div>
+
+      <ModalShowOrderScreenshot
+        :is-active="isModalScreenshotShow"
+        :currentImageUrl="currentImageUrl"
+        @close="closeModalShowOrderScreenshot"
+      />
+
+      <ModalShowOrderDetail
+        :is-active="isModalShowOrderDetail"
+        :selectedOrder="selectedOrder"
+        :selectedUser="selectedUser"
+        :clientName="clientName"
+        @close="closeModalOrderDetail"
+      />
     </div>
 </template>
 
 <script>
 import { OrdersService } from '@/services/OrdersService.js'
-import Pusher from 'pusher-js'
+import { TemplateService } from '@/services/TemplateMessagesService.js'
+import { UserService } from '@/services/UserService.js'
+import { usePusher } from '@/helpers/usePusher'
+import { useReminder } from '@/helpers/useReminder'
+import { handleApiError } from '@/helpers/errors.js'
+import { eventBus } from '@/utils/eventBus.js'
+import { useOrdersStore } from '@/stores/ordersStore'
+import Alert from '@/Components/Notifications/Alert.vue'
 import { Icon } from '@iconify/vue';
+import ModalShowOrderScreenshot from '@/Pages/Order/Modal/ModalShowOrderScreenshot.vue'
+import ModalShowOrderDetail from '@/Pages/Order/Modal/ModalShowOrderDetail.vue'
+import PinChatsInChatModal from '@/Pages/Order/Chats/PinedChats/PinChatsInChatModal.vue'
+import { HollowDotsSpinner } from 'epic-spinners'
+import FileInput from '@/Components/Input/FileInput.vue'
 
 export default {
-  components: {Icon},
+  components: { FileInput, ModalShowOrderDetail, Alert, ModalShowOrderScreenshot, Icon, PinChatsInChatModal, HollowDotsSpinner},
     props: {
         isActive: {
             type: Boolean,
             default: false,
             required: true
         },
-        orderId: {
-            required: false
+      orderId: {
+            required: true
         },
+      order: {
+            required: true
+        },
+      selectedUser: {
+        type: Object,
+        required: true
+      },
+      selectedOrder: {
+        type: Object,
+        required: true
+      },
+      clientName: {
+        required: true
+      },
     },
     data() {
         return {
             messages: [],
-            order: {},
+            pinnedChats: [],
             clientMessages: [],
             supportMessages: [],
+            localOrder: { ...this.selectedOrder },
+            orderIdForGoToDetailIfNextModalChat: null,
             newMessage: '',
+            newMessagePhoto: {
+              photo_path: null,
+              previewUrl: null,
+            },
+            messageChannel: null,
+            isModalScreenshotShow: false,
+            isModalShowOrderDetail: false,
+            currentImageUrl: '',
+            showTemplates: false,
+            pinedChat: false,
+            templates: [],
             errors: '',
+            alertMessage: '',
+            inputPlaceholder: 'Введите сообщение...',
+            alertType: 'success',
             pusher: null,
-            channel: null,
         };
     },
-    mounted() {
-        this.checkOrdersUpdate()
-    },
+  setup() {
+    const ordersStore = useOrdersStore()
+    const { removeReminder } = useReminder()
+    return { ordersStore, removeReminder}
+  },
+  beforeMount() {
+    this.getPinedChat();
+  },
+  beforeUnmount() {
+    eventBus.off('newChek', this.onOrderUpdated)
+  },
+  async mounted() {
+    const { pusher } = usePusher()
+    this.pusher = pusher
+    eventBus.on('newChek', this.onOrderUpdated)
+    this.checkOrdersUpdate();
+    await this.getPinedChat();
+  },
     computed: {
             groupedMessages() {
                 const grouped = [];
                 let currentGroup = null;
-
-                // Сортировка сообщений по дате (по убыванию)
                 const sortedMessages = [...this.messages].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
                 sortedMessages.forEach((message) => {
                     const messageDate = new Date(message.created_at);
-                    const messageDateString = messageDate.toLocaleDateString(); // Форматируем дату, чтобы её сравнивать
+                    const messageDateString = messageDate.toLocaleDateString();
 
-                    // Если это новый день, создаем новую группу
                     if (!currentGroup || currentGroup.date !== messageDateString) {
                         currentGroup = {
                             date: messageDateString,
-                            showDate: true, // Показываем дату для первого сообщения в группе
+                            showDate: true,
                             messages: [message],
                         };
                         grouped.push(currentGroup);
                     } else {
-                        // Если это тот же день, добавляем сообщение в текущую группу
                         currentGroup.messages.push(message);
-                        currentGroup.showDate = false; // Для остальных сообщений той же даты показывать дату не нужно
+                        currentGroup.showDate = false;
                     }
                 });
 
                 return grouped;
-            }
+            },
+      receiptNotice() {
+        const ordersStore = useOrdersStore()
+        return !!ordersStore.receiptNoticeByOrderId[this.orderId]
+      }
     },
     methods: {
+      formatTime(datetime) {
+        const date = new Date(datetime);
+        return date.toLocaleTimeString('ru-RU', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Europe/Chisinau'
+        });
+      },
       async getOrder() {
         try {
           const response = await OrdersService.getOrder(this.orderId);
@@ -120,24 +319,41 @@ export default {
           this.organizeMessages();
           await this.$nextTick(() => this.scrollToBottom());
         } catch (error) {
-          this.errors = error.response?.data?.errors || 'Ошибка загрузки данных';
+          this.errors = handleApiError(error)
+        }finally {
+          await this.setMessagesRead()
         }
       },
-      setMessagesRead() {
-            OrdersService.setOrderMessagesRead(this.orderId).then(response => {
-            })
-        },
+      async getPinedChat() {
+        try {
+          const response = await UserService.getPinedChat();
+          this.pinnedChats = response.data.data;
+        } catch (error) {
+          this.errors = handleApiError(error)
+        }
+      },
+      async getTemplatesMessages() {
+        try {
+          const response = await TemplateService.getTemplateMessages();
+          this.templates = Array.isArray(response.data.template.messages) ? response.data.template.messages: [];
+        } catch (error) {
+          this.templates = [];
+          this.errors = handleApiError(error)
+        }
+      },
+      async setMessagesRead() {
+        try {
+          const response = await OrdersService.setOrderMessagesRead(this.orderId);
+        } catch (error) {
+          this.errors = handleApiError(error)
+        }
+      },
         checkOrdersUpdate() {
-            this.pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
-                cluster: 'eu', logToConsole: true,
-            })
-            this.channel =  this.pusher.subscribe('update_order');
+            this.messageChannel =  this.pusher.subscribe('send_message');
 
-            this.channel.bind('order-updated', (data) => {
+            this.messageChannel.bind('send_message', (data) => {
 
-            if (this.isActive) {
-                this.getOrder()
-            }
+            if (this.isActive) {this.getOrder() }
             });
         },
         organizeMessages() {
@@ -145,47 +361,178 @@ export default {
             this.supportMessages = this.messages.filter(message => message.sender_type === 'client');
         },
       async sendMessages() {
-        if (!this.newMessage.trim()) {
-          return;
+        const hasText = this.newMessage.trim() !== '';
+        const hasImage = this.newMessagePhoto?.photo_path !== null;
+
+        if (!hasText && !hasImage) return;
+
+        if (hasText && this.isRequisiteMessage(this.newMessage)) {
+          const matches = this.newMessage.match(/вот реквизиты:\s*(.+)/i);
+          this.removeReminder(this.orderId);
+          if (!matches || !matches[1].trim()) {
+            this.triggerErrorAlert('Вы не указали реквизиты после фразы "Вот реквизиты:"');
+            return;
+          }
         }
+
         try {
-          const response = await OrdersService.sendOrderMessages(
-            this.orderId,
-            this.newMessage
-          );
-          this.messages.push(response.data);
-          this.$nextTick(() => this.scrollToBottom());
-          this.newMessage = '';
+          let response;
+
+          if (hasImage) {
+            response = await OrdersService.sendOrderMessagesWithImage(this.orderId, this.newMessagePhoto.photo_path, this.newMessage);
+          } else {
+            response = await OrdersService.sendOrderMessages(
+              this.orderId,
+              this.newMessage,
+              this.isRequisiteMessage(this.newMessage)
+            );
+          }
+
+          this.messages.push(response.data.order.message);
+          await this.$nextTick(() => {
+            this.scrollToBottom();
+          });
         } catch (error) {
-          console.error('Ошибка отправки:', error);
+          this.errors = handleApiError(error);
+        } finally {
+          this.newMessage = '';
+          this.inputPlaceholder = 'Введите сообщение...'
+          this.newMessagePhoto.photo_path = null;
         }
       },
-        scrollToBottom() {
-            const chatContainer = this.$el.querySelector('.flex-1');
-            if (chatContainer) {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-        },
-        close() {
-            // this.setMessagesRead()
+      onOrderUpdated(updatedOrder) {
+        if (updatedOrder.id === this.localOrder.id) {
+          this.localOrder = { ...this.localOrder, ...updatedOrder }
+        }
+      },
+      triggerFileInput() {
+        this.inputPlaceholder = 'Отправьте выбранное изображение. Можете прикрепить к нему сообщение'
+        this.$refs.fileInputRef.browse()
+      },
+      scrollToBottom() {
+        this.$nextTick(() => {
+          const chatContainer = this.$refs.chatContainer;
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        });
+      },
+      showNextModalChat(order) {
+        this.orderIdForGoToDetailIfNextModalChat = order
+        this.close(order, true)
+      },
+      showModalScreenshot(image) {
+        this.currentImageUrl = image
+        this.isModalScreenshotShow = true
+      },
+      closeModalShowOrderScreenshot() {
+        this.isModalScreenshotShow = false
+      },
+      showModalOrderDetail() {
+        const order = Object.keys(this.orderIdForGoToDetailIfNextModalChat ?? {}).length? this.orderIdForGoToDetailIfNextModalChat: this.selectedOrder;
+        this.$emit('openOrderDetail', {fromChatToDetail: true, selectedUser: this.selectedUser, selectedOrder: order});
+        this.orderIdForGoToDetailIfNextModalChat = null
+      },
+      closeModalOrderDetail() {
+        this.isModalShowOrderDetail = false
+      },
+      triggerErrorAlert($message) {
+        this.alertMessage = $message;
+        this.alertType = 'error';
+        this.$refs.alertComponent.showAlert();
+      },
+      openTemplates() {
+        if (!this.templates.length) {
+          this.triggerErrorAlert('Вы не установили ни одного шаблонного сообщения');
+          return;
+        }
+        this.showTemplates = !this.showTemplates;
+      },
+      sendRequisite() {
+        this.showTemplates = false;
+        this.newMessage = 'Вот реквизиты: '
+      },
+      isRequisiteMessage($text) {
+        return $text.toLowerCase().includes('вот реквизиты');
+      },
+      selectTemplate(template) {
+        this.newMessage = template;
+        this.showTemplates = false;
+      },
+      pinChat(order) {
+          UserService.pinChat(order.id, order.client.id)
+            .then(response => {
+              if (response.data.data) {
+                this.pinedChat = response.data.data;
+                this.getPinedChat()
+              }
+            })
+            .catch(error => {
+              this.errors = handleApiError(error)
+            })
+      },
+      unPinChat(orderId, pinedChatId) {
+          UserService.unPinChat(orderId, pinedChatId)
+            .then(response => {
+              if (response.data.data) {
+                this.pinedChat = response.data.data;
+                this.getPinedChat()
+              }
+            })
+            .catch(error => {
+              this.errors = handleApiError(error)
+            })
+      },
+      clearInput() {
+        this.newMessage = '';
+        this.newMessagePhoto.photo_path = null;
+        this.inputPlaceholder = 'Введите сообщение...'
+      },
+        close(order, nextChat = false) {
+          this.newMessagePhoto.photo_path = null
 
             setTimeout(() => {
-                this.$emit('close');
-              this.messages = ''
+              this.$emit('close', {nextChat: nextChat, order: order, orderId: order.id});
+              this.showTemplates = false;
+              this.messages = []
+              this.ordersStore.setOrderCheckRead(this.orderId)
             }, 500)
         },
     },
     watch: {
       isActive(newVal) {
         if (newVal) {
+          this.newMessage = ''
           this.getOrder();
+          this.getTemplatesMessages();
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
         }
       },
-        orderId(newOrderId) {
-            if (newOrderId) {
+      order(newVal) {
+            if (newVal) {
                 this.getOrder();
+              if (newVal.pinned_messages?.length) {
+                this.pinedChat = newVal.pinned_messages[0];
+              } else {
+                this.pinedChat = {};
+              }
             }
         },
+      'newMessagePhoto.photo_path'(file) {
+        if (file && file.type.startsWith('image/')) {
+          this.newMessagePhoto.previewUrl = URL.createObjectURL(file)
+        } else {
+          this.newMessagePhoto.previewUrl = null
+        }
+      },
+      selectedOrder: {
+        handler(newOrder) {
+          this.localOrder = newOrder ? { ...newOrder } : {}
+        },
+        immediate: true
+      }
     },
 };
 </script>
@@ -220,7 +567,7 @@ export default {
 .chat_container {
     padding-left: 4rem;
     padding-right: 4rem;
-    padding-top: 2rem;
+    padding-top: 0.5rem;
     padding-bottom: 2rem;
 }
 .w-96 {
@@ -244,8 +591,8 @@ export default {
 
 /* Чат сообщения */
 .flex-1 {
-    flex: 1;
-    overflow-y: auto;
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* Поле ввода сообщения */
@@ -268,40 +615,6 @@ input:focus {
 }
 .rounded-l-md {
     border-radius: 0.375rem 0 0 0.375rem;
-}
-
-/* Кнопка отправки */
-button {
-    cursor: pointer;
-}
-.bg-blue-500 {
-    background-color: #3b82f6;
-}
-.text-white {
-    color: white;
-}
-.rounded-r-md {
-    border-radius: 0 0.375rem 0.375rem 0;
-}
-
-/* Оформление аватарок */
-.w-8 {
-    width: 2rem;
-}
-.h-8 {
-    height: 2rem;
-}
-.rounded-full {
-    border-radius: 50%;
-}
-.bg-blue-600 {
-    background-color: #3b82f6;
-}
-.bg-green-600 {
-    background-color: #10b981;
-}
-.text-white {
-    color: white;
 }
 
 /* Оформление сообщения */
@@ -340,5 +653,15 @@ button {
 .bg-white-100 {
     background-color: #f9fafb;
 }
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 
+  &:hover {
+    transform: scale(1.2);
+  }
+}
 </style>
