@@ -5,44 +5,48 @@ import { useUserStore } from '@/stores/userStore.js'
 import { ConsultationService } from '@/services/ConsultationService.js'
 import { useConsultationStore } from '@/stores/consultationStore'
 import { eventBus } from '@/utils/eventBus.js'
-import { computed } from 'vue'
+import { computed, onUnmounted } from 'vue'
 
 export default {
   setup() {
     const { pusher } = usePusher()
     const { playSound } = useSound()
-    const userStore = useUserStore()
+    const userStore         = useUserStore()
     const consultationStore = useConsultationStore()
 
     const notificationSettings = computed(() => {
-      return (userStore.currentUser?.settings?.find(s => s.key === 'notification') || { is_active: false })
+      return userStore.currentUser?.settings?.find(s => s.key === 'notification')
+        || { is_active: false }
     })
 
-    const subscribeToConsultation = () => {
-      const channel = pusher.subscribe('consultation')
-      channel.bind('new_message', async (data) => {
-        const response = await ConsultationService.getMessages('', 1)
-        consultationStore.setMessages(response.data.data)
+    const channelName = 'consultation'
+    let channel = pusher.channel(channelName)
+    if (!channel) {
+      channel = pusher.subscribe(channelName)
+    }
+    channel.unbind('new_message')
 
-        if (notificationSettings.value.is_active){
-          playSound('new_sms.mp3')
-        }
+    const handler = async (data) => {
+      const response = await ConsultationService.getMessages('', 1)
+      consultationStore.setMessages(response.data.data)
 
-        try {
-          eventBus.emit('newMessage')
-        } catch (e) {
-          console.error('Ошибка при обновлении сообщений:', e)
-        }
-      })
+      if (notificationSettings.value.is_active) {
+        playSound('new_sms.mp3')
+      }
+
+      eventBus.emit('newMessage')
     }
 
-    subscribeToConsultation()
+    channel.bind('new_message', handler)
 
-    return {userStore, consultationStore}
+    onUnmounted(() => {
+      channel.unbind('new_message', handler)
+    })
+
+    return {}
   },
   render() {
-    return null // Компонент невидимый
+    return null
   }
 }
 </script>
-
