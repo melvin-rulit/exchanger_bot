@@ -1,4 +1,6 @@
 <template>
+  <Alert ref="alertComponent" :message="alertMessage" :type="alertType" />
+
   <div class="main">
     <div class="table-container">
       <table class="w-full">
@@ -39,12 +41,32 @@
           </td>
         </tr>
         </thead>
-        <tbody v-if="orders.length">
 
-        <tr v-for="(order, index) in filteredOrders" :key="order.id" tabindex="0"
-            @click="showModalOrderDetail(order, order.user)"
-            class="h-12 inside_table">
-          <td v-if="order.is_message && order.status !== 'success'" class="pl-5">
+        <tbody v-if="isLoadingSpiner">
+        <tr>
+          <td class="absolute top-[50%] left-[47%]">
+            <hollow-dots-spinner
+              v-if="isLoadingSpiner"
+              :animation-duration="1000"
+              :dot-size="20"
+              :dots-num="3"
+              color="#4caf50"
+            />
+          </td>
+
+        </tr>
+        </tbody>
+
+        <tbody v-else-if="!isLoadingSpiner && orders.length === 0 ">
+        <tr>
+          <td class="absolute top-[47%] left-[47%] text-xl text-muted">На сегодня нет заказов</td>
+        </tr>
+        </tbody>
+
+        <tbody v-else>
+
+        <tr v-for="(order, index) in filteredOrders" :key="order.id" tabindex="0" @click="showModalOrderDetail(order, order.user)" class="h-12 inside_table">
+          <td v-if="order.is_message" class="pl-5">
             <div @click="showModalChat(order)" class="flex items-center">
               <Icon icon="wpf:message-outline" width="26" height="26" class="animate-fade-bounce" />
             </div>
@@ -121,23 +143,13 @@
               <p class="text-sm leading-none text-gray-600 ml-10">{{ order.amount }}</p>
             </div>
           </td>
-<!--          <td class="pl-3">-->
-<!--            <div class="flex items-center">-->
-<!--              <p class="text-sm leading-none text-gray-600 ml-2">{{ order.currency_name }}</p>-->
-<!--            </div>-->
-<!--          </td>-->
+
           <td class="pl-5">
             <div class="flex items-center">
               <img v-if="order.image_url" @click="showModalScreenshot(order.image_url)" :src="order.image_url"
                    class="h-8 w-8 object-cover rounded cursor-pointer" alt="" />
             </div>
           </td>
-
-          <!--              <td class="pl-5">-->
-          <!--                <div class="flex items-center">-->
-          <!--                  <p class="text-lg leading-none font-bold text-gray-600 ml-2">{{ order.user?.name || "&#45;&#45;&#45;&#45;&#45;&#45;" }}</p>-->
-          <!--                </div>-->
-          <!--              </td>-->
 
           <td class="">
             <div class="flex">
@@ -156,21 +168,7 @@
         </tr>
         </tbody>
 
-        <tbody v-else>
-        <tr>
-          <td class="absolute top-[50%] left-[47%]">
-            <hollow-dots-spinner
-              v-if="isLoadingSpiner"
-              :animation-duration="1000"
-              :dot-size="20"
-              :dots-num="3"
-              color="#4caf50"
-            />
-          </td>
 
-          <td v-if="!orders.length && !isLoadingSpiner && (!filteredOrders || !filteredOrders.length)" class="absolute top-[47%] left-[47%] text-xl text-muted">На сегодня нет заказов</td>
-        </tr>
-        </tbody>
 
       </table>
     </div>
@@ -195,6 +193,7 @@
       @openOrderDetail="openOrderDetail"
     />
     <ModalShowOrderDetail
+      v-if="isModalShowOrderDetail"
       :is-active="isModalShowOrderDetail"
       :selectedOrder="selectedOrder"
       :selectedUser="selectedUser"
@@ -229,7 +228,7 @@
             :config="flatpickrConfig"
             class="invisible absolute z-10 ml-[110px] mb-4"
           />
-          <Icon @click="openCalendar" icon="bi:calendar-date" width="38" height="38" :class="['hover:text-gray-400 cursor-pointer',isCalendarOpen ? 'text-gray-400' : '']"/>
+          <Icon @click="openCalendar" icon="bi:calendar-date" width="38" height="38" :class="['hover:text-gray-400 cursor-pointer', isCalendarOpen ? 'text-gray-400' : '']"/>
           <Icon @click="openFilterBlock" icon="material-symbols-light:app-registration-outline-rounded" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
           <Icon @click="clickShowLockScreen" icon="hugeicons:lock-sync-01" width="45" height="45" class="hover:text-gray-400 cursor-pointer"/>
         </div>
@@ -237,7 +236,7 @@
 
   <FilterBlock :isActive="filterBlock" @filter-change="applyFilters" @close="closeFilterBlock"/>
 
-      <AlertForNotification :message="alertMessage" :type="alertType" @clearMessages="clearAlertMessage" ref="alertComponent">
+      <AlertForNotification :message="alertMessage" :type="alertType" @clearMessages="clearAlertMessage" ref="alertNotificationComponent">
         <template #buttons>
           <div class="pl-4">
             <ButtonUI @click="alertButtonFunction" type="submit" color="green">{{alertButtonName}}</ButtonUI>
@@ -289,12 +288,14 @@ import flatPickr from 'vue-flatpickr-component'
 import { Russian } from "flatpickr/dist/l10n/ru.js"
 import 'flatpickr/dist/flatpickr.css';
 import FilterBlock from '@/Pages/Order/Filter/FilterBlock.vue'
+import Alert from '@/Components/Notifications/Alert.vue'
+import { eventBus } from '@/utils/eventBus.js'
 
 export default {
-  components: { FilterBlock, SetLockScreenPassword, ButtonUI, ModalLock, AlertForNotification, Pagination, Icon, ModalShowOrderScreenshot, ModalShowChat, ModalShowOrderDetail, TextInput, HollowDotsSpinner, PinChatsInOrderList, flatPickr},
+  components: { Alert, FilterBlock, SetLockScreenPassword, ButtonUI, ModalLock, AlertForNotification, Pagination, Icon, ModalShowOrderScreenshot, ModalShowChat, ModalShowOrderDetail, TextInput, HollowDotsSpinner, PinChatsInOrderList, flatPickr},
   data: function() {
     return {
-      orders: '',
+      orders: [],
       oldOrders: [],
       pinnedChats: [],
       filters: JSON.parse(localStorage.getItem('selectedFilters')) || [],
@@ -327,10 +328,10 @@ export default {
         locale: Russian
       },
       filterBlock: false,
-      updateChannel: null,
-      newChannel: null,
+      updateOrderChannel: null,
+      newOrderChannel: null,
       messageChannel: null,
-      closedChannel: null,
+      closedOrderChannel: null,
       ordersMeta: {},
       searchQuery: '',
       currentPage: 1,
@@ -363,13 +364,34 @@ export default {
     const { attentionOrders, setReminder, removeReminder, } = useReminder()
     return { attentionOrders, playSound, stopSound, ordersStore, userStore, setReminder, removeReminder, REMINDER_TIMEOUT_MS, translateStatus}
   },
-
+  beforeUnmount() {
+    if (this.messageChannel) {
+      this.messageChannel.unbind('send_message')
+      this.pusher.unsubscribe('send_message')
+      this.messageChannel = null
+    }
+    if (this.newOrderChannel) {
+      this.newOrderChannel.unbind('new_order')
+      this.pusher.unsubscribe('new_order')
+      this.newOrderChannel = null
+    }
+    if (this.closedOrderChannel) {
+      this.closedOrderChannel.unbind('order_closed')
+      this.pusher.unsubscribe('order_closed')
+      this.closedOrderChannel = null
+    }
+    if (this.updateOrderChannel) {
+      this.updateOrderChannel.unbind('update_order')
+      this.pusher.unsubscribe('update_order')
+      this.updateOrderChannel = null
+    }
+  },
   async mounted() {
     const { pusher } = usePusher()
     this.pusher = pusher
     await this.userStore.fetchUser()
     this.spinerLoading()
-    this.getOrders(this.currentPage, this.searchQuery);
+    await this.getOrders(this.currentPage, this.searchQuery);
     this.checkNewMessage()
     this.checkNewOrders()
     await this.getCurrentUser()
@@ -381,28 +403,33 @@ export default {
   },
   computed: {
     notificationSettings() {
-      return this.currentUser?.settings?.find(s => s.key === 'notification') || null;
+      return this.userStore.currentUser?.settings?.find(s => s.key === 'notification') || { is_active: false }
     }
   },
   methods: {
-    getOrders(page = 1, query = '') {
-      return OrdersService.getOrders(query, page)
-        .then(response => {
-          this.orders = response.data.data || []
-          this.ordersStore.setOrders(this.orders)
-          this.ordersMeta = response.data.meta || {}
-          this.currentPage = page
-        })
-        .catch(error => {
-          this.errors = handleApiError(error)
-          this.orders = []
-          this.ordersMeta = {}
-        })
+    async getOrders(page = 1, query = '', showSpiner = true) {
+      this.isLoadingSpiner = showSpiner
+
+      try {
+        const response = await OrdersService.getOrders(query, page)
+        this.orders = response.data.data || []
+        this.ordersStore.setOrders(this.orders)
+        this.ordersMeta = response.data.meta || {}
+        this.currentPage = page
+        this.applyFilters(this.ordersStore.selectedFilters)
+      } catch (error) {
+        this.errors = handleApiError(error)
+        this.orders = []
+        this.filteredOrders = []
+        this.ordersMeta = {}
+      } finally {
+        this.isLoadingSpiner = false
+      }
     },
     async getCurrentUser() {
       try {
         const response = await UserService.currentUser();
-        this.currentUser = response.data.data[0] || null;
+        this.currentUser = response.data.data || null;
       } catch (error) {
         this.errors = handleApiError(error)
       }
@@ -415,9 +442,6 @@ export default {
         this.errors = handleApiError(error)
       }
     },
-    hasNewOrders(newOrders) {
-      return newOrders.length > this.oldOrders.length
-    },
     getStatusColor(status) {
       return getStatusColorClass(status)
     },
@@ -428,37 +452,47 @@ export default {
       this.messageChannel = this.pusher.subscribe('send_message')
 
       this.messageChannel.bind('send_message', (data) => {
-        this.playSound('new_sms.mp3')
-        this.getPinedChat()
-        this.getOrders()
+
+        if (this.notificationSettings.is_active){
+          this.playSound('new_sms.mp3')
+        }
+        this.getOrders(1, '', false)
       })
     },
     async checkOrdersUpdate() {
-      if (this.updateChannel) {
+      if (this.updateOrderChannel) {
         return;
       }
-      this.updateChannel = this.pusher.subscribe('update_order');
-      this.updateChannel.bind('order-updated', async (data) => {
+      this.updateOrderChannel = this.pusher.subscribe('update_order');
+      this.updateOrderChannel.bind('order-updated', async (data) => {
         this.ordersStore.updateOrder(data.order)
-        await this.unPinChat(data.order.id, null);
-        await this.getOrders();
-        console.log('orders before filtering:', this.ordersStore.orders)
+        //await this.getOrders();
         this.applyFilters(this.ordersStore.selectedFilters)
         await this.getPinedChat()
+
         switch (data.type) {
           case 'attach_user':
-            this.playSound('attach_user_out.wav')
+            await this.unPinChat(data.order.id, null);
+            if (this.notificationSettings.is_active){
+              this.playSound('attach_user_out.wav')
+            }
+            break;
+            case 'send_chek':
+              if(!this.isModalShowOrderDetail && !this.isModalChatShow) {
+                await this.getOrders();
+              }
+              eventBus.emit('newChek', data.order)
             break;
           default:
         }
       });
     },
     checkOrdersClosed() {
-      if (this.closedChannel) {
+      if (this.closedOrderChannel) {
         return;
       }
-      this.closedChannel = this.pusher.subscribe('order_closed');
-      this.closedChannel.bind('order_closed', (data) => {
+      this.closedOrderChannel = this.pusher.subscribe('order_closed');
+      this.closedOrderChannel.bind('order_closed', (data) => {
 
         this.isModalShow = false
         this.isModalChatShow = false
@@ -467,17 +501,14 @@ export default {
         this.$nextTick(() => {
           if (data.order) {
             this.removeReminder(data.order.id)
-            this.triggerErrorAlert(`Заказ ${data.order.id} был отменен клиентом`, 'Перейти', () => this.showModalOrderDetail(data.order, 'fgj'));
+            this.triggerErrorAlert(`Заказ ${data.order.id} был отменен клиентом`, 'Перейти', () => this.showModalOrderDetail(data.order, 'fgj'), 'alertNotificationComponent');
           }
         });
 
         this.getOrders();
 
-        switch (data.type) {
-          case 'order_closed':
-            this.playSound('close_order.ogg')
-            break;
-          default:
+        if (this.notificationSettings.is_active){
+          this.playSound('close_order.ogg')
         }
       });
     },
@@ -491,21 +522,18 @@ export default {
       this.editableClientNameId = null
     },
     checkNewOrders() {
-      if (this.newChannel) {
+      if (this.newOrderChannel) {
         return;
       }
-      this.newChannel = this.pusher.subscribe('new_order')
-
-      this.newChannel.bind('new_order', async (data) => {
+      this.newOrderChannel = this.pusher.subscribe('new_order')
+      this.newOrderChannel.bind('new_order', async (data) => {
         this.ordersStore.addOrder(data.order)
         await this.getOrders();
         this.applyFilters(this.ordersStore.selectedFilters)
         this.setReminder(data.order.id, REMINDER_TIMEOUT_MS)
-        switch (data.type) {
-          case 'new_order':
-            this.playSound('new_order.wav')
-            break;
-          default:
+
+        if (this.notificationSettings.is_active){
+          this.playSound('new_order.wav')
         }
       })
     },
@@ -517,45 +545,60 @@ export default {
         this.errors = handleApiError(error)
       }
     },
-    async toggleNotification (notificationSettings) {
+    async toggleNotification(notificationSettings) {
       try {
         const response = await UserService.toggleNotification(notificationSettings);
-        // const is_active = response.data.notification.is_active;
-        //
-        // if (index !== -1) {
-        //   const settings = [...this.currentUser.settings]; // копия массива
-        //   settings[index] = {
-        //     ...settings[index],
-        //     is_active: false,
-        //   };
-        //   this.currentUser.settings = settings; // переустанавливаем весь массив
-        // }
+        const newIsActive = response.data.notification.is_active;
+
+        const userStore = useUserStore();
+
+        const settingsArray = userStore.currentUser.settings || [];
+        const idx = settingsArray.findIndex(s => s.id === notificationSettings.id);
+
+        if (idx !== -1) {
+          const updatedSettings = [...settingsArray];
+          updatedSettings[idx] = {
+            ...updatedSettings[idx],
+            is_active: newIsActive
+          };
+
+          userStore.setCurrentUser({
+            ...userStore.currentUser,
+            settings: updatedSettings
+          });
+        }
       } catch (error) {
-        this.errors = handleApiError(error)
+        this.errors = handleApiError(error);
       }
-    },
-    // toggleCalendar() {
-    //   const fp = this.$refs.calendar?.fp;
-    //   if (!fp) return;
-    //
-    //   if (this.isCalendarOpen) {
-    //     fp.close();
-    //   } else {
-    //     fp.open();
-    //   }
-    // },
+  },
     openCalendar() {
         if (this.$refs.calendar?.fp) {
           this.isCalendarOpen = true
           this.$refs.calendar.fp.open()
         }
     },
-    triggerErrorAlert($message, $buttonName, $buttonFunction) {
+    triggerSuccessAlert($message, $type) {
+      this.alertMessage = $message;
+      this.alertType = 'success';
+      const refName = $type;
+      if (this.$refs[refName]) {
+        this.$refs[refName].showAlert();
+      } else {
+        console.warn(`Ref "${refName}" не найден`);
+      }
+    },
+    triggerErrorAlert($message, $buttonName, $buttonFunction, $type) {
       this.alertMessage = $message;
       this.alertType = 'error';
       this.alertButtonName = $buttonName;
       this.alertButtonFunction = $buttonFunction;
-      this.$refs.alertComponent.showAlert();
+
+      const refName = $type;
+      if (this.$refs[refName]) {
+        this.$refs[refName].showAlert();
+      } else {
+        console.warn(`Ref "${refName}" не найден`);
+      }
     },
     clearAlertMessage() {
       this.alertMessage = '';
@@ -569,7 +612,7 @@ export default {
     },
     async clickShowLockScreen() {
       if (await this.userStore.getUserLockPassword(this.$page.props.auth.user.id) === null){
-        this.triggerErrorAlert('Вы не задали пароль для этого действия', 'Установить', this.setScreenLockPassword);
+        this.triggerErrorAlert('Вы не задали пароль для этого действия', 'Установить', this.setScreenLockPassword, 'alertNotificationComponent');
         return
       }
       const is_lock = await this.userStore.getUserLockScreen(this.$page.props.auth.user.id)
@@ -603,7 +646,7 @@ export default {
       this.startFunction = true
       this.isVisibleSetPassword = false
       await this.userStore.fetchUser()
-      this.getOrders()
+      await this.getOrders()
     },
     openFilterBlock() {
       this.startFunction = false
@@ -645,7 +688,7 @@ export default {
       // }
 
       this.removeReminder(selectedOrder.id)
-      this.$refs.alertComponent?.closeAlert();
+      this.$refs.alertNotificationComponent.closeAlert();
 
       if (!this.isModalChatShow && !this.isModalShow && this.editableClientNameId === null) {
         this.selectedOrder = { ...selectedOrder, orderStatus: this.translateStatus(selectedOrder.status) }
@@ -653,7 +696,6 @@ export default {
       }
     },
     openOrderDetail(data) {
-      console.log(data.fromChatToDetail )
       this.fromChatToDetail = data.fromChatToDetail
       this.selectedOrder = { ...data.selectedOrder, orderStatus: this.translateStatus(data.selectedOrder.status) }
       this.selectedUser = data.selectedOrder.user
@@ -674,8 +716,9 @@ export default {
       if (data.openChat) {
         this.showModalChat(data.order, data.orderId)
       }
-      this.getPinedChat()
-      this.getOrders(this.currentPage)
+      //TODO тут надо сделать чтоб при закрытии модалку детальной информации не обновлялись каждый раз а только в нужный момент
+      // this.getPinedChat()
+       //this.getOrders(this.currentPage)
       this.isModalShowOrderDetail = false
       this.fromChatToDetail = false
         //console.log(this.fromChatToDetail )
