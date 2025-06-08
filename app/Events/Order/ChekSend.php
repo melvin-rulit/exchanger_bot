@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\Order;
 
 use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
@@ -16,21 +16,13 @@ class ChekSend implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-
-    public Order $order;
-    public ?string $eventType;
-
-    public function __construct(Order $order, $eventType = null)
-    {
-        $this->order = $order;
-        $this->eventType = $eventType ?? 'default';
-    }
+    public function __construct(public Order $order, public ?string $eventType = null){}
 
 
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {
@@ -40,10 +32,10 @@ class ChekSend implements ShouldBroadcast
     }
     public function broadcastWith(): array
     {
+        $orderWithRelations = $this->order->load('client');
+
         return [
-            'order' => [
-                'id' => $this->order->id
-            ],
+            'order' => $orderWithRelations,
             'type' => $this->eventType ?? 'default',
         ];
     }
