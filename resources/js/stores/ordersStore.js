@@ -57,11 +57,9 @@ export const useOrdersStore = defineStore('orders', {
             this.orders.unshift(newOrder)
             this.unreadByOrderId[newOrder.id] =
                 newOrder.is_message && newOrder.status !== 'success'
-            // не устанавливаем receiptNotice
         },
 
         updateOrder(updatedOrder) {
-            console.log(updatedOrder)
             const index = this.orders.findIndex(o => o.id === updatedOrder.id)
             if (index !== -1) {
                 this.orders[index] = { ...this.orders[index], ...updatedOrder }
