@@ -2,9 +2,8 @@
 
 namespace App\Handlers\Callback\MenuHandlers;
 
-use App\Actions\StartConsultationAction;
 use App\DTO\ConsultationData;
-use Illuminate\Support\Facades\Log;
+use App\Actions\Menu\StartConsultationAction;
 
 class GetConsultationCallbackHandler
 {
