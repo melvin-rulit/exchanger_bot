@@ -7,6 +7,9 @@ export default defineConfig({
     esbuild: {
         target: 'esnext',
     },
+    build: {
+        target: 'esnext',
+    },
     optimizeDeps: {
         exclude: ['<conflicting-package>'],
     },
