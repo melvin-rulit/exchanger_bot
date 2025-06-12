@@ -10,8 +10,8 @@
                 <h1>{{ today }}</h1>
               </div>
 
-                <ManagerLinks v-if="userStore.currentUser.role === 'Менеджер'"/>
-                <AdminLinks v-if="userStore.currentUser.role === 'Администратор'"/>
+                <ManagerLinks v-if="userStore.currentUser && userStore.currentUser.role === 'Менеджер'"/>
+                <AdminLinks v-if="userStore.currentUser && userStore.currentUser.role === 'Администратор'"/>
 
             </div>
 
