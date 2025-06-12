@@ -34,7 +34,6 @@ class ConsultationHandles
         $this->download_url = ensure_string(config('telegram.telegram_bot.api_file_url')) . config('telegram.telegram_bot.token');
     }
 
-
     /**
      * @throws TelegramApiException
      * @throws CountryBankNotFoundException
