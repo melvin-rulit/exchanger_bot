@@ -3,11 +3,10 @@
 
   <div
     v-if="isActive"
-    @click="close"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 
     <div @click.stop class="modal-container">
-      <!-- Заголовок -->
+
       <div class="modal-header">
         <div class="flex items-center">
           <h2 v-if="selectedOrder.status !== 'success'" class="text-lg font-semibold">Обработка заказа </h2>
@@ -17,7 +16,7 @@
           <span :class="getStatusColor(selectedOrder.status )" class="text-base font-medium leading-none ml-2">{{ translateStatus(selectedOrder.status) }}</span>
         </div>
 
-        <div v-show="selectedOrder.status !== 'success'" class="flex items-center cursor-pointer space-x-4">
+        <div v-if="selectedOrder.status !== 'success' && selectedOrder.status !== 'closed'" class="flex items-center cursor-pointer space-x-4">
           <div @click="openChat" class="cursor-pointer flex items-center">
             <Icon icon="wpf:message-outline" width="26" height="26"/>
             <span class="text-xs rounded ml-2 hover:underline">Отправить сообщение</span>
@@ -25,32 +24,66 @@
 
           <div @click="fixTheOrder(selectedOrder.id)">
             <div v-if="!selectedOrder.is_pinned" class="cursor-pointer flex items-center">
-              <Icon icon="mynaui:pin" width="24" height="24" />
-              <span class="text-xs rounded ml-2 hover:underline">Закрепить заказ</span>
+              <Icon icon="bi:pin-angle" width="26" height="26" class="cursor-pointer"/>
+              <span class="text-xs rounded ml-1 hover:underline">Закрепить заказ</span>
             </div>
             <div v-else class="cursor-pointer flex items-center">
-              <Icon icon="mynaui:pin-solid" width="24" height="24" />
-              <span class="text-xs rounded ml-2 hover:underline">Закреплен</span>
+              <Icon icon="bi:pin-angle-fill" width="26" height="26" class="cursor-pointer"/>
+              <span class="text-xs rounded ml-1 hover:underline">Заказ закреплен</span>
             </div>
           </div>
         </div>
-
 
         <button @click="close" class="close-btn" aria-label="Close modal">
           <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
         </button>
       </div>
 
-      <!-- Контент -->
       <div class="modal-body">
         <div class="left-panel">
-          <div v-if="selectedOrder.status !== 'success'" class="select_user">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Ответственный</label>
-            <multiselect v-model="form.selectedUser" :options="managers" placeholder="Назначить ответственного"
-                         :close-on-select="true" :show-labels="false" label="name"></multiselect>
+          <div v-if="selectedOrder.status !== 'success' && selectedOrder.status !== 'closed'" class="select_user">
+            <label class="text-sm font-medium text-gray-700 mb-1">Ответственный</label>
+
+            <multiselect
+              v-model="form.selectedUser"
+              :options="managers"
+              placeholder="список менеджеров"
+              :close-on-select="true"
+              :show-labels="false"
+              :searchable="false"
+              :append-to-body="false"
+              label="name" />
+            <Icon v-if="!form.selectedUser" icon="pajamas:warning" class="animate-fade-bounce ml-3 icon-danger" width="36" height="36" />
           </div>
 
-          <div v-if="selectedOrder.status === 'success'" class="order-info-wrapper">
+
+          <div v-if="selectedOrder.status === 'success' && selectedOrder.status !== 'closed'" class="order-info-wrapper">
+            <div class="order-info">
+              <h1 class="order-title">Информация о заказе</h1>
+
+              <div class="info-item">
+                <span class="label">Клиент: </span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.client.first_name }}</span>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Закрыл заказ: </span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.user?.name || '' }}</span>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Сумма заказа: </span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
+              </div>
+
+              <div class="info-item">
+                <span class="label">Дата закрытия:</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md">12/12</span>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedOrder.status !== 'success' && selectedOrder.status === 'closed'" class="order-info-wrapper">
             <div class="order-info">
               <h1 class="order-title">Информация о заказе</h1>
 
@@ -60,8 +93,8 @@
               </div>
 
               <div class="info-item">
-                <span class="label">Закрыл заказ: </span>
-                <span class="value">{{ selectedOrder.user?.name || '' }}</span>
+                <span class="label">Отменил заказ: </span>
+                <span class="value">{{ selectedOrder.client.first_name }}</span>
               </div>
 
               <div class="info-item">
@@ -74,54 +107,56 @@
               </div>
             </div>
           </div>
-
-
         </div>
 
         <div class="right-panel">
-          <img v-if="selectedOrder.media[0]['original_url']" :src="selectedOrder.media[0]['original_url']" alt="Фото заказа" class="order-image">
-          <div v-else class="no-image">Фото отсутствует</div>
+          <img  v-if="selectedOrder?.image_url && selectedOrder.status !== 'closed'" @click="showModalScreenshot(selectedOrder.image_url)" :src="selectedOrder.image_url" alt="Фото заказа" class="order-image">
+          <div v-else-if="selectedOrder.status !== 'closed'" class="no-image">Чек отсутствует</div>
         </div>
       </div>
 
       <!-- Фиксированный футер -->
       <div class="modal-footer">
-
         <div class="spinner-wrapper" v-if="showSpinner">
-            <hollow-dots-spinner
-              :animation-duration="1000"
-              :dot-size="20"
-              :dots-num="3"
-              color="#ff1d5e"
-            />
+          <hollow-dots-spinner
+            :animation-duration="1000"
+            :dot-size="20"
+            :dots-num="3"
+            color="#ff1d5e"
+          />
         </div>
 
-<!--        <transition name="fade">-->
-<!--          <div v-if="!confirmationOrder && selectedOrder.status !== 'success' && !checkCloseOrder">-->
-<!--            <div class="btn_save">-->
-<!--              <ButtonUI @click="store" type="submit" color="green">Сохранить</ButtonUI>-->
-<!--            </div>-->
-
-<!--            <div class="btn_complete">-->
-<!--              <ButtonUI @click="prepareCompleted" type="submit">Завершить</ButtonUI>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </transition>-->
-
         <FadeOrInstant :disable-transition="checkCloseOrder" name="fade">
-          <div v-if="!confirmationOrder && selectedOrder.status !== 'success' && !checkCloseOrder">
-            <div class="btn_save">
-              <ButtonUI @click="store" type="submit" color="green">Сохранить</ButtonUI>
-            </div>
+          <div v-if="!confirmationOrder && selectedOrder.status !== 'success' && !checkCloseOrder && selectedOrder.status !== 'closed' && form.selectedUser">
 
-            <div class="btn_complete">
-              <ButtonUI @click="prepareCompleted" type="submit">Завершить</ButtonUI>
+            <div v-if="form.selectedUser && form.selectedUser.id !== $page.props.auth.user.id || selectedOrder.status === 'new'" class="spiner_wait">
+              <hollow-dots-spinner
+                :animation-duration="1000"
+                :dot-size="15"
+                :dots-num="1"
+                color="#4caf50"
+              />
             </div>
+              <div class="btn_assign">
+                <div v-if="selectedOrder.status !== 'new' && form.selectedUser && form.selectedUser.id === $page.props.auth.user.id" class="mb-1">
+                  <InfoNotification message="Вы уже ответственный" type="success" :animateIcon="false" />
+                </div>
+                <ButtonUI v-if="selectedOrder.status === 'new'" @click="assignExecutor" type="submit" color="green">Закрепить менеджера</ButtonUI>
+                <ButtonUI v-if="selectedOrder.status !== 'new' && form.selectedUser && form.selectedUser.id !== $page.props.auth.user.id" @click="assignExecutor" type="submit" color="green">Передать заказ другому</ButtonUI>
+              </div>
+
+            <div class="btn_close">
+              <ButtonUI @click="prepareCompleted" type="submit">Завершить заказ</ButtonUI>
+            </div>
+          </div>
+
+          <div v-if="!confirmationOrder && !form.selectedUser && selectedOrder.status !== 'closed'" class="mb-7 border">
+            <InfoNotification message="Чтобы начать обработку заказа назначьте менеджера" type="danger"/>
           </div>
         </FadeOrInstant>
 
 
-        <transition name="fade">
+<!--        <transition name="fade">-->
           <div v-if="confirmationOrder">
             <div class="content">
               <p class="message_complete">Вы уверены, что хотите завершить этот заказ?</p>
@@ -132,25 +167,38 @@
               <ButtonUI @click="cancelCloseOrder" type="submit" color="red">Отмена</ButtonUI>
             </div>
           </div>
-        </transition>
+<!--        </transition>-->
 
       </div>
     </div>
+
+    <ModalShowOrderScreenshot
+      :is-active="isModalShow"
+      :currentImageUrl="currentImageUrl"
+      :clientName="clientName"
+      @close="closeModalShowOrderScreenshot"
+    />
+
   </div>
 </template>
 
 <script>
-import Multiselect from "vue-multiselect";
+import { handleApiError } from '@/helpers/errors.js'
+import { getStatusColorClass } from '@/helpers/statusColorClass.js'
+import { translateStatus } from '@/helpers/statusTranslationClass.js'
+import Multiselect from 'vue-multiselect'
 import { UserService } from '@/services/UserService.js'
 import { OrdersService } from '@/services/OrdersService.js'
 import FadeOrInstant from "../../../Components/FadeOrInstant.vue";
-import Alert from "../../../Components/Alert.vue";
+import Alert from "../../../Components/Notifications/Alert.vue";
 import { Icon } from '@iconify/vue';
-import ButtonUI from "../../../Components/ButtonUI.vue";
+import ButtonUI from "../../../Components/Button/ButtonUI.vue";
 import { HollowDotsSpinner } from 'epic-spinners'
+import ModalShowOrderScreenshot from '@/Pages/Order/Modal/ModalShowOrderScreenshot.vue'
+import InfoNotification from '@/Components/Notifications/InfoNotification.vue'
 
 export default {
-  components: {Multiselect, FadeOrInstant, Alert, Icon, ButtonUI, HollowDotsSpinner},
+  components: {InfoNotification, ModalShowOrderScreenshot, Multiselect, FadeOrInstant, Alert, Icon, ButtonUI, HollowDotsSpinner},
   props: {
     isActive: {
       type: Boolean,
@@ -164,91 +212,121 @@ export default {
       type: Object,
       default: null,
     },
+    clientName: {
+      required: true
+    },
   },
   data() {
     return {
       managers: '',
+      clientName: '',
       form: {
         selectedUser: null,
         selectedOrder: null,
       },
-      statusTranslations: {
-        new: 'Новый',
-        active: 'Активный',
-        success: 'Завершен',
-        deleted: 'Удален',
-      },
+      localOrder: { ...this.selectedOrder },
       showSpinner: false,
-      currentColor: "red",
-      colors: [
-        "red",
-        "blue",
-        "green",
-        "indigo",
-        "purple",
-        "",
-        "orange",
-        "brown",
-        "deep-orange",
-        "blue-grey",
-        // "cyan"
-      ],
-      errors: '',
+      errors: {},
       alertMessage: '',
       alertType: 'success',
       loading: false,
       confirmationOrder: false,
       checkCloseOrder: false,
       isClosing: false,
+      isModalShow: false,
+      currentImageUrl: '',
     }
+  },
+  setup() {
+    return {translateStatus}
   },
   mounted() {
     this.getManagers()
-    this.randomColors()
   },
   methods: {
     getManagers() {
       UserService.getManagers().then(response => {
-        this.managers = response.data.managers
+        this.managers = response.data.data
       })
     },
-    store: async function (event) {
-      event.preventDefault()
+    assignExecutor: async function () {
       this.errors = null
+
       if (!this.form.selectedUser || !this.form.selectedUser.id) {
         this.triggerErrorAlert('Назначьте ответственного менеджера!')
         return;
       }
 
-      OrdersService.store(this.form)
+      if (this.selectedOrder.user?.id === this.$page.props.auth.user.id && this.form.selectedUser.id === this.$page.props.auth.user.id) {
+        this.triggerSuccessAlert('Этот заказ уже закреплен за вами!')
+        return;
+      }
+
+      this.updateStatus('active');
+
+      OrdersService.assignExecutor(this.form)
         .then(response => {
-          this.selectedOrder.status  = response.data.order.status
-          this.triggerSuccessAlert('Менеджер успешно закреплен ');
+          this.localOrder.user = response.data.assigned_user.user;
+
+          if (this.$page.props.auth.user.id !== response.data.assigned_user.user.id) {
+            this.unPinChat()
+            this.close();
+          }
         })
         .catch(error => {
-          this.errors = error.response.data.message
+          this.errors = handleApiError(error)
+        }).finally(() => {
+        if (this.selectedOrder.status === 'new') {
+          this.triggerSuccessAlert('Менеджер успешно закреплен ');
+        }else if (this.selectedOrder.status === 'active' && this.form.selectedUser.id !== this.$page.props.auth.user.id) {
+          this.triggerSuccessAlert('Заказ передается другому менеджеру');
+        }
+      });
+
+    },
+    unPinChat(pinedChatId) {
+      UserService.unPinChat(pinedChatId)
+        .then(response => {
+          if (response.data.data) {
+            this.pinedChat = response.data.data;
+            this.getPinedChat()
+          }
+        })
+        .catch(error => {
+          this.errors = handleApiError(error)
+        })
+    },
+    updateStatus($status) {
+      OrdersService.updateStatus(this.selectedOrder.id, $status)
+        .then(response => {
+          this.selectedOrder.status  = response.data.order.status
+        })
+        .catch(error => {
+          this.errors = handleApiError(error)
         })
     },
     closeOrder: async function () {
       if (this.isClosing) return;
       this.isClosing = true;
+      this.errors = {};
 
       OrdersService.close_order(this.form)
         .then(response => {
-          Object.assign(this.selectedOrder, response.data.order);
+          Object.assign(this.selectedOrder, response.data.update.order);
           this.triggerSuccessAlert('Заказ успешно завершен');
         })
         .catch(error => {
-          if (error.response && error.response.data) {
-            this.errors = error.response.data.message;
-          } else {
-            console.error('Неизвестная ошибка:', error);
-            this.errors = 'Что-то пошло не так. Попробуйте позже.';
-          }
+          this.errors = handleApiError(error)
         })
         .finally(() => {
-          this.isClosing = false;
           this.showSpinner = false
+          this.isClosing = false;
+          if (this.errors.success === false){
+            this.checkCloseOrder = false
+            this.triggerErrorAlert('Невозможно завершить заказ. Обратитесь к администратору')
+          }else {
+            this.updateStatus('success');
+          }
         });
     },
     prepareCompleted() {
@@ -267,46 +345,42 @@ export default {
       this.confirmationOrder = false
       this.checkCloseOrder = true
       this.showSpinner = true
+      this.$emit('successCloseOrder');
     },
     cancelCloseOrder() {
       this.confirmationOrder = false
     },
     openChat() {
-      this.$emit('close', { openChat: true, orderId: this.selectedOrder.id});
+      //console.log(this.localOrder.status)
+      if (String(this.selectedOrder.status).trim() === 'new') {
+      //if (!this.form.selectedUser) {
+      //if (!this.selectedOrder.user && !this.form.selectedUser) {
+        this.triggerErrorAlert('Назначьте ответственного менеджера')
+        return;
+      }
+
+      this.$emit('close', { openChat: true, order: this.selectedOrder, orderId: this.selectedOrder.id});
     },
     fixTheOrder($orderId) {
+      if (!this.form.selectedUser || !this.localOrder.user) {
+        this.triggerErrorAlert('Назначьте ответственного менеджера!')
+        return;
+      }
+
       OrdersService.fix_order($orderId)
         .then(response => {
-          // this.selectedOrder.is_pinned = response.data.order
-          if (response.data.order) {
-            this.selectedOrder.is_pinned = response.data.order.is_pinned;
+          if (response.data.order.fixed) {
+            this.selectedOrder.is_pinned = response.data.order.fixed.is_pinned;
           } else {
             this.selectedOrder.is_pinned = !this.selectedOrder.is_pinned;
           }
         })
         .catch(error => {
-          this.errors = error.response.data.message
+          this.errors = handleApiError(error)
         })
     },
-    translateStatus(status) {
-      return this.statusTranslations[status] || status;
-    },
     getStatusColor(status) {
-      switch (status) {
-        case 'new':
-          return 'text-[#38b0b0]';
-        case 'active':
-          return 'text-[#F93827]';
-        case 'success':
-          return 'text-[#FFA500]';
-        case 'deleted':
-          return 'text-[#FF0000]';
-        default:
-          return 'text-black';
-      }
-    },
-    randomColors() {
-      this.currentColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+      return getStatusColorClass(status)
     },
     triggerSuccessAlert($message) {
       this.alertMessage = $message;
@@ -320,24 +394,36 @@ export default {
     },
     close() {
       this.form.selectedUser = ''
-      // this.selectedOrder = ''
       this.confirmationOrder = false
       this.checkCloseOrder = false
       this.$emit('close', { openChat: false, orderId: 0});
     },
+    showModalScreenshot(image) {
+      this.currentImageUrl = image
+      this.isModalShow = true
+    },
+    closeModalShowOrderScreenshot() {
+      this.isModalShow = false
+    },
   },
   watch: {
+    // selectedUser: {
+    //   immediate: true,
+    //   handler(newUser) {
+    //     this.form.selectedUser = newUser;
+    //   }
+    // },
     selectedUser: {
+      handler(newVal) {
+        this.form.selectedUser = newVal ? { ...newVal } : null
+      },
       immediate: true,
-      handler(newUser) {
-        this.form.selectedUser = newUser;
-      }
     },
     selectedOrder: {
-      immediate: true,
       handler(newOrder) {
-        this.form.selectedOrder = newOrder;
-      }
+        this.form.selectedOrder = newOrder ? { ...newOrder } : null
+      },
+      immediate: true
     }
   },
 };
@@ -393,15 +479,16 @@ export default {
     gap: 10px;
   }
 }
-
 .left-panel {
   flex: 1;
 }
-
 .right-panel {
   flex: 1;
   display: flex;
   justify-content: center;
+  align-items: center;
+  max-height: 60vh;
+  overflow: hidden;
 }
 .order-info-wrapper {
   display: flex;
@@ -409,7 +496,6 @@ export default {
   align-items: center;
   height: 50vh;
 }
-
 .order-info {
   background: white;
   padding: 60px;
@@ -425,12 +511,15 @@ export default {
 }
 .order-image {
   max-width: 100%;
-  max-height: 70%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   border-radius: 8px;
   margin-right: 20%;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
-
 .no-image {
   text-align: center;
   color: #999;
@@ -443,20 +532,15 @@ export default {
   width: 100%;
   border-radius: 0 0 10px 10px;
 }
-.btn_save {
+.btn_assign {
   position: absolute;
-  left: 10%;
+  left: 7%;
   bottom: 40px;
 }
-.btn_complete {
+.btn_close {
   position: absolute;
-  left: 22%;
+  left: 26%;
   bottom: 40px;
-}
-.btn_close_order {
-  position: absolute;
-  left: 10%;
-  bottom: 30px;
 }
 .buttons {
   display: flex;
@@ -472,6 +556,11 @@ export default {
   font-weight: bold;
   bottom: 90px;
 }
+.spiner_wait {
+  position: absolute;
+  left: 4%;
+  bottom: 53px;
+}
 .spinner-wrapper {
   display: flex;
   justify-content: center;
@@ -485,7 +574,13 @@ export default {
   border: none;
   font-size: 20px;
   cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.2);
+  }
 }
+
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.5s ease;
 }
