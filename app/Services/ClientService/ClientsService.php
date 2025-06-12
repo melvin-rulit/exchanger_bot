@@ -3,37 +3,55 @@
 namespace App\Services\ClientService;
 
 use App\Models\Client;
+use App\Models\Message;
 use App\Models\Setting;
+use App\Services\BaseService;
+use App\Enums\MenuLevelStatus;
+use App\DTO\CallbackTelegramData;
+use App\Telegram\Traits\HandlesFile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
+use App\Exceptions\TelegramApiException;
+use App\Events\Consultation\ConsultationClosed;
+use App\Exceptions\Images\MediaLibraryException;
+use App\Services\RedisService\RedisSessionService;
+use App\Exceptions\Services\MessageNotFoundException;
+use App\Exceptions\Helpers\InvalidStringValueException;
 
-class ClientsService implements ClientServiceInterface
+class ClientsService extends BaseService implements ClientServiceInterface
 {
-    public function getClient($clientId)
+    use HandlesFile;
+
+    protected string $url;
+    protected string $download_url;
+    public function __construct(RedisSessionService $redis)
     {
-        return Client::where('bot_id', $clientId)->first();
+        parent::__construct($redis);
+        $this->url = ensure_string(config('telegram.telegram_bot.api_url'), 'telegram.telegram_bot.api_url') . ensure_string(config('telegram.telegram_bot.token'), 'telegram.telegram_bot.token');
+        $this->download_url = ensure_string(config('telegram.telegram_bot.api_file_url')) . config('telegram.telegram_bot.token');
     }
-    public function getClientLanguage($clientId)
+
+    public function getClient($clientBotId, $chatId): ?int
     {
-        $client = Client::where('bot_id', $clientId)->first();
+        if (!$this->redis->has('client_id', $chatId)){
+
+            $client = $this->getClientByBotId($clientBotId);
+            $this->redis->setClientIdForChat($chatId, $client->id, 0);
+        }
+
+        return $this->redis->getClientIdForChat($chatId);
+    }
+
+    public function getClientLanguage($clientBotId): string
+    {
+        $client = $this->getClientByBotId($clientBotId);
         $setting = $client->settings->where('key', 'language')->first();
         return $setting['value'];
     }
 
-    public function setStatus($clientId, $status): void
+    public function setClientChangeLanguageInput($clientBotId, $language, $setStatus): true
     {
-        $client = Client::where('bot_id', $clientId)->first();
-
-        if ($client) {
-            $client->status = $status;
-            $client->save();
-        }
-    }
-
-    public function setClientChangeLanguageInput($clientId, $language, $setStatus)
-    {
-        $client = Client::where('bot_id', $clientId)->first();
-
-        if ($client) {
+        if ($client = $this->getClientByBotId($clientBotId)) {
                 $client->status = 'language_input';
                 $client->save();
 
@@ -50,118 +68,160 @@ class ClientsService implements ClientServiceInterface
                 }
             }
         } else {
-            Log::error("Client with bot_id {$clientId} not found.");
+            Log::error("Client with bot_id {$clientBotId} not found.");
         }
 
-        return false;
+        return true;
     }
 
-    public function isClientChangeLanguageInput($clientId)
+    public function isClientChangeLanguageInput($clientBotId): void
     {
-        $client = Client::where('bot_id', $clientId)->first();
+        $client = $this->getClientByBotId($clientBotId);
     }
+
+    /**
+     * @throws InvalidStringValueException
+     * @throws TelegramApiException
+     * @throws MediaLibraryException
+     */
     public function checkIfClientExit($data): void
     {
-        $from = $data['message']['from'];
-        $clientId = $data['message']['from']['id'];
+        $callback = CallbackTelegramData::fromWebhook($data);
+        $botToken = ensure_string(config('telegram.telegram_bot.token'));
+        if (!$callback->fromBot) {
 
-        if (!$from['is_bot']) {
-
-            $client = Client::where('bot_id', $clientId)->first();
-
+            $client = Client::where('bot_id', $callback->clientBotId)->first();
 
             if (!$client) {
                 $client = new Client();
-                $client->bot_id = $clientId;
-                $client->first_name = $from['first_name'];
-                $client->bot_name = $from['username'];
+                $client->bot_id = $callback->clientBotId;
+                $client->first_name = $callback->firsName;
+                $client->bot_name = $callback->userName;
                 $client->status = 'main_menu';
                 $client->save();
 
+                $getPhotosUrl = "https://api.telegram.org/bot{$botToken}/getUserProfilePhotos?user_id={$client->bot_id}&limit=1";
+                $response = file_get_contents($getPhotosUrl);
+                $data = json_decode($response, true);
+
+                if ($data['ok'] && $data['result']['total_count'] > 0) {
+                    $fileId = $data['result']['photos'][0][0]['file_id'];
+
+                    $imageContent = $this->getTelegramFileContent($fileId);
+
+                    $this->saveImageToModelFromResponse($imageContent, 'client_avatar.jpg', $client, 'client_avatar', false);
+
+                } else {
+                    echo "Фото профиля отсутствует.";
+                }
+//                $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $created_message, 'chat_screenshot');
+
                 //Устанавливаем дефолтные настройки русского языка
                 $client->settings()->attach(1);
+                $this->redis->setClientIdForChat($callback->chatId, $client->id, 0);
             }
         }
     }
-    public function setClientMainInput($clientId, $status): void
+    public function setClientMainInput($clientId, $status): true
     {
-        $this->setStatus($clientId, $status);
+        return $this->setStatus($clientId, $status);
     }
+    public function setUserCountryInput($clientId): void
+    {
+        $this->setStatus($clientId, MenuLevelStatus::Country->value);
+    }
+    public function setClientBankInput($clientId): void
+    {
+        $this->setStatus($clientId, MenuLevelStatus::Bank->value);
+    }
+    public function setClientCurrencyInput($clientId): void
+    {
+        $this->setStatus($clientId, MenuLevelStatus::Currency->value);
+    }
+
     public function setClientAmountInput($clientId): void
     {
-        $this->setStatus($clientId, 'amount_input');
+        $this->setStatus($clientId, MenuLevelStatus::Amount->value);
+    }
+
+    public function setRequisiteInput($clientId): void
+    {
+        $this->setStatus($clientId, MenuLevelStatus::Requisite->value);
     }
     public function setClientAmountSuccessInput($clientId): void
     {
         $this->setStatus($clientId, 'amount_input_success');
     }
-    public function setClientCurrencyInput($clientId): void
-    {
-        $this->setStatus($clientId, 'currency_input');
-    }
-
-    public function isUserInAmountInput($clientId): bool
-    {
-        $isUserInAmountInput = Client::where('bot_id', $clientId)->first();
-
-        if ($isUserInAmountInput) {
-            if ($isUserInAmountInput->status == 'amount_input') {
-                return true;
-            }
-        }
-        return false;
-    }
-    public function setUserCountryInput($clientId): void
-    {
-        $this->setStatus($clientId, 'country_input');
-    }
-
-    public function isUserInACountryInput($clientId): bool
-    {
-        $isUserInACountryInput = Client::where('bot_id', $clientId)->first();
-
-        if ($isUserInACountryInput) {
-            if ($isUserInACountryInput->status == 'country_input') {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public function setClientBankInput($clientId): void
-    {
-        $this->setStatus($clientId, 'bank_input');
-    }
-
-    public function setClientConsultationInput($clientId): void
-    {
-        $this->setStatus($clientId, 'consultant_input');
-    }
-    public function isClientConsultationInput($clientId): bool
-    {
-        $isClientConsultationInput = Client::where('bot_id', $clientId)->first();
-
-        if ($isClientConsultationInput) {
-            if ($isClientConsultationInput->status == 'consultant_input') {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public function setClientSendScreenshot($clientId): void
     {
-        $this->setStatus($clientId, 'send_screenshot');
+        $this->setStatus($clientId, MenuLevelStatus::Screenshot->value);
     }
-    public function isClientSendScreenshot($clientId): bool
+    public function setClientWalletInput($clientId): void
     {
-        $isClientConsultationInput = Client::where('bot_id', $clientId)->first();
+        $this->setStatus($clientId, MenuLevelStatus::Wallet->value);
+    }
+    public function setClientConsultationInput($chatId, $clientId): void
+    {
+        $this->setStatus($clientId, MenuLevelStatus::Consultant->value);
+        $this->redis->setClientInConsultation($chatId);
 
-        if ($isClientConsultationInput) {
-            if ($isClientConsultationInput->status == 'send_screenshot') {
-                return true;
+        if ($this->redis->getClientInConsultation($chatId)){
+            if (!$this->redis->has('message_group_in_consultation', $chatId)) {
+                $randomCharacter = generateRandomDigits();
+                $this->redis->setMessageGroupForConsultation($chatId, $randomCharacter, 0);
             }
         }
-        return false;
+    }
+
+    /**
+     * @throws MessageNotFoundException
+     */
+    public function setCloseConsultation($messageId): void
+    {
+        if (!$message = Message::find($messageId)) {
+            throw new MessageNotFoundException("Заказ с ID {$messageId} не найден.");
+        }
+
+        $message->is_close = true;
+        $message->save();
+        //$this->clearConsultationSession($clientId);
+
+        broadcast( new ConsultationClosed());
+    }
+    public function isClientInACountryInput($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Country->value;
+    }
+
+    public function isClientInBankInput($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Bank->value;
+    }
+    public function isUserInAmountInput($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Amount->value;
+    }
+    public function isUserInRequisiteInput($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Requisite->value;
+    }
+
+    public function isClientConsultationInput($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Consultant->value;
+    }
+
+    public function isClientSendScreenshot($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Screenshot->value;
+    }
+    public function isClientWalletInput($clientBotId): bool
+    {
+        return $this->getClientStatus($clientBotId) === MenuLevelStatus::Wallet->value;
+    }
+    public function clearConsultationSession($clientId): void
+    {
+        Redis::set('client_in_consultation' . $clientId, false);
+        Redis::del(['message_group_in_consultation' . $clientId]);
     }
 }
