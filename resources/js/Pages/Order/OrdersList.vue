@@ -44,7 +44,7 @@
 
         <tbody v-if="isLoadingSpiner">
         <tr>
-          <td class="absolute top-[50%] left-[47%]">
+          <td class="absolute top-[48%] left-[48%]">
             <hollow-dots-spinner
               v-if="isLoadingSpiner"
               :animation-duration="1000"
@@ -59,7 +59,7 @@
 
         <tbody v-else-if="!isLoadingSpiner && orders.length === 0 ">
         <tr>
-          <td class="absolute top-[47%] left-[47%] text-xl text-muted">На сегодня нет заказов</td>
+          <td class="absolute top-[47%] left-[45%] text-xl text-muted">На сегодня нет заказов</td>
         </tr>
         </tbody>
 
