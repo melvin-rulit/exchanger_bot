@@ -59,7 +59,7 @@
 
           <tbody v-else>
           <tr>
-            <td class="absolute top-[48%] left-[48%]">
+            <td class="absolute top-[48%] left-[47%]">
               <hollow-dots-spinner
                 v-if="isLoadingSpiner"
                 :animation-duration="1000"
@@ -68,7 +68,7 @@
                 color="#4caf50"
               />
             </td>
-            <td v-if="!messages.length && !isLoadingSpiner" class="absolute top-[47%] left-[45%] text-xl text-muted">На сегодня нет сообщений</td>
+            <td v-if="!messages.length && !isLoadingSpiner" class="absolute top-[47%] left-[44%] text-xl text-muted">На сегодня нет сообщений</td>
           </tr>
           </tbody>
 
