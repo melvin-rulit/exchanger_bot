@@ -4,9 +4,8 @@ namespace App\Actions;
 
 use App\DTO\CurrencySelectionData;
 use App\Services\ClientService\ClientsService;
-use App\Services\RedisSessionService;
+use App\Services\RedisService\RedisSessionService;
 use App\Services\TelegramBotService\TelegramMessageService;
-
 use Illuminate\Support\Facades\Redis;
 
 class StartCurrencyAction
@@ -32,7 +31,7 @@ class StartCurrencyAction
         $this->clientsService->setClientAmountInput($data->clientBotId);
 
         $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId);
-        $this->telegramMessageService->sendMessage($data->chatId, __('messages.enter_the_amount_only_numbers'), $data->messageId);
+        $this->telegramMessageService->sendMessage($data->chatId, __('messages.enter_the_amount_only_numbers'));
 
     }
 }

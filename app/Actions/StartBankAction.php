@@ -2,48 +2,75 @@
 
 namespace App\Actions;
 
-use App\Models\Currency;
+use App\Models\Bank;
+use App\Models\Country;
 use App\DTO\BankSelectionData;
-use App\Services\RedisSessionService;
+use App\Enums\Bank\BankField;
+use App\Enums\TelegramCallbackAction;
+use App\Exceptions\TelegramApiException;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
+use App\Services\RedisService\RedisSessionService;
+use App\Exceptions\Country\CountryNotFoundException;
+use App\Exceptions\Country\CountryBankNotFoundException;
 use App\Services\TelegramBotService\TelegramMessageService;
-use Illuminate\Support\Facades\Log;
 
 class StartBankAction
 {
     public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService, protected RedisSessionService $redis) {}
+
+    /**
+     * @throws TelegramApiException
+     * @throws CountryNotFoundException
+     * @throws CountryBankNotFoundException
+     */
     public function execute(BankSelectionData $data): void
     {
-        $country_currency = Currency::where('country_id', $this->redis->getSelectedCountry($data->chatId))->get();
+        $this->redis->forgetBankConsultant($data->chatId);
 
-        $keyboard = [
-            'inline_keyboard' => [],
-        ];
+        $country = Country::with('banks')->where('code', $data->countryCode)->first();
 
-        if ($country_currency) {
-            $row = [];
-
-            foreach ($country_currency as $index => $currency) {
-                $row[] = [
-                    'text' => $currency->name,
-                    'callback_data' => 'currency_' . $currency->id
-                ];
-                if (count($row) == 3) {
-                    $keyboard['inline_keyboard'][] = $row;
-                    $row = [];
-                }
-            }
-            if (count($row) > 0) {
-                $keyboard['inline_keyboard'][] = $row;
-            }
-
-            $keyboard['inline_keyboard'][] = KeyboardFactory::toBack('select_currency_back');
+        if (Country::count() === 0) {
+            throw new CountryNotFoundException("Страна с кодом {$data->countryCode} не найдена", 404, null, [], 'database');
         }
 
-        $this->clientsService->setClientCurrencyInput($data->clientBotId);
+        if ($country->banks->isEmpty()) {
+            throw new CountryBankNotFoundException('У выбранной страны нет доступных банков.', 404, null, [], 'database');
+        }
 
+        $this->redis->setSelectedCountry($data->chatId, $country->id);
+        $this->redis->setCountryCode($data->chatId, $data->countryCode);
+
+        $keyboard = [
+            'inline_keyboard' => []
+        ];
+
+        $row = [];
+
+        /** @var Bank $bank */
+        foreach ($country->banks as $bank) {
+            $row[] = [
+                'text' => $bank->name,
+                'callback_data' => 'bank_' . $bank->id
+            ];
+            if (count($row) == 2) {
+                $keyboard['inline_keyboard'][] = $row;
+                $row = [];
+            }
+        }
+        if (count($row) > 0) {
+            $keyboard['inline_keyboard'][] = $row;
+        }
+
+        $keyboard['inline_keyboard'][] = KeyboardFactory::toConsultation(TelegramCallbackAction::ToConsultation->value. BankField::BANK->value);
+        $keyboard['inline_keyboard'][] = KeyboardFactory::toBack(TelegramCallbackAction::SelectBankBack->value);
+
+        $this->clientsService->setClientBankInput($data->clientBotId);
+
+        $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.get_banks'), $keyboard, $data->messageId);
         $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId);
-        $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.get_currency'), $keyboard, $data->messageId);
+//        $this->telegramMessageService->sendDeleteReplay($data->chatId);
+//        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -1);
+//        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -2);
     }
 }

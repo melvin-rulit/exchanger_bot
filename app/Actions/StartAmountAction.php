@@ -3,15 +3,13 @@
 namespace App\Actions;
 
 use App\DTO\AmountSelectionData;
+use App\Enums\Amount\AmountField;
 use App\Enums\TelegramCallbackAction;
 use App\Exceptions\TelegramApiException;
-use App\Services\RedisSessionService;
-use App\Services\ClientService\ClientsService;
-use App\Services\TelegramBotService\TelegramMessageService;
-
 use App\Telegram\Keyboard\KeyboardFactory;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
+use App\Services\ClientService\ClientsService;
+use App\Services\RedisService\RedisSessionService;
+use App\Services\TelegramBotService\TelegramMessageService;
 
 class StartAmountAction
 {
@@ -22,12 +20,13 @@ class StartAmountAction
      */
     public function execute(AmountSelectionData $data): void
     {
+        $this->redis->forgetAmountConsultant($data->chatId);
         $this->clientsService->setClientAmountInput($data->clientBotId);
 
-        $keyboard['inline_keyboard'][] = KeyboardFactory::toBack(TelegramCallbackAction::SelectCountryBack);
+        $keyboard['inline_keyboard'][] = KeyboardFactory::toConsultation(TelegramCallbackAction::ToConsultation->value. AmountField::AMOUNT->value);
+        $keyboard['inline_keyboard'][] = KeyboardFactory::toBack(TelegramCallbackAction::SelectAmountBack->value);
 
         $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId);
         $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.enter_the_amount_only_numbers'), $keyboard, $data->messageId);
-//        $this->telegramMessageService->sendMessage($data->chatId, __('messages.enter_the_amount_only_numbers'));
     }
 }
