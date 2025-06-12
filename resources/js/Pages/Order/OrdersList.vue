@@ -639,7 +639,7 @@ export default {
     },
     setScreenLockPassword() {
       this.startFunction = false
-      this.$refs.alertComponent.closeAlert();
+      this.$refs.alertNotificationComponent.closeAlert();
       this.isVisibleSetPassword = true
     },
     async closeScreenLockPassword() {
