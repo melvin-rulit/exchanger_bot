@@ -4,14 +4,22 @@ namespace App\Handlers\Callback;
 
 use App\DTO\BankSelectionData;
 use App\Actions\StartBankAction;
+use App\Exceptions\TelegramApiException;
+use App\Exceptions\Country\CountryNotFoundException;
+use App\Exceptions\Country\CountryBankNotFoundException;
 
 class BankCallbackHandler
 {
     public function __construct(protected StartBankAction $action) {}
 
-    public function handle(int $bankId, int $clientBotId, int $chatId, int $messageId): void
+    /**
+     * @throws CountryNotFoundException
+     * @throws TelegramApiException
+     * @throws CountryBankNotFoundException
+     */
+    public function handle(string $countryCode, int $clientBotId, int $chatId, int $messageId): void
     {
-        $dto = new BankSelectionData($bankId, $clientBotId, $chatId, $messageId);
+        $dto = new BankSelectionData($countryCode, $clientBotId, $chatId, $messageId);
         $this->action->execute($dto);
     }
 }

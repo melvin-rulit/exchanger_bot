@@ -4,14 +4,20 @@ namespace App\Handlers\Callback;
 
 use App\DTO\CountrySelectionData;
 use App\Actions\StartCountryAction;
+use App\Exceptions\TelegramApiException;
+use App\Exceptions\Country\CountryNotFoundException;
 
 class CountryCallbackHandler
 {
     public function __construct(protected StartCountryAction $action) {}
 
-    public function handle(string $countryCode, int $clientBotId, int $chatId, int $messageId): void
+    /**
+     * @throws TelegramApiException
+     * @throws CountryNotFoundException
+     */
+    public function handle(int $clientBotId, int $chatId, int $messageId): void
     {
-        $dto = new CountrySelectionData($countryCode, $clientBotId, $chatId, $messageId);
+        $dto = new CountrySelectionData($clientBotId, $chatId, $messageId);
         $this->action->execute($dto);
     }
 }

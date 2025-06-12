@@ -5,7 +5,6 @@ namespace App\Handlers\Callback;
 use App\DTO\AmountSelectionData;
 use App\Actions\StartAmountAction;
 use App\Exceptions\TelegramApiException;
-use Illuminate\Support\Facades\Log;
 
 
 class AmountCallbackHandler
