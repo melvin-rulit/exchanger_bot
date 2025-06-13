@@ -413,8 +413,9 @@ export default {
         this.newMessagePhoto.photo_path = null;
         this.inputPlaceholder = 'Введите сообщение...'
       },
-        close() {
-        this.showTemplates = false
+      close() {
+          this.showTemplates = false
+          this.messages = []
           this.$emit('close');
         },
     },
