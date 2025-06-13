@@ -2,13 +2,16 @@
 
 namespace App\Handlers\Callback;
 
-use App\Exceptions\TelegramApiException;
-use App\Telegram\Keyboard\KeyboardFactory;
-use App\Services\OrderService\OrderService;
-use App\Services\ClientService\ClientsService;
+use App\Enums\ModelEnum;
+use App\Enums\TelegramCallbackAction;
+use App\Events\Order\OrderClosed;
 use App\Exceptions\Order\OrderNotFoundException;
+use App\Exceptions\TelegramApiException;
+use App\Services\ClientService\ClientsService;
+use App\Services\OrderService\OrderService;
 use App\Services\RedisService\RedisFieldService;
 use App\Services\TelegramBotService\TelegramMessageService;
+use App\Telegram\Keyboard\KeyboardFactory;
 
 class GoToMainHandler
 {
@@ -18,9 +21,14 @@ class GoToMainHandler
      * @throws TelegramApiException
      * @throws OrderNotFoundException
      */
-    public function handle(int $clientBotId, int $chatId, int $messageId): void
+    public function handle(int $clientBotId, int $chatId, int $messageId, string $action): void
     {
-        $this->orderService->changeStatus($this->redis->getOrderId($chatId), 'closed');
+        $order = $this->orderService->changeStatus($this->redis->getOrderId($chatId), ModelEnum::CLOSEORDERSTATUS);
+
+        if ($action === TelegramCallbackAction::Cancel->value){
+            broadcast(new OrderClosed($order, 'order_closed'));
+        }
+
         $this->clientsService->setClientMainInput($clientBotId, __('buttons.to_main'));
 
         $keyboard = KeyboardFactory::startKeyboard();
