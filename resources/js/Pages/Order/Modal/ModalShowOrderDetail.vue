@@ -407,18 +407,22 @@ export default {
     },
   },
   watch: {
+    isActive: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal && this.selectedUser) {
+          this.form.selectedUser = this.selectedUser
+        }
+      }
+    },
     // selectedUser: {
     //   immediate: true,
     //   handler(newUser) {
-    //     this.form.selectedUser = newUser;
+    //     if (this.isActive && newUser) {
+    //       this.form.selectedUser = newUser
+    //     }
     //   }
     // },
-    selectedUser: {
-      handler(newVal) {
-        this.form.selectedUser = newVal ? { ...newVal } : null
-      },
-      immediate: true,
-    },
     selectedOrder: {
       handler(newOrder) {
         this.form.selectedOrder = newOrder ? { ...newOrder } : null
