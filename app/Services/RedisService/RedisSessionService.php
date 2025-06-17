@@ -2,6 +2,7 @@
 
 namespace App\Services\RedisService;
 
+use App\Enums\ModelEnum;
 use App\Enums\Bank\BankField;
 use App\Enums\Amount\AmountField;
 use App\Enums\Wallet\WalletField;
@@ -73,6 +74,20 @@ class RedisSessionService extends BaseService
     {
         $this->forget(BankField::BANKCONSULTANT->value, $chatId);
     }
+    public function setBankOrder(int $chatId, $bankId, ?int $ttl = null): void
+    {
+        $this->set(ModelEnum::BANKID->value, $chatId, $bankId, $ttl);
+    }
+
+    public function getBankOrder(string|int $chatId): ?int
+    {
+        $value = $this->get(ModelEnum::BANKID->value, $chatId);
+        return $value !== null ? (int) $value : null;
+    }
+    public function forgetBankOrder(int $chatId): void
+    {
+        $this->forget(ModelEnum::BANKID->value, $chatId);
+    }
 
     // === AMOUNT ===
 
@@ -123,7 +138,7 @@ class RedisSessionService extends BaseService
     }
 
 
-    // // === CONSULTATION ===
+    // === CONSULTATION ===
 
     public function setMessageGroupForConsultation(int $chatId, int $messageGroupId, ?int $ttl = null): void
     {

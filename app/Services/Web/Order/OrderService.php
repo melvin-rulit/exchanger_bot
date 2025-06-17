@@ -37,7 +37,7 @@ class OrderService extends BaseWebService
      */
     public function getOrders(): LengthAwarePaginator
     {
-        return Order::with(['user', 'client', 'pinnedMessages'])
+        return Order::with(['user', 'client', 'pinnedMessages', 'bank'])
             ->whereDate('created_at', Carbon::today())
             ->where(function ($query) {
                 $query

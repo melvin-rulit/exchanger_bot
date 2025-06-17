@@ -26,6 +26,11 @@
               <p class="font-semibold ml-2">Сумма обмена</p>
             </div>
           </td>
+          <td>
+            <div class="flex">
+              <p class="font-semibold ml-2">Банк</p>
+            </div>
+          </td>
           <td class="pl-3">
             <p class="font-semibold ml-2">Чек</p>
           </td>
@@ -141,6 +146,13 @@
           <td class="">
             <div class="flex items-center">
               <p class="text-sm leading-none text-gray-600 ml-10">{{ order.amount }}</p>
+            </div>
+          </td>
+
+          <td class="">
+            <div class="flex items-center">
+              <span v-if="order.bank?.name" class="text-sm leading-none text-gray-600">{{ order.bank.name}}</span>
+              <span v-else class="px-2 text-gray-500"></span>
             </div>
           </td>
 

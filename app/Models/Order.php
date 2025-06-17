@@ -20,7 +20,7 @@ class Order extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = ['chat_id', 'client_id', 'user_id', 'amount', 'currency_name', 'status', 'is_requisite'];
+    protected $fillable = ['chat_id', 'client_id', 'user_id', 'bank_id', 'amount', 'currency_name', 'status', 'is_requisite'];
 
     public function registerMediaCollections(): void
     {
@@ -42,6 +42,10 @@ class Order extends Model implements HasMedia
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(Bank::class);
     }
 
     public function messages(): HasMany

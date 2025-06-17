@@ -33,6 +33,7 @@ class OrderService extends BaseService implements OrderServiceInterface
             'chat_id' => $chatId,
             'client_id' => $client->id,
             'user_id' => null,
+            'bank_id' => $this->redis->getBankOrder($chatId),
             'amount' => $amount,
         ]);
 

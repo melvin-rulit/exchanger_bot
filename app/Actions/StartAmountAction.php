@@ -20,6 +20,7 @@ class StartAmountAction
      */
     public function execute(AmountSelectionData $data): void
     {
+        $this->redis->setBankOrder($data->chatId, $data->bankId);
         $this->redis->forgetAmountConsultant($data->chatId);
         $this->clientsService->setClientAmountInput($data->clientBotId);
 

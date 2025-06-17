@@ -4,6 +4,7 @@ namespace App\Http\Resources\Order;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Http\Resources\Bank\BankResource;
 use App\Http\Resources\User\UserResource;
 use App\Http\Resources\BaseTypedResource;
 use App\Http\Resources\Client\ClientResource;
@@ -24,6 +25,7 @@ class OrdersResource extends BaseTypedResource
             'id' => $model->id,
             'client'  => ClientResource::make($model->client),
             'user' => UserResource::make($model->user),
+            'bank' => BankResource::make($model->bank),
             'amount' => $model->amount,
             'status' => $model->status,
             'is_message' => $model->is_message,
