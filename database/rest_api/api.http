@@ -1,0 +1,6 @@
+###
+
+POST https://vstickers.ru/api/export/telegram_service
+Accept: application/json
+Content-Type: application/json
+X-Secret-Key: eyJpdiI6IktWMkM2RWRSa0tOMjh4K3lDUWMvL1E9PSIsInZhbHVlIjoiL0dYMUpLNkF5R0xCakhWM1JMUVhic2JlNXVDeTdHZ2hoNzh5WmpRQ2FFdz0iLCJtYWMiOiI1M2UxYmYwNzc2MDk5MTIxZjJmYjVkMmFjNTEwYTNmMGJhMTZkZjE4ZjQ1ZmU5MTY5NTgxNDI2OGQ5NTI3OTU1IiwidGFnIjoiIn0=
