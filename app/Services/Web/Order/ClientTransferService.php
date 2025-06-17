@@ -35,7 +35,6 @@ class ClientTransferService extends BaseWebService
         <pre>
           $requisite
         </pre>
-        <a href="https://example.com">Как пополнить?</a>
 HTML;
         //$keyboard['inline_keyboard'][] = KeyboardFactory::toConsultation(TelegramCallbackAction::ToConsultation->value . BankField::BANK->value);
         $keyboard['inline_keyboard'][] = KeyboardFactory::toCancel(true);
