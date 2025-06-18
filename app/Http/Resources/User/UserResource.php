@@ -27,6 +27,7 @@ class UserResource extends BaseTypedResource
             'role' => $model->getRoleNames(),
             'image_url'    => $model->getImageUrl(),
             'settings' => UserSettingsResource::collection($this->whenLoaded('settings')),
-        ];
+            'created_at' => $model->created_at,
+            ];
     }
 }
