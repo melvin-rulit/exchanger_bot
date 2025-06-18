@@ -48,3 +48,17 @@ if (!function_exists('getLargestPhoto')) {
     }
 }
 
+/**
+ * Вернуть сам document как есть.
+ *
+ * @param array|null $document
+ * @return array|null
+ */
+
+if (!function_exists('getDocumentFile')) {
+    function getDocumentFile(?array $document): ?array
+    {
+        return $document ?: null;
+    }
+}
+
