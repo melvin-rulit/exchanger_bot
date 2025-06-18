@@ -8,6 +8,7 @@ class CallbackTelegramData extends BaseTelegramDTO
     public function __construct(
         public int|string $text,
         public array $photos,
+        public array $document,
         public int $chatId,
         public int $clientBotId,
         public string $firsName,
@@ -25,6 +26,7 @@ class CallbackTelegramData extends BaseTelegramDTO
         return new self(
             text: $message['text'] ?? '',
             photos: $message['photo'] ?? [],
+            document: $message['document'] ?? [],
             chatId: $message['chat']['id'] ?? 0,
             clientBotId: $from['id'] ?? 0,
             firsName: $from['first_name'] ?? '',
