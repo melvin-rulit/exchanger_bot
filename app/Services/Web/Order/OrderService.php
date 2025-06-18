@@ -236,6 +236,7 @@ class OrderService extends BaseWebService
             $this->sendWebhookCommand($order->chat_id, 'start');
 
             $order->setRelation('user', $user);
+            $order->update(['close_at' => now()]);
         }
 
         return $order;

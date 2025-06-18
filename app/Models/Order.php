@@ -20,7 +20,7 @@ class Order extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = ['chat_id', 'client_id', 'user_id', 'bank_id', 'amount', 'currency_name', 'status', 'is_requisite'];
+    protected $fillable = ['chat_id', 'client_id', 'user_id', 'bank_id', 'amount', 'currency_name', 'status', 'is_requisite', 'close_at'];
 
     public function registerMediaCollections(): void
     {
