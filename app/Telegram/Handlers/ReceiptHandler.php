@@ -35,11 +35,13 @@ class ReceiptHandler
      * @throws MediaLibraryException
      * @throws OrderNotFoundException
      */
-    public function prepareSendCheck($photo, $clientId, $chatId): void
+    public function prepareSendCheck($fileData, $clientId, $chatId): void
     {
         setAppLanguage($this->clientsService->getClientLanguage($clientId));
 
-        $imageContent = $this->getTelegramFileContent($photo['file_id']);
+        $fileId = $fileData['file_id'];
+
+        $imageContent = $this->getTelegramFileContent($fileId);
 
         $order = Order::where('id', $this->redisField->getOrderId($chatId))->first();
 
@@ -49,7 +51,8 @@ class ReceiptHandler
 
         $this->saveImageToModelFromResponse($imageContent, 'check.jpg', $order, 'amount_check');
         broadcast(new ChekSend($order, 'send_chek'));
-//TODO понят что нужно передавать messageId
-        $this->walletCallbackHandler->handle($clientId, $chatId, 564);
+
+////TODO понят что нужно передавать messageId
+      $this->walletCallbackHandler->handle($clientId, $chatId, 564);
     }
 }
