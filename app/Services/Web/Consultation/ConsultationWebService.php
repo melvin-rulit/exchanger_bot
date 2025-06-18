@@ -32,15 +32,23 @@ class ConsultationWebService extends BaseWebService
 
     public function getTodayConsultationMessages(): LengthAwarePaginator
     {
-        return Message::whereIn('id', function ($query) {
-            $query->select(DB::raw('MAX(id)'))
-                ->from('messages')
-                ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
-                ->whereNull('order_id')
-                ->where('sender_type', 'client')
-                ->groupBy('chat_id');
-        })
-            ->orderBy('created_at', 'desc')
+        $today = Carbon::now()->format('Y-m-d');
+
+        $clientSub = Message::select(DB::raw('MAX(id)'))
+            ->whereDate('created_at', $today)
+            ->whereNull('order_id')
+            ->where('sender_type', 'client')
+            ->groupBy('chat_id');
+
+        $userSub = Message::select(DB::raw('MAX(id)'))
+            ->whereDate('created_at', $today)
+            ->whereNull('order_id')
+            ->where('sender_type', 'user')
+            ->groupBy('chat_id');
+
+        return Message::whereIn('id', $clientSub)
+            ->orWhereIn('id', $userSub)
+            ->orderBy('created_at', 'asc')
             ->paginate(16);
     }
 
