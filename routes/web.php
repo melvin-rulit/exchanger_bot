@@ -10,6 +10,9 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\CunsultationController;
 use App\Http\Controllers\TemplateMessageController;
 
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
+
 Route::get('/', function () {
     return Inertia::render('Auth/Login', [
         'canLogin' => Route::has('login'),
@@ -34,6 +37,12 @@ Route::get('/consultation', function () {
 Route::get('/settings', function () {
     return Inertia::render('Settings/Index');
 })->middleware(['auth', 'verified'])->name('settings');
+
+Route::group(['prefix' => 'admin'], function () {
+    Route::get('/users', function () {
+        return Inertia::render('Admin/Index');
+    })->middleware(['auth', 'verified'])->name('adminUsers');
+});
 
 Route::middleware('auth')->group(function () {
 

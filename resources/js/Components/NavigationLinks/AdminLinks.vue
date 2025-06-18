@@ -26,6 +26,18 @@
         :active="route().current('consultation')">
         Переписка
       </NavLink>
+
+      <div class="pl-5">
+                                    <span v-if="consultationStore.unreadMessagesCount > 0"
+                                          :class="['badge',route().current('adminUsers') ? 'badge-active' : 'badge-inactive']">
+                                          {{ consultationStore.unreadMessagesCount }}
+                                    </span>
+      </div>
+      <NavLink
+        :href="route('adminUsers')"
+        :active="route().current('adminUsers')">
+        Сотрудники
+      </NavLink>
     </div>
 
   </div>
