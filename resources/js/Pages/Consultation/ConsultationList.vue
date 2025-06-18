@@ -12,7 +12,7 @@
                 </td>
               <td>
                 <div class="flex">
-                  <p class="font-semibold mr-2">Последнее сообщение клиента</p>
+                  <p class="font-semibold mr-2">Последнее сообщение</p>
                 </div>
               </td>
               <td>
@@ -28,28 +28,40 @@
             </tr>
             </thead>
 
-            <tbody v-if="messages.length">
+            <tbody v-if="groupedMessages.length">
 
-            <tr v-for="message of messages" tabindex="0" @click="showModalChat(message, message.client)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
+            <tr v-for="item of groupedMessages" tabindex="0" @click="showModalChat(item.last_message, item.client ?? item.last_message.client)" class="table_body inside_table focus:outline-none h-10 rounded hover:bg-gray-100">
                 <td class="pl-4">
                     <div class="flex items-center text-gray-800">
-                        <Icon icon="wpf:message-outline" width="26" height="26" :class="{'animate-fade-bounce': !message.is_message}"/>
+                        <Icon icon="wpf:message-outline" width="26" height="26" :class="{'animate-fade-bounce': !item.last_message.is_message}"/>
                     </div>
                 </td>
               <td class="">
                 <div class="flex items-center">
-                  <p v-if="message.messages !== null" class="text-sm leading-none text-gray-600 ml-2">{{ message.messages }}</p>
-                  <img v-else :src="message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
+                  <p v-if="item.last_message.messages !== null" class="text-sm leading-none text-gray-600 ml-2">
+                    {{ item.last_message.messages }}
+                    <span class="text-xs text-gray-400 ml-2">
+        (от {{ item.last_message.sender_type === 'client' ? 'клиента' : 'менеджера' }})
+      </span>
+                  </p>
+                  <div v-else class="flex items-center">
+                    <img :src="item.last_message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
+                    <span class="text-xs text-gray-400 ml-2">
+        (от {{ item.last_message.sender_type === 'client' ? 'клиента' : 'менеджера' }})
+      </span>
+                  </div>
+                </div>
+              </td>
+
+              <td class="">
+                <div class="flex items-center">
+                  <p v-if="item.last_message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColor"/> Чат закрыт клиентом</p>
                 </div>
               </td>
               <td class="">
                 <div class="flex items-center">
-                  <p v-if="message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColor"/> Чат закрыт клиентом</p>
-                </div>
-              </td>
-              <td class="">
-                <div class="flex items-center">
-                  <span class="px-4 bg-gray-50 text-gray-800 rounded-md shadow-md">{{ message.client.first_name }}</span>
+                  {{ (item.client ?? item.last_message.client)?.first_name || 'Клиент не найден' }}
+<!--                  <span class="px-4 bg-gray-50 text-gray-800 rounded-md shadow-md">{{ item.client.first_name }}</span>-->
                 </div>
               </td>
             </tr>
@@ -240,6 +252,32 @@ export default {
       },
       notificationSettings() {
         return this.userStore.currentUser?.settings?.find(s => s.key === 'notification') || { is_active: false }
+      },
+      groupedMessages() {
+        const messages = Array.isArray(this.messages) ? this.messages : [];
+
+        const map = new Map();
+
+        messages.forEach(msg => {
+          const chatId = msg.chat_id;
+
+          if (!map.has(chatId)) {
+            map.set(chatId, {
+              last_message: msg,
+              client: msg.client, // запоминаем клиента
+            });
+          } else {
+            const existing = map.get(chatId);
+            if (new Date(msg.created_at) > new Date(existing.last_message.created_at)) {
+              map.set(chatId, {
+                last_message: msg,
+                client: existing.client, // клиент берём из первого
+              });
+            }
+          }
+        });
+
+        return Array.from(map.values());
       }
     },
     methods: {
