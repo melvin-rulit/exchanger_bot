@@ -12,5 +12,6 @@ return [
 //    'invalid_amount' => 'Please enter a valid amount (only numbers).',
     'wait_requisite' => 'Подождите, мы отправим вам реквизит',
     'wait_wallet' => 'Чек принят и ушел на проверку. Ждем от вас номер кошелька',
+    'wait_usdt' => 'Ожидайте, сейчас вам переведут USDT',
     'get_language' => 'Выберите язык',
 ];
