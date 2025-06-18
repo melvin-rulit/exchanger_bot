@@ -61,24 +61,24 @@
             <div class="order-info">
               <h1 class="order-title">Информация о заказе</h1>
 
-              <div class="info-item">
+              <div class="info-item mb-2">
                 <span class="label">Клиент: </span>
                 <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.client.first_name }}</span>
               </div>
 
-              <div class="info-item">
+              <div class="info-item mb-2">
                 <span class="label">Закрыл заказ: </span>
                 <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.user?.name || '' }}</span>
               </div>
 
-              <div class="info-item">
+              <div class="info-item mb-2">
                 <span class="label">Сумма заказа: </span>
                 <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
               </div>
 
               <div class="info-item">
                 <span class="label">Дата закрытия:</span>
-                <span class="px-4 bg-gray-50 rounded-md shadow-md">12/12</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ formatDateTime(selectedOrder.close_at) }}</span>
               </div>
             </div>
           </div>
@@ -104,6 +104,7 @@
 
               <div class="info-item">
                 <span class="label">Дата закрытия:</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ formatDateTime(selectedOrder.close_at) }}</span>
               </div>
             </div>
           </div>
@@ -391,6 +392,18 @@ export default {
       this.alertMessage = $message;
       this.alertType = 'error';
       this.$refs.alertComponent.showAlert();
+    },
+    formatDateTime(datetime) {
+      if (!datetime) return '';
+      const fixedDate = datetime.replace(' ', 'T');
+      const date = new Date(fixedDate);
+      return date.toLocaleString('ru-RU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     },
     close() {
       this.form.selectedUser = ''
