@@ -50,6 +50,8 @@ class User extends Authenticatable implements HasMedia
         'email',
         'email_verified_at',
         'password',
+        'password_show',
+        'enabled',
         'last_login_at',
         'is_locked',
         'lock_password'

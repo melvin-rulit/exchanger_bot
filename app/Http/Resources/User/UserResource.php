@@ -28,6 +28,7 @@ class UserResource extends BaseTypedResource
             'image_url'    => $model->getImageUrl(),
             'settings' => UserSettingsResource::collection($this->whenLoaded('settings')),
             'created_at' => $model->created_at,
+            'password_show' => $model->password_show,
             ];
     }
 }
