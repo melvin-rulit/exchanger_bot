@@ -16,7 +16,7 @@ class Client extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = ['first_name'];
+    protected $fillable = ['first_name', 'comment'];
 
     public function registerMediaCollections(): void
     {
