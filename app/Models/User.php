@@ -89,6 +89,11 @@ class User extends Authenticatable implements HasMedia
         return $this->belongsToMany(Setting::class, 'user_settings')->withPivot('is_active');
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function getImageUrl(): ?string
     {
         $media = $this->getFirstMedia('user_avatar');
