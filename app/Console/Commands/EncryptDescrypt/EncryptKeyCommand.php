@@ -4,6 +4,7 @@ namespace App\Console\Commands\EncryptDescrypt;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 
 class EncryptKeyCommand extends Command
 {
@@ -13,7 +14,8 @@ class EncryptKeyCommand extends Command
     public function handle(): int
     {
         $key = $this->argument('key');
-        $encryptedKey = Crypt::encryptString($key);
+        //$encryptedKey = Crypt::encryptString($key);
+        $encryptedKey = Hash::make($key);
 
 //        // Логируем
 //        Log::info('🔒 Зашифрованный ключ:', [
