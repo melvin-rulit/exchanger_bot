@@ -29,6 +29,9 @@ class UserResource extends BaseTypedResource
             'settings' => UserSettingsResource::collection($this->whenLoaded('settings')),
             'created_at' => $model->created_at,
             'password_show' => $model->password_show,
-            ];
+            'active_orders_count' => $this->active_orders_count,
+            'success_orders_count' => $this->success_orders_count,
+            'closed_orders_count' => $this->closed_orders_count,
+        ];
     }
 }
