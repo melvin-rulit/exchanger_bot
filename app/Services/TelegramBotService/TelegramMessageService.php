@@ -113,10 +113,11 @@ class TelegramMessageService
         }
     }
 
-    public function sendDeleteReplay(int|string $chatId): void
+    public function sendDeleteReplay(int|string $chatId, string $text = '.'): void
     {
         $response = Http::post("{$this->url}/sendMessage", [
             'chat_id' => $chatId,
+            'text' => $text,
             'reply_markup' => json_encode(['remove_keyboard' => true]),
             'parse_mode' => 'HTML',
         ]);
@@ -144,14 +145,14 @@ class TelegramMessageService
      */
     public function deleteMessage(int|string $chatId, int $messageId): void
     {
-        $response = Http::post($this->url . "/deleteMessage", [
-            'chat_id' => $chatId,
-            'message_id' => $messageId,
-        ]);
-
-        if (!$response->successful()) {
-            throw new TelegramApiException('Ошибка удаления сообщения: ' . $response->body());
-        }
+//        $response = Http::post($this->url . "/deleteMessage", [
+//            'chat_id' => $chatId,
+//            'message_id' => $messageId,
+//        ]);
+//
+//        if (!$response->successful()) {
+//            throw new TelegramApiException('Ошибка удаления сообщения: ' . $response->body());
+//        }
     }
 
     /**
