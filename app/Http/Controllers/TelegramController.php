@@ -13,10 +13,24 @@ class TelegramController extends Controller
 {
     public function __construct(protected TelegramBotServiceInterface $telegramBotService){}
 
-    public function handleWebhook(Request $request): void
+    public function handleWebhook(Request $request): JsonResponse
     {
-        $this->telegramBotService->getWebchook($request->all());
+        try {
+            $this->telegramBotService->getWebchook($request->all());
+        } catch (\Throwable $e) {
+            \Log::error('[Telegram webhook ERROR]', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => collect($e->getTrace())->take(10),
+                'payload' => $request->all(),
+            ]);
+        }
+
+        return response()->json(['ok' => true]);  // Обязательно вернуть HTTP ответ!
     }
+
 
     public function getWebhookInfo(): JsonResponse
     {
