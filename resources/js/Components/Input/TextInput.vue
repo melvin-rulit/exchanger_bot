@@ -1,20 +1,36 @@
 <template>
   <label v-if="isTitle" class="block mb-1 text-sm font-medium text-gray-900">{{title}}</label>
-  <input
+
+  <textarea
+    v-if="multiline"
+    ref="input"
     :placeholder="placeholder"
-    :autofocus="autofocus"
-    :type="type"
     :readonly="readonly"
     :disabled="disabled"
-    class="text-sm px-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-400 text-gray-900 shadow-md"
-    :class="widthClass"
+    :autofocus="autofocus"
+    class="text-sm px-2 rounded border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-400 text-gray-900 shadow-md resize-none placeholder-gray-400"
+    :class="[widthClass, heightClass]"
     :value="model"
-    ref="input"
     @keydown="onKeyDown"
     @input="handleInput"
-    @beforeinput="preventInvalidInput"
+  ></textarea>
+
+  <input
+    v-else
+    ref="input"
+    :placeholder="placeholder"
+    :readonly="readonly"
+    :disabled="disabled"
+    :autofocus="autofocus"
+    :type="type"
+    class="text-sm px-2 rounded border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-400 text-gray-900 shadow-md"
+    :class="[widthClass, heightClass]"
+    :value="model"
+    @keydown="onKeyDown"
+    @input="handleInput"
   />
 </template>
+
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
@@ -28,9 +44,11 @@ interface Props {
   disabled?: boolean
   autofocus?: boolean
   widthClass?: string
+  heightClass?: string
   limitLength?: boolean
   maxLength?: number
   trimWhitespace?: boolean
+  multiline?: boolean
 }
 
 const {
@@ -44,7 +62,8 @@ const {
   limitLength = false,
   maxLength = 10,
   trimWhitespace = false,
-  widthClass = 'w-full'
+  widthClass = 'w-full',
+  heightClass = 'h-[32px]'
 } = defineProps<Props>()
 
 const emit = defineEmits(['enter'])
