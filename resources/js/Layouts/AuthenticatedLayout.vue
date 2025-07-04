@@ -28,7 +28,7 @@
                     type="button" data-drawer-target="drawer-right-example"
                     data-drawer-show="drawer-right-example" data-drawer-placement="right"
                     aria-controls="drawer-right-example">{{ userStore.currentUser.name }}</span>
-              <span v-if="userStore.currentUser && userStore.currentUser.role.length" class="d-none d-md-block">
+              <span v-if="userStore.currentUser && userStore.currentUser.role && userStore.currentUser.role.length" class="d-none d-md-block">
                             <span class="px-2 py-0.5 text-xs font-bold bg-green-100 rounded-md shadow-md">
                          {{ userStore.currentUser.role }}
                             </span>
@@ -57,6 +57,7 @@
       <!-- Page Content -->
       <main>
         <ConsultationListWatcher />
+        <OrderListWatcher />
         <slot />
       </main>
     </div>
@@ -72,6 +73,7 @@ import { useOrdersStore } from '@/stores/ordersStore'
 import { useUserStore } from '@/stores/userStore.js'
 import { useConsultationStore } from '@/stores/consultationStore'
 import ConsultationListWatcher from '@/Pages/Consultation/Watcher/ConsultationListWatcher.vue'
+import OrderListWatcher from '@/Pages/Order/Watcher/OrderListWatcher.vue'
 import { getFormattedDate } from '@/utils/dateFormatter.js'
 import ManagerLinks from '@/Components/NavigationLinks/ManagerLinks.vue'
 import AdminLinks from '@/Components/NavigationLinks/AdminLinks.vue'
