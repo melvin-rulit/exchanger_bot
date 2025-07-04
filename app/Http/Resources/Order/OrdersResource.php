@@ -29,11 +29,13 @@ class OrdersResource extends BaseTypedResource
             'amount' => $model->amount,
             'status' => $model->status,
             'is_message' => $model->is_message,
+            'last_message' => MessageResource::make($model->lastMessage),
             'is_pinned' => $model->is_pinned,
             'is_requisite' => $model->is_requisite,
             'image_url'    => $model->getImageUrl(),
             'created_at' => $model->created_at,
             'close_at' => $model->close_at,
+            'end_at' => $model->end_at,
             'pinned_messages' => PinedChatsResource::collection($this->whenLoaded('pinnedMessages')),
             ];
     }
