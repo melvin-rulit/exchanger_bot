@@ -9,7 +9,6 @@ trait SendsFakeWebhookCommandTrait
 {
     public function sendWebhookCommand($chatId, $command): string
     {
-        //TODO убрать позже
         $webhookUrl= '';
         Artisan::call('telegram:get-webhook-info');
 
@@ -44,7 +43,7 @@ trait SendsFakeWebhookCommandTrait
                     "type" => "private"
                 ],
                 "date" => time(),
-                "text" => "/$command"
+                'text' => $command === 'start' ? "/$command" : $command,
             ]
         ];
 
