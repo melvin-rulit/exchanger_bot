@@ -42,11 +42,13 @@ export default {
     },
     computed: {
         colorClass() {
-            return this.color === "blue" ? "blue-button" :
-                this.color === "white" ? "white-button" :
-                    this.color === "grey" ? "grey-button" :
-                        this.color === "green" ? "green-button" :
-                        "red-button";
+          const baseClass = this.color === "blue" ? "blue-button" :
+            this.color === "white" ? "white-button" :
+              this.color === "grey" ? "grey-button" :
+                this.color === "green" ? "green-button" :
+                  "red-button";
+
+          return [baseClass, this.isDisabled ? 'disabled-button' : ''].join(' ');
         },
     },
     methods: {
@@ -121,5 +123,10 @@ button {
             transition: 0.3s;
         }
     }
+}
+.disabled-button {
+  opacity: 0.6;
+  pointer-events: none;
+  filter: grayscale(30%);
 }
 </style>
