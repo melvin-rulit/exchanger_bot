@@ -10,33 +10,18 @@
       </div>
       <NavLink
         :href="route('adminOrders')"
-        :active="route().current('adminOrders')">
+        :active="route().current('adminOrders')"
+        @click="userStore.setIsOnUserStatistics(false)">
         Заказы
       </NavLink>
 
-
       <div class="pl-5">
-                                    <span v-if="consultationStore.unreadMessagesCount > 0"
-                                          :class="['badge',route().current('consultation') ? 'badge-active' : 'badge-inactive']">
-                                          {{ consultationStore.unreadMessagesCount }}
-                                    </span>
-      </div>
-      <NavLink
-        :href="route('consultation')"
-        :active="route().current('consultation')">
-        Переписка
-      </NavLink>
 
-      <div class="pl-5">
-                                    <span v-if="consultationStore.unreadMessagesCount > 0"
-                                          :class="['badge',route().current('adminUsers') ? 'badge-active' : 'badge-inactive']">
-                                          {{ consultationStore.unreadMessagesCount }}
-                                    </span>
       </div>
       <NavLink
         :href="route('adminUsers')"
         :active="route().current('adminUsers')">
-        Сотрудники
+        {{ userStore.isOnUserStatistics ? 'Статистика сотрудников' : 'Сотрудники' }}
       </NavLink>
     </div>
 
@@ -46,6 +31,7 @@
 <script>
 import NavLink from '@/Components/NavLink.vue'
 import { useOrdersStore } from '@/stores/ordersStore.js'
+import { useUserStore } from '@/stores/userStore.js'
 import { useConsultationStore } from '@/stores/consultationStore'
 
 export default {
@@ -57,8 +43,9 @@ export default {
   },
   setup() {
     const ordersStore = useOrdersStore()
+    const userStore = useUserStore()
     const consultationStore = useConsultationStore()
-    return {ordersStore, consultationStore}
+    return {ordersStore, userStore, consultationStore}
   },
 }
 
