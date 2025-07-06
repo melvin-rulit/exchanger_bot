@@ -37,4 +37,12 @@ abstract class BaseService
     {
         return Redis::exists($this->key($prefix, $chatId)) === 1;
     }
+    public function rpush(string|int $chatId, int $messageId)
+    {
+        return Redis::rpush("messages:$chatId", $messageId);
+    }
+    public function lrange(string|int $chatId): array
+    {
+        return Redis::lrange("messages:$chatId", 0, -1);
+    }
 }
