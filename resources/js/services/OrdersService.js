@@ -7,6 +7,18 @@ export class OrdersService {
         const url = `${this.serverUrl}/orders?query=${encodeURIComponent(query)}&page=${page}`;
         return axios.get(url);
     }
+    static getOrdersWithElasticSearch(query = '', page = 1) {
+        const url = `${this.serverUrl}/orders/elastic_search?query=${encodeURIComponent(query)}&page=${page}`;
+        return axios.get(url);
+    }
+    static getOrdersWithSearch(params = {}, page = 1) {
+        return axios.get(`${this.serverUrl}/orders/search`, {
+            params: {
+                ...params,
+                page,
+            },
+        });
+    }
     static getOrder(orderId) {
         let url = `${this.serverUrl}/orders/get_order/${orderId}`
         return axios.get(url, orderId)
@@ -38,6 +50,10 @@ export class OrdersService {
         let url = `${this.serverUrl}/orders/status/${orderId}`
         return axios.patch(url, {status})
     }
+    static end_order(form) {
+        let url = `${this.serverUrl}/orders/end_order`;
+        return axios.put(url, form)
+    }
     static close_order(form) {
         let url = `${this.serverUrl}/orders/close_order`;
         return axios.put(url, form)
@@ -45,9 +61,5 @@ export class OrdersService {
     static fix_order(orderId) {
         let url = `${this.serverUrl}/orders/fix_order/${orderId}`;
         return axios.put(url)
-    }
-    static updateClientName(orderId, first_name) {
-        let url = `${this.serverUrl}/orders/update_client_name/${orderId}`
-        return axios.patch(url, { first_name })
     }
 }
