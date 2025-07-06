@@ -1,13 +1,26 @@
 <template>
   <div class="mt-2">
     <div class="hidden space-x-2 sm:-my-px sm:ms-40 sm:flex">
-      <div>
-                  <span v-if="ordersStore.unreadMessagesCount > 0"
-                        :class="['badge',route().current('dashboard') ? 'badge-active' : 'badge-inactive']">
-                        {{ ordersStore.unreadMessagesCount }}
-                  </span>
+      <div class="flex items-center gap-3">
+        <!-- Иконка сообщений -->
+        <div v-show="ordersStore.unreadMessagesCount > 0" class="relative">
+          <Icon icon="wpf:message-outline" width="24" height="24" class="text-white" />
+          <span
+            class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full">
+      {{ ordersStore.unreadMessagesCount }}
+    </span>
+        </div>
 
+        <!-- Иконка новых заказов -->
+        <div v-show="ordersStore.unreadNewOrdersCount > 0" class="relative">
+          <Icon icon="mdi:cart-outline" width="24" height="24" class="text-white" />
+          <span
+            class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full">
+      {{ ordersStore.unreadNewOrdersCount }}
+    </span>
+        </div>
       </div>
+
       <NavLink
         :href="route('dashboard')"
         :active="route().current('dashboard')"
@@ -37,9 +50,10 @@
 import NavLink from '@/Components/NavLink.vue'
 import { useOrdersStore } from '@/stores/ordersStore.js'
 import { useConsultationStore } from '@/stores/consultationStore'
+import { Icon } from '@iconify/vue'
 
 export default {
-  components: { NavLink, useConsultationStore},
+  components: { Icon, NavLink, useConsultationStore },
   data: function() {
     return {
       hasNewConsultMessages: true,
@@ -48,7 +62,7 @@ export default {
   setup() {
     const ordersStore = useOrdersStore()
     const consultationStore = useConsultationStore()
-    return {ordersStore, consultationStore}
+    return { ordersStore, consultationStore }
   },
 }
 
