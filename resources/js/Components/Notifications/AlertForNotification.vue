@@ -104,12 +104,12 @@ export default {
 <style lang="scss" scoped>
 .alert {
     position: fixed;
-    bottom: 20px;
+    bottom: 5px;
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
     max-width: 700px;
-    padding: 15px;
+    padding: 10px;
     border-radius: 6px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
