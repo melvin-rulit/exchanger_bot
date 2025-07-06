@@ -7,6 +7,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { createPinia } from 'pinia';
 import { useUserStore } from './stores/userStore';
+import { useLockScreenStore } from '@/stores/lockScreenStore'
 
 const pinia = createPinia();
 
@@ -24,10 +25,14 @@ async function init() {
             vueApp.use(plugin).use(ZiggyVue).use(pinia);
 
             const userStore = useUserStore();
+            const lockStore = useLockScreenStore();
             const initialUser = props.initialPage.props.auth.user || null
             if (initialUser) {
                 initialUser.role = props.initialPage.props.auth.role
                 userStore.setCurrentUser(props.initialPage.props.auth.user)
+
+                const isLocked = initialUser.settings?.is_locked ?? false;
+                lockStore.setInitialLockState(isLocked);
             }
             if (props.initialPage.props.auth?.user) {
                 userStore.setUser(props.initialPage.props.auth.user);

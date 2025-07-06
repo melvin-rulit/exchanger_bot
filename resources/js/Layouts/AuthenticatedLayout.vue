@@ -1,7 +1,7 @@
 <template>
     <div class="min-h-screen bg-main">
 
-      <nav class="bg-transparent">
+      <nav v-if="!lockStore.isModalLockShow" class="bg-transparent">
 
         <div class="mx-auto with-custom">
           <div class="flex h-13 justify-between">
@@ -47,6 +47,11 @@
         </div>
       </nav>
 
+      <ModalLock
+        :is-active="lockStore.isModalLockShow"
+        @unlocked="unLockScreen"
+      />
+
       <!-- Page Heading -->
       <header class="bg-white shadow" v-if="$slots.header">
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -55,7 +60,7 @@
       </header>
 
       <!-- Page Content -->
-      <main>
+      <main v-if="!lockStore.isModalLockShow">
         <ConsultationListWatcher />
         <OrderListWatcher />
         <slot />
@@ -71,12 +76,14 @@ import { Icon } from '@iconify/vue'
 import { router } from '@inertiajs/vue3'
 import { useOrdersStore } from '@/stores/ordersStore'
 import { useUserStore } from '@/stores/userStore.js'
+import { useLockScreenStore } from '@/stores/lockScreenStore.js'
 import { useConsultationStore } from '@/stores/consultationStore'
 import ConsultationListWatcher from '@/Pages/Consultation/Watcher/ConsultationListWatcher.vue'
 import OrderListWatcher from '@/Pages/Order/Watcher/OrderListWatcher.vue'
 import { getFormattedDate } from '@/utils/dateFormatter.js'
 import ManagerLinks from '@/Components/NavigationLinks/ManagerLinks.vue'
 import AdminLinks from '@/Components/NavigationLinks/AdminLinks.vue'
+import ModalLock from '@/Components/Modal/ModalLock.vue'
 
 const logout = () => {
   router.post(route('logout'))
@@ -90,6 +97,11 @@ const today = ref(getFormattedDate())
 const ordersStore = useOrdersStore()
 const userStore = useUserStore()
 const consultationStore = useConsultationStore()
+const lockStore = useLockScreenStore()
+
+function unLockScreen() {
+  lockStore.hideLockModal()
+}
 
 </script>
 
