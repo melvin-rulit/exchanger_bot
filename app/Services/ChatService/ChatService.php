@@ -33,8 +33,10 @@ class ChatService
         }
 
         if ($saveOrderId) {
-            $this->saveMessage($chatId, $clientId, $message, $saveOrderId, $messageGroup);
-            $this->setMessageInput($saveOrderId);
+            if ($message !== __('buttons.to_main')) {
+                $this->saveMessage($chatId, $clientId, $message, $saveOrderId, $messageGroup);
+                $this->setMessageInput($saveOrderId);
+            }
             return null;
         }
 
