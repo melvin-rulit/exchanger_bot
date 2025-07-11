@@ -50,6 +50,7 @@ class ReceiptHandler
         }
 
         $this->saveImageToModelFromResponse($imageContent, 'check.jpg', $order, 'amount_check');
+        $order->refresh();
         broadcast(new ChekSend($order, 'send_chek'));
 
 ////TODO понят что нужно передавать messageId
