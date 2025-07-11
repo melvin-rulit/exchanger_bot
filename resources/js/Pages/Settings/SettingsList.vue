@@ -37,7 +37,7 @@
 
               <div class="w-[336px] h-[140px]">
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
-                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя в системе</h6>
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя/ник в системе</h6>
                   <div class="flex items-center gap-2 mt-3 flex-col">
                     <span v-if="editableUserId !== userStore.currentUser.id" @click="enableEdit(userStore.currentUser, 'userType')" class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ userStore.currentUser.name }}</span>
                     <div  v-if="editableUserId === userStore.currentUser.id" class="flex items-center gap-2">
@@ -59,9 +59,11 @@
               </div>
 
               <div class="w-[336px] h-[140px]">
-                <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 border-t">
-                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя в системе:</h6>
-                  <p class="text-gray-800 text-base">Еще одна карточка</p>
+                <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша почта в системе:</h6>
+                  <div class="flex items-center gap-2 mt-3 flex-col">
+                  <span class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ userStore.currentUser.email }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -275,6 +277,7 @@ export default {
           updated.role = updated.role[0] ?? '';
         }
         this.userStore.setCurrentUser(updated)
+        this.userStore.currentUser.image_url = updated.image_url
         this.form.photo_path = null;
       } catch (error) {
         this.errors = handleApiError(error)
