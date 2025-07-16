@@ -4,14 +4,21 @@ export const useOrdersStore = defineStore('orders', {
     state: () => ({
         orders: [],
         unreadByOrderId: {},     // orderId: true/false
+        unreadNewOrdersById: {},
         receiptNoticeByOrderId: {}, // orderId: true/false
         activeOrderId: null,
-        selectedFilters: JSON.parse(localStorage.getItem('selectedFilters')) || []
+        selectedFilters: JSON.parse(localStorage.getItem('selectedFiltersOrders')) || [],
+        searchParams: {},
+        isSearchBlockActive: false
     }),
 
     getters: {
         unreadMessagesCount: (state) =>
             Object.values(state.unreadByOrderId).filter(Boolean).length,
+
+        unreadNewOrdersCount: (state) =>
+            Object.values(state.unreadNewOrdersById).filter(Boolean).length,
+
 
         activeOrder(state) {
             return state.orders.find(order => order.id === state.activeOrderId)
@@ -27,11 +34,14 @@ export const useOrdersStore = defineStore('orders', {
             const oldReceiptNotice = { ...this.receiptNoticeByOrderId }
             this.orders = orders
             this.unreadByOrderId = {}
+            this.unreadNewOrdersById = {}
 
             const newReceiptNotice = {}
 
             for (const order of orders) {
                 this.unreadByOrderId[order.id] = order.is_message && order.status !== 'success'
+
+                this.unreadNewOrdersById[order.id] = order.status === 'new'
 
                 if (oldReceiptNotice.hasOwnProperty(order.id)) {
                     newReceiptNotice[order.id] = oldReceiptNotice[order.id]
@@ -42,8 +52,20 @@ export const useOrdersStore = defineStore('orders', {
 
             this.receiptNoticeByOrderId = newReceiptNotice
         },
+        setActiveSearchBlock(isActive) {
+            this.isSearchBlockActive = isActive
+        },
+        setSearchParams(params) {
+            this.searchParams = { ...params }
+        },
+        resetSearchParams() {
+            this.searchParams = {}
+        },
         markAsRead(orderId) {
             this.unreadByOrderId[orderId] = false
+        },
+        markAsReadNewOrder(orderId) {
+            this.unreadNewOrdersById[orderId] = false
         },
 
         setActiveOrder(id) {
@@ -57,6 +79,7 @@ export const useOrdersStore = defineStore('orders', {
             this.orders.unshift(newOrder)
             this.unreadByOrderId[newOrder.id] =
                 newOrder.is_message && newOrder.status !== 'success'
+            this.unreadNewOrdersById[newOrder.id] = newOrder.status === 'new'
         },
 
         updateOrder(updatedOrder) {
@@ -75,7 +98,10 @@ export const useOrdersStore = defineStore('orders', {
         },
         setSelectedFilters(filters) {
             this.selectedFilters = filters
-            localStorage.setItem('selectedFilters', JSON.stringify(filters))
+            localStorage.setItem('selectedFiltersOrders', JSON.stringify(filters))
         },
+        getSelectedFilters() {
+            return this.selectedFilters
+        }
     }
 })
