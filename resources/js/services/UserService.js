@@ -12,18 +12,46 @@ export class UserService {
         let url = `${this.serverUrl}/users`;
         return axios.get(url)
     }
+    static getUsersWithSearch(params = {}, page = 1) {
+        console.log(params)
+        return axios.get(`${this.serverUrl}/users/search`, {
+            params: {
+                ...params,
+                page,
+            },
+        });
+    }
     static updateUser(userId, userForm) {
+
         let url = `${this.serverUrl}/users/current_user/update/${userId}`
         return axios.patch(url, { userForm })
     }
-    static getManagers()
+    static updateUserForAdmin(userId, updatedFields)
     {
-        let url = `${this.serverUrl}/users/managers`;
+        let url = `${this.serverUrl}/admin/user/update/${userId}`
+        return axios.patch(url, updatedFields)
+    }
+    static delete(userId) {
+        let url = `${this.serverUrl}/admin/user/delete/${userId}`;
+        return axios.delete(url, { userId })
+    }
+    static getManagers(query = '', page = 1)
+    {
+        const url = `${this.serverUrl}/users/managers?query=${encodeURIComponent(query)}&page=${page}`;
+        //let url = `${this.serverUrl}/users/managers`;
         return axios.get(url)
     }
     static sendPasswordForUnlock(password) {
         let url = `${this.serverUrl}/users/unlocked/send_password`
-        return axios.patch(url, {password})
+        return axios.patch(url, { password })
+    }
+    static updateUserRole(userId, roleId) {
+        let url = `${this.serverUrl}/admin/user/update_role/${userId}`
+        return axios.patch(url, { roleId })
+    }
+    static updateUserStatus(userId, statusId) {
+        let url = `${this.serverUrl}/admin/user/update_status/${userId}`
+        return axios.patch(url, { statusId })
     }
     static saveIsLock() {
         let url = `${this.serverUrl}/users/locked`
@@ -31,7 +59,7 @@ export class UserService {
     }
     static saveIsLockPassword(password) {
         let url = `${this.serverUrl}/users/locked/set_password`
-        return axios.patch(url, {password})
+        return axios.patch(url, { password })
     }
     static getPinedChat() {
         let url = `${this.serverUrl}/users/pined/chat`
