@@ -25,6 +25,7 @@ use App\Http\Requests\Order\UpdateOrderStatusRequest;
 use App\Exceptions\Order\OrderClientNotFoundException;
 use App\Http\Requests\Order\CreateOrderMessageRequest;
 use App\Http\Requests\Order\SetOrderMessageReadRequest;
+use App\Http\Requests\Order\UpdateClientCommentRequest;
 use App\Services\TelegramBotService\TelegramMessageService;
 use App\Http\Requests\Order\CreateOrderMessageWithPhotoRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -34,15 +35,31 @@ class OrderController extends Controller
 {
 public function __construct(protected TelegramMessageService $telegramService, protected ClientsService $clientsService, protected OrderService $orderService){}
 
-    public function getOrders(): NotFoundResponse|AnonymousResourceCollection
+    /**
+     * @throws OrdersNotFoundException
+     */
+    public function getOrders(): AnonymousResourceCollection
     {
-        try {
-            $orders = $this->orderService->getOrders();
-            return OrdersResource::collection($orders);
+        $orders = $this->orderService->getOrders();
+        return OrdersResource::collection($orders);
+    }
 
-        } catch (OrdersNotFoundException $e) {
-            return new NotFoundResponse($e->getMessage());
-        }
+    public function getAllOrders(): AnonymousResourceCollection
+    {
+        $orders = $this->orderService->getAllOrders();
+        return OrdersResource::collection($orders);
+    }
+    public function getOrdersWitchElasticSearch(Request $request): AnonymousResourceCollection
+    {
+        $orders = $this->orderService->getOrdersWitchElasticSearch($request);
+
+        return OrdersResource::collection($orders);
+    }
+    public function getOrdersWitchSearch(Request $request): AnonymousResourceCollection
+    {
+        $orders = $this->orderService->getOrdersWitchSearch($request);
+
+        return OrdersResource::collection($orders);
     }
     public function getOrder(GetOrderRequest $request): JsonResponse|AnonymousResourceCollection
     {
@@ -114,6 +131,16 @@ public function __construct(protected TelegramMessageService $telegramService, p
         }
     }
 
+    public function endOrder(CloseOrderRequest $request): NotFoundResponse|SuccessResponse
+    {
+        try {
+            $order = $this->orderService->endOrder($request);
+            return new SuccessResponse('Заказ отменен.', 'update', ['order' => $order]);
+
+        } catch (OrderNotFoundException|UserNotFoundException|ClientNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
     public function closeOrder(CloseOrderRequest $request): NotFoundResponse|SuccessResponse
     {
         try {
@@ -125,16 +152,6 @@ public function __construct(protected TelegramMessageService $telegramService, p
         }
     }
 
-    public function updateClientName(UpdateClientNameRequest $request): NotFoundResponse|SuccessResponse
-    {
-        try {
-            $this->orderService->updateClientName($request);
-            return new SuccessResponse('Имя клиента успешно обновлено.');
-
-        } catch (OrderClientNotFoundException $e) {
-            return new NotFoundResponse($e->getMessage());
-        }
-    }
     public function fixOrder(FixedOrderRequest $request): NotFoundResponse|SuccessResponse
     {
         try {
