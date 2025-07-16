@@ -12,6 +12,7 @@ use App\Services\Web\BaseWebService;
 use App\Exceptions\TelegramApiException;
 use App\Exceptions\User\UserNotFoundException;
 use App\Services\ClientService\ClientsService;
+use Elastic\Elasticsearch\ClientBuilder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Exceptions\Order\OrderNotFoundException;
@@ -22,6 +23,9 @@ use App\Exceptions\Client\ClientNotFoundException;
 use App\Telegram\Traits\SendsFakeWebhookCommandTrait;
 use App\Exceptions\Order\OrderClientNotFoundException;
 use App\Services\TelegramBotService\TelegramMessageService;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class OrderService extends BaseWebService
 {
@@ -32,45 +36,99 @@ class OrderService extends BaseWebService
         parent::__construct($redis, $telegramMessageService, $clientsService);
     }
 
+    public function getAllOrders(): LengthAwarePaginator
+    {
+        return Order::with(['user', 'client', 'pinnedMessages', 'bank', 'lastMessage'])->paginate(16);
+    }
     /**
      * @throws OrdersNotFoundException
      */
     public function getOrders(): LengthAwarePaginator
     {
-        return Order::with(['user', 'client', 'pinnedMessages', 'bank'])
-            ->whereDate('created_at', Carbon::today())
-            ->where(function ($query) {
+        $query = Order::with(['user', 'client', 'pinnedMessages', 'bank', 'lastMessage'])
+            ->whereDate('created_at', Carbon::today());
+
+        $user = Auth::user();
+
+        if (! $user->hasRole('Администратор')) {
+            $query->where(function ($query) use ($user) {
                 $query
                     ->whereNotIn('status', ['active', 'success', 'closed'])
-                    ->orWhere(function ($q) {
+                    ->orWhere(function ($q) use ($user) {
                         $q->where('status', 'active')
-                            ->where(function ($subQuery) {
-                                $subQuery->where('user_id', auth()->id())
+                            ->where(function ($subQuery) use ($user) {
+                                $subQuery->where('user_id', $user->id)
                                     ->orWhereNull('user_id');
                             });
                     })
-                    ->orWhere(function ($q) {
-                        $q->where('status', ['success'])
-                            ->where('user_id', auth()->id());
+                    ->orWhere(function ($q) use ($user) {
+                        $q->where('status', 'success')
+                            ->where('user_id', $user->id);
                     })
-                    ->orWhere(function ($q) {
+                    ->orWhere(function ($q) use ($user) {
                         $q->where('status', 'closed')
-                            ->where('user_id', auth()->id());
+                            ->where('user_id', $user->id);
                     });
-            })
+            });
+        }
+
+        return $query
             ->orderByRaw("
-        CASE
-            WHEN status = 'new' THEN 0
-            WHEN status = 'active' THEN 1
-            WHEN status = 'success' THEN 2
-            WHEN status = 'closed' THEN 3
-            ELSE 1
-        END
-    ")
+            CASE
+                WHEN status = 'new' THEN 0
+                WHEN status = 'active' THEN 1
+                WHEN status = 'success' THEN 2
+                WHEN status = 'closed' THEN 3
+                ELSE 1
+            END
+        ")
             ->orderBy('created_at', 'asc')
             ->paginate(16);
     }
 
+    public function getOrdersWitchElasticSearch($request): LengthAwarePaginator
+    {
+        $search = $request->query('query');
+
+        return Order::search($search)->paginate(16);
+    }
+
+    public function getOrdersWitchSearch($request): LengthAwarePaginator
+    {
+        $sort = strtolower($request->query('sort', 'desc'));
+        $dateFrom = $request->query('dateFrom');
+        $dateTo = $request->query('dateTo');
+        $status = $request->query('status');
+        $clientId = $request->query('client_id');
+        $userId = $request->query('user_id');
+
+        $query = Order::query()->with(['user', 'client', 'bank', 'lastMessage']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [
+                Carbon::createFromFormat('d.m.Y', $dateFrom)->startOfDay(),
+                Carbon::createFromFormat('d.m.Y', $dateTo)->endOfDay()
+            ]);
+        } elseif ($dateFrom) {
+            $query->whereDate('created_at', Carbon::createFromFormat('d.m.Y', $dateFrom));
+        }
+
+        return $query
+            ->orderBy('created_at', $sort)
+            ->paginate(16);
+    }
     /**
      * @throws OrderNotFoundException
      */
@@ -118,22 +176,6 @@ class OrderService extends BaseWebService
     }
 
     /**
-     * @throws OrderClientNotFoundException
-     */
-    public function updateClientName($request): void
-    {
-        $order = Order::with('client')->find($request->getIdFromRoute('orderId'));
-
-        if (!$order->client) {
-            throw new OrderClientNotFoundException("Заказу с ID {$request->getIdFromRoute('orderId')} не присвоен клиент");
-        }
-
-        $order->client->update([
-            'first_name' => $request->getClientName(),
-        ]);
-    }
-
-    /**
      * @throws TelegramApiException
      * @throws OrderNotFoundException
      * @throws OrderClientNotFoundException
@@ -153,9 +195,13 @@ class OrderService extends BaseWebService
         ]);
 
         if ($request->getIsRequisite()) {
+            if ($this->redis->getRequisiteConsultant($order->chat_id)) {
+                $this->redis->forgetRequisiteConsultant($order->chat_id);
+                $this->sendWebhookCommand($order->chat_id, __('buttons.to_main'));
+            }
             $this->clientTransferService->handleRequisiteRequest($order, $order->chat_id, $request->getMessage());
         } else {
-            $this->telegramMessageService->sendMessage($order->chat_id, $request->getMessage());
+                $this->telegramMessageService->sendMessage($order->chat_id, $request->getMessage());
         }
 
         return $created_message;
@@ -236,7 +282,46 @@ class OrderService extends BaseWebService
             $this->sendWebhookCommand($order->chat_id, 'start');
 
             $order->setRelation('user', $user);
-            $order->update(['close_at' => now()]);
+            $order->update([
+                'status' => 'closed',
+                'close_at' => now()
+            ]);
+        }
+
+        return $order;
+    }
+
+    /**
+     * @throws UserNotFoundException
+     * @throws OrderNotFoundException
+     * @throws ClientNotFoundException
+     */
+    public function endOrder($request)
+    {
+        $client = Client::find($request->getClientId());
+
+        if (! $client) {
+            throw new ClientNotFoundException("Клиент с ID {$request->getClientId()} не найден.");
+        }
+
+        $client->update(['status' => __('buttons.to_main')]);
+
+        if (!$order = Order::find($request->getOrderId())) {
+            throw new OrderNotFoundException("Заказ с ID {$request->getOrderId()} не найден.");
+        }
+
+        if (!$user = User::find($request->getUserId())) {
+            throw new UserNotFoundException();
+        }
+
+        if ( $this->clientsService->setClientMainInput($client->bot_id, __('buttons.to_main'))) {
+            // Отправка сообщение, как буд-то это было сделано клиентом в чате для возврата в главное меню
+            $this->sendWebhookCommand($order->chat_id, 'start');
+
+            $order->setRelation('user', $user);
+            $order->update([
+                'end_at' => now(),
+            ]);
         }
 
         return $order;
