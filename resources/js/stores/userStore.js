@@ -4,6 +4,8 @@ export const useUserStore = defineStore('user', {
     state: () => ({
         users: [],
         currentUser: null,
+        selectedFilters: JSON.parse(localStorage.getItem('selectedFiltersUsers')) || [],
+        isOnUserStatistics: false,
     }),
     getters: {
 
@@ -11,6 +13,12 @@ export const useUserStore = defineStore('user', {
     actions: {
         setUser(userData) {
             this.users = userData
+        },
+        setUsers(users) {
+            this.users = users
+        },
+        setIsOnUserStatistics(value) {
+            this.isOnUserStatistics = value
         },
         setCurrentUser(userData) {
             this.currentUser = userData
@@ -42,6 +50,13 @@ export const useUserStore = defineStore('user', {
             }
             const user = this.users.find(u => u.id === id)
             return user ? user.is_locked : null
+        },
+        setSelectedFilters(filters) {
+            this.selectedFilters = filters
+            localStorage.setItem('selectedFiltersUsers', JSON.stringify(filters))
+        },
+        getSelectedFilters() {
+            return this.selectedFilters
         }
     },
 })
