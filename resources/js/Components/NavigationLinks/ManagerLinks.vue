@@ -3,21 +3,15 @@
     <div class="hidden space-x-2 sm:-my-px sm:ms-40 sm:flex">
       <div class="flex items-center gap-3">
         <!-- Иконка сообщений -->
-        <div v-show="ordersStore.unreadMessagesCount > 0" class="relative">
+        <div v-show="ordersStore.unreadMessagesCount > 0 && !ordersStore.isSearchBlockActive" class="relative">
           <Icon icon="wpf:message-outline" width="24" height="24" class="text-white" />
-          <span
-            class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full">
-      {{ ordersStore.unreadMessagesCount }}
-    </span>
+          <span class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full">{{ ordersStore.unreadMessagesCount }}</span>
         </div>
 
         <!-- Иконка новых заказов -->
-        <div v-show="ordersStore.unreadNewOrdersCount > 0" class="relative">
+        <div v-show="ordersStore.unreadNewOrdersCount > 0 && !ordersStore.isSearchBlockActive" class="relative">
           <Icon icon="mdi:cart-outline" width="24" height="24" class="text-white" />
-          <span
-            class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full">
-      {{ ordersStore.unreadNewOrdersCount }}
-    </span>
+          <span class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full">{{ ordersStore.unreadNewOrdersCount }}</span>
         </div>
       </div>
 
@@ -28,13 +22,14 @@
         Заказы
       </NavLink>
 
-
-      <div class="pl-5">
-                                    <span v-if="consultationStore.unreadMessagesCount > 0"
-                                          :class="['badge',route().current('consultation') ? 'badge-active' : 'badge-inactive']">
-                                          {{ consultationStore.unreadMessagesCount }}
-                                    </span>
+      <!-- Иконка сообщений -->
+      <div class="flex items-center gap-3 pl-5">
+        <div v-show="consultationStore.unreadMessagesCount > 0" class="relative">
+          <Icon icon="wpf:message-outline" width="24" height="24" class="text-white" />
+          <span class="absolute -top-1.5 -right-1.5 bg-green-600 text-xs font-bold px-1.5 py-0.3 rounded-full"> {{ consultationStore.unreadMessagesCount }}</span>
+        </div>
       </div>
+
       <NavLink
         :href="route('consultation')"
         :active="route().current('consultation')"
