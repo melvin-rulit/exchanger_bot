@@ -7,10 +7,13 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\UserPinnedMessage;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use App\Services\Web\BaseWebService;
 use App\Telegram\Traits\HandlesFile;
 use App\Exceptions\User\UserNotFoundException;
 use App\Exceptions\User\UsersNotFoundException;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Exceptions\Images\MediaLibraryException;
 use App\Exceptions\User\AuthUserNotFoundException;
 use App\Exceptions\User\ManagersNotFoundException;
@@ -25,9 +28,19 @@ class UserWebService extends BaseWebService
     /**
      * @throws UsersNotFoundException
      */
-    public function getUsers(): Collection
+    public function getUsers(): LengthAwarePaginator
     {
-        $users = User::with('settings')->get();
+        $users = User::with('settings')
+            ->withCount(['orders as active_orders_count' => function ($query) {
+                $query->where('status', 'active');
+            }])
+            ->withCount(['orders as success_orders_count' => function ($query) {
+                $query->where('status', 'success');
+            }])
+            ->withCount(['orders as closed_orders_count' => function ($query) {
+                $query->where('status', 'closed');
+            }])
+            ->paginate(16);
 
         if ($users->isEmpty()) {
             throw new UsersNotFoundException;
@@ -36,13 +49,67 @@ class UserWebService extends BaseWebService
         return $users;
     }
 
+    public function getUsersWitchSearch($request)
+    {
+        $dateFrom = $request->query('dateFrom');
+        $dateTo = $request->query('dateTo');
+
+        return User::whereHas('orders', function ($query) use ($dateFrom, $dateTo) {
+                if ($dateFrom && $dateTo) {
+                    $query->whereBetween('created_at', [
+                        Carbon::createFromFormat('d.m.Y', $dateFrom)->startOfDay(),
+                        Carbon::createFromFormat('d.m.Y', $dateTo)->endOfDay()
+                    ]);
+                } elseif ($dateFrom) {
+                    $query->whereDate('created_at', Carbon::createFromFormat('d.m.Y', $dateFrom));
+                }
+            })
+                ->with('settings')
+                ->withCount([
+                    'orders as active_orders_count' => function ($query) use ($dateFrom, $dateTo) {
+                        $query->where('status', 'active');
+                        if ($dateFrom && $dateTo) {
+                            $query->whereBetween('created_at', [
+                                Carbon::createFromFormat('d.m.Y', $dateFrom)->startOfDay(),
+                                Carbon::createFromFormat('d.m.Y', $dateTo)->endOfDay()
+                            ]);
+                        } elseif ($dateFrom) {
+                            $query->whereDate('created_at', Carbon::createFromFormat('d.m.Y', $dateFrom));
+                        }
+                    },
+                    'orders as success_orders_count' => function ($query) use ($dateFrom, $dateTo) {
+                        $query->where('status', 'success');
+                        if ($dateFrom && $dateTo) {
+                            $query->whereBetween('created_at', [
+                                Carbon::createFromFormat('d.m.Y', $dateFrom)->startOfDay(),
+                                Carbon::createFromFormat('d.m.Y', $dateTo)->endOfDay()
+                            ]);
+                        } elseif ($dateFrom) {
+                            $query->whereDate('created_at', Carbon::createFromFormat('d.m.Y', $dateFrom));
+                        }
+                    },
+                    'orders as closed_orders_count' => function ($query) use ($dateFrom, $dateTo) {
+                        $query->where('status', 'closed');
+                        if ($dateFrom && $dateTo) {
+                            $query->whereBetween('created_at', [
+                                Carbon::createFromFormat('d.m.Y', $dateFrom)->startOfDay(),
+                                Carbon::createFromFormat('d.m.Y', $dateTo)->endOfDay()
+                            ]);
+                        } elseif ($dateFrom) {
+                            $query->whereDate('created_at', Carbon::createFromFormat('d.m.Y', $dateFrom));
+                        }
+                    }
+                ])
+                ->paginate(16);
+    }
+
 
     /**
      * @throws ManagersNotFoundException
      */
-    public function getManagers(): Collection
+    public function getManagers(): LengthAwarePaginator
     {
-        $managers = User::role('менеджер')->get();
+        $managers = User::role('менеджер')->paginate(16);
 
         if (!$managers) {
             throw new ManagersNotFoundException;
@@ -184,7 +251,7 @@ class UserWebService extends BaseWebService
         return $pinnedChat;
     }
 
-    public function toggleNotification($request)
+    public function toggleNotification($request): bool
     {
         $user = auth()->user();
 
@@ -198,7 +265,7 @@ class UserWebService extends BaseWebService
     /**
      * @throws UserNotFoundException
      */
-    public function update($request)
+    public function updateUser($request)
     {
         $user = User::find($request->getIdFromRoute('userId'));
 
@@ -208,6 +275,81 @@ class UserWebService extends BaseWebService
 
         $user->update([
             'name' => $request->getName(),
+        ]);
+
+        return $user;
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function updateFieldsUser($request)
+    {
+        $user = User::find($request->getIdFromRoute('userId'));
+
+        if (!$user) {
+            throw new UserNotFoundException();
+        }
+
+        $user->update($request->only(['name', 'email', 'password_show']));
+
+        if ($request->filled('password_show')) {
+            $user->password = bcrypt($request->input('password_show'));
+            $user->save();
+        }
+
+        return $user;
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function deleteUser($request): void
+    {
+        $user = User::find($request->getIdFromRoute('userId'));
+
+        if (!$user) {
+            throw new UserNotFoundException();
+        }
+
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+
+        $user->delete();
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function updateRole($request)
+    {
+        $user = User::find($request->getIdFromRoute('userId'));
+
+        if (!$user) {
+            throw new UserNotFoundException();
+        }
+
+        $role = Role::find($request->getRoleId());
+
+        if ($role) {
+            $user->syncRoles($role);
+        }
+
+        return $user;
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function updateStatus($request)
+    {
+        $user = User::find($request->getIdFromRoute('userId'));
+
+        if (!$user) {
+            throw new UserNotFoundException();
+        }
+
+        $user->update([
+            'enabled' => $request->getStatusId()
         ]);
 
         return $user;
@@ -228,6 +370,7 @@ class UserWebService extends BaseWebService
         $imageContent = file_get_contents($request->file('photo')->getRealPath());
         $this->saveImageToModelFromResponse($imageContent, 'screenshot.jpg', $user, 'user_avatar');
 
+        $user->refresh();
         return $user;
     }
 }

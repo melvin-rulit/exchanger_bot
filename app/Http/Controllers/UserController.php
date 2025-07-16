@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\Images\MediaLibraryException;
 use App\Http\Responses\ErrorResponse;
 use App\Http\Responses\SuccessResponse;
 use App\Http\Responses\NotFoundResponse;
@@ -11,18 +10,24 @@ use App\Services\Web\User\UserWebService;
 use App\Exceptions\User\UserNotFoundException;
 use App\Exceptions\User\UsersNotFoundException;
 use App\Http\Requests\User\UnlockScreenRequest;
+use App\Exceptions\Images\MediaLibraryException;
 use App\Exceptions\User\AuthUserNotFoundException;
 use App\Exceptions\User\ManagersNotFoundException;
 use App\Http\Requests\User\PinedChat\PinChatRequest;
 use App\Exceptions\User\Chat\PinChatFailedException;
 use App\Http\Requests\User\PinedChat\UnPinChatRequest;
 use App\Http\Requests\User\Settings\UpdateUserRequest;
+use App\Http\Requests\User\Settings\DeleteUserRequest;
+use App\Http\Requests\User\Role\UpdateUserRoleRequest;
 use App\Http\Requests\User\Settings\NotificationRequest;
 use App\Http\Requests\User\SetLockScreenPasswordRequest;
 use App\Http\Requests\User\Settings\SaveUserPhotoRequest;
 use App\Http\Resources\User\PinedChat\PinedChatsResource;
 use App\Exceptions\User\Chat\PinnedChatNotFoundException;
+use App\Http\Requests\User\Settings\UpdateUserFieldsRequest;
+use App\Http\Requests\User\Settings\UpdateUserStatusRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -38,6 +43,11 @@ class UserController extends Controller
             return new NotFoundResponse($e->getMessage());
         }
 
+    }
+    public function getUsersWitchSearch(Request $request): AnonymousResourceCollection
+    {
+        $users = $this->userWebService->getUsersWitchSearch($request);
+        return UserResource::collection($users);
     }
     public function getManagers(): NotFoundResponse|AnonymousResourceCollection
     {
@@ -122,7 +132,7 @@ class UserController extends Controller
         }
     }
 
-    public function toggleNotification(NotificationRequest $request)
+    public function toggleNotification(NotificationRequest $request): ErrorResponse|SuccessResponse
     {
         try {
             $isActive = $this->userWebService->toggleNotification($request);
@@ -132,10 +142,46 @@ class UserController extends Controller
         }
     }
 
-    public function updateUser(UpdateUserRequest $request): NotFoundResponse|UserResource
+    /**
+     * @throws UserNotFoundException
+     */
+    public function updateUser(UpdateUserRequest $request): UserResource
+    {
+        $user = $this->userWebService->updateUser($request);
+        return new UserResource($user);
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function updateFieldsUser(UpdateUserFieldsRequest $request): UserResource
+    {
+        $user = $this->userWebService->updateFieldsUser($request);
+        return new UserResource($user);
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function deleteUser(DeleteUserRequest $request): SuccessResponse
+    {
+        $this->userWebService->deleteUser($request);
+        return new SuccessResponse('Пользователь успешно удален');
+    }
+    public function updateRole(UpdateUserRoleRequest $request): NotFoundResponse|UserResource
     {
         try {
-            $user = $this->userWebService->update($request);
+            $user = $this->userWebService->updateRole($request);
+            return new UserResource($user);
+
+        } catch (UserNotFoundException $e) {
+            return new NotFoundResponse($e->getMessage());
+        }
+    }
+    public function updateStatus(UpdateUserStatusRequest $request): NotFoundResponse|UserResource
+    {
+        try {
+            $user = $this->userWebService->updateStatus($request);
             return new UserResource($user);
 
         } catch (UserNotFoundException $e) {
