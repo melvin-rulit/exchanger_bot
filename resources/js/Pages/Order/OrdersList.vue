@@ -2,10 +2,15 @@
   <Alert ref="alertComponent" :message="alertMessage" :type="alertType" />
 
   <div class="main">
-    <div class="table-container">
+    <div class="table-container rounded-xl">
       <table class="w-full">
         <thead class="head_table">
-        <tr tabindex="0" class="focus:outline-none h-10 rounded sticky top-0 bg-white">
+        <tr tabindex="0" class="focus:outline-none h-7 rounded sticky top-0 bg-white">
+          <td>
+            <div class="flex">
+
+            </div>
+          </td>
           <td>
             <div class="flex pl-6">
               <p class="font-semibold mr-2">№</p>
@@ -39,9 +44,10 @@
               <p class="font-semibold ml-2">Кем взят</p>
             </div>
           </td>
+
           <td>
             <div class="flex">
-
+              <p class="font-semibold ">Последнее сообщение</p>
             </div>
           </td>
         </tr>
@@ -64,36 +70,58 @@
 
         <tbody v-else-if="!isLoadingSpiner && orders.length === 0 ">
         <tr>
-          <td class="absolute top-[47%] left-[44%] text-xl text-muted">На сегодня нет заказов</td>
+          <td v-if="!searchBlock" class="absolute top-[47%] left-[44%] text-xl text-muted">На сегодня нет заказов</td>
+          <td v-if="searchBlock" class="absolute top-[47%] left-[44%] text-xl text-muted">По запросу ничего не найдено</td>
         </tr>
         </tbody>
 
         <tbody v-else>
 
         <tr v-for="(order, index) in filteredOrders" :key="order.id" tabindex="0" @click="showModalOrderDetail(order, order.user)" class="h-12 inside_table">
-          <td v-if="order.is_message" class="pl-5">
-            <div @click="showModalChat(order)" class="flex items-center">
-              <Icon icon="wpf:message-outline" width="26" height="26" class="animate-fade-bounce" />
-            </div>
-          </td>
-          <td v-else-if="!order.is_message && order.status !== 'success' && order.status !== 'closed'" class="pl-4">
-            <div class="flex items-center">
-              <!-- <p class="text-sm leading-none text-gray-600 ml-3">{{ index + 1 }}</p>-->
-                           <p class="text-sm leading-none text-gray-600 ml-2">{{ order.id }}</p>
-            </div>
-          </td>
-          <td v-else-if="!order.is_message && order.status !== 'success' && order.status === 'closed'" class="pl-4">
-            <div class="flex items-center">
-              <Icon icon="carbon:close-outline" width="26" height="26" class="icon-error"/>
-            </div>
-          </td>
-          <td v-else class="pl-4">
-            <div class="flex items-center ml-2">
-              <Icon icon="mdi:success" width="26" height="26" class="icon-success" />
-            </div>
-          </td>
+          <td class="w-[25px] pl-4">
 
-          <td class="pl-2">
+              <div v-if="order.is_message" @click="showModalChat(order)" class="flex items-center">
+                   <Icon icon="wpf:message-outline" width="26" height="26" class="animate-fade-bounce" />
+              </div>
+<!--              <div v-else-if="!order.is_message && order.status !== 'success' && order.status === 'closed'" class="flex items-center">-->
+<!--                    <Icon icon="carbon:close-outline" width="20" height="20" class="icon-error"/>-->
+<!--              </div>-->
+<!--              <div v-else-if="!order.is_message && order.status !== 'success' && order.status === 'closed'" class="flex items-center">-->
+<!--                <Icon icon="mdi:success" width="20" height="20" class="icon-success" />-->
+<!--              </div>-->
+<!--              <div v-else class="flex items-center">-->
+<!--                 <Icon icon="mdi:success" width="20" height="20" class="icon-success" />-->
+<!--              </div>-->
+              <Icon v-if="attentionOrders.includes(order.id) && !order.is_requisite" icon="mdi:alarm-multiple" width="24" height="24" class="icon-danger animate-fade-bounce" />
+
+          </td>
+          <td class="w-[70px] pl-4">
+            <div class="flex items-center">
+              <p class="text-sm leading-none text-gray-600 ml-2">{{ order.id }}</p>
+            </div>
+          </td>
+<!--          <td v-if="order.is_message" class="w-[70px] pl-5">-->
+<!--            <div @click="showModalChat(order)" class="flex items-center">-->
+<!--              <Icon icon="wpf:message-outline" width="26" height="26" class="animate-fade-bounce" />-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td v-else-if="!order.is_message && order.status !== 'success' && order.status !== 'closed'" class="w-[70px] pl-4">-->
+<!--            <div class="flex items-center">-->
+<!--              <p class="text-sm leading-none text-gray-600 ml-2">{{ order.id }}</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td v-else-if="!order.is_message && order.status !== 'success' && order.status === 'closed'" class="w-[70px] pl-4">-->
+<!--            <div class="flex items-center">-->
+<!--              <Icon icon="carbon:close-outline" width="26" height="26" class="icon-error"/>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td v-else class="pl-4">-->
+<!--            <div class="flex items-center ml-2">-->
+<!--              <Icon icon="mdi:success" width="26" height="26" class="icon-success" />-->
+<!--            </div>-->
+<!--          </td>-->
+
+          <td class="w-[150px] pl-2">
             <div class="flex items-center">
                 <span :class="['text-sm font-medium leading-none mr-2', getStatusColor(order.status)]">
                   {{ translateStatus(order.status) }}
@@ -101,9 +129,11 @@
             </div>
           </td>
 
-          <td class="">
+          <td class="w-[150px]">
             <div class="flex items-center">
-
+              <span @click="showClientInfo(order.client, $event)">
+                              <Icon v-if="editableClientNameId !== order.id" icon="icon-park:info" width="20" height="20"  class="mr-2"/>
+              </span>
                             <span v-if="editableClientNameId !== order.id && order.client"
                                   @click="enableEdit(order)"
                                   class="px-4 bg-gray-50 rounded-md shadow-md cursor-pointer">
@@ -143,27 +173,27 @@
             </div>
           </td>
 
-          <td class="">
+          <td class="w-[200px]">
             <div class="flex items-center">
               <p class="text-sm leading-none text-gray-600 ml-10">{{ order.amount }}</p>
             </div>
           </td>
 
-          <td class="">
+          <td class="w-[150px]">
             <div class="flex items-center">
               <span v-if="order.bank?.name" class="text-sm leading-none text-gray-600">{{ order.bank.name}}</span>
               <span v-else class="px-2 text-gray-500"></span>
             </div>
           </td>
 
-          <td class="pl-5">
+          <td class="w-[150px] pl-5">
             <div class="flex items-center">
               <img v-if="order.image_url" @click="showModalScreenshot(order.image_url)" :src="order.image_url"
                    class="h-8 w-8 object-cover rounded cursor-pointer" alt="" />
             </div>
           </td>
 
-          <td class="">
+          <td class="w-[150px]">
             <div class="flex">
               <span v-if="order.user?.name" class="px-4 bg-gray-50 rounded-md shadow-md">
                 {{ order.user.name }}
@@ -172,17 +202,23 @@
             </div>
           </td>
 
-          <td class="">
-            <div class="flex">
-                  <Icon v-if="attentionOrders.includes(order.id) && !order.is_requisite" icon="mdi:alarm-multiple" width="24" height="24" class="icon-danger animate-fade-bounce" />
+          <td class="w-[400px] text-xs leading-tight break-words">
+            <div class="whitespace-normal line-clamp-2">
+              {{ order.last_message?.message }}
             </div>
           </td>
+
         </tr>
         </tbody>
-
-
-
       </table>
+      <div class="pagination-wrapper">
+        <Pagination
+          :total="ordersMeta.total"
+          :limit="ordersMeta.per_page"
+          :currentPage="ordersMeta.current_page"
+          @page-change="onPageChange"
+        />
+      </div>
     </div>
 
     <ModalShowOrderScreenshot
@@ -190,10 +226,7 @@
       :currentImageUrl="currentImageUrl"
       @close="closeModalShowOrderScreenshot"
     />
-    <ModalLock
-      :is-active="isModalLockShow"
-      @unlocked="unLockScreen"
-    />
+
     <ModalShowChat
       :is-active="isModalChatShow"
       :orderId="orderId"
@@ -211,7 +244,15 @@
       :selectedUser="selectedUser"
       :clientName="clientName"
       @close="closeModalShowOrderDetail"
+      @successEndOrder="closeModalShowChat"
       @successCloseOrder="closeModalShowChat"
+    />
+    <ModalShowClientDetail
+      v-if="isModalShowClientDetail"
+      :is-active="isModalShowClientDetail"
+      :selectedClient="selectedClient"
+      :currentUser="currentUser"
+      @update-client-comment="updateClientCommentInOrders"
     />
 
     <SetLockScreenPassword
@@ -220,20 +261,15 @@
     />
 
     <div class="flex justify-between items-center rounded-lg shadow h-[20px]">
-      <div class="w-[450px] text-sm sm:text-base font-medium text-gray-700 mt-16">
-        <Pagination
-          :total="ordersMeta.total"
-          :limit="ordersMeta.per_page"
-          :currentPage="ordersMeta.current_page"
-          @page-change="getOrders"
-        />
+      <div v-if="!searchBlock" class="w-[420px] text-sm sm:text-base font-medium text-white mt-[67px] ml-6">
+        <span v-if="filteredOrders.length > 0">Всего заказов: {{filteredOrders.length}}</span>
       </div>
 
       <div v-show="startFunction" class="text-sm sm:text-base font-medium text-white">
-        <div class="flex items-center gap-3 mt-20">
+        <div class="flex items-center gap-3 mt-14">
           <Icon @click="toggleNotification(notificationSettings)" v-show="notificationSettings && notificationSettings.is_active" icon="system-uicons:bell-ringing" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
           <Icon @click="toggleNotification(notificationSettings)" v-show="notificationSettings && !notificationSettings.is_active" icon="system-uicons:bell-disabled" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
-          <Icon icon="lsicon:find-outline" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
+          <Icon @click="openSearch" icon="lsicon:find-outline" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
           <flat-pickr
             v-model="date"
             ref="calendar"
@@ -246,7 +282,8 @@
         </div>
       </div>
 
-  <FilterBlock :isActive="filterBlock" @filter-change="applyFilters" @close="closeFilterBlock"/>
+      <FilterBlock :isActive="filterBlock" @filter-change="applyFilters" @close="closeFilterBlock" type="orders"/>
+      <SearchBlock :isActive="searchBlock" @rough_search="roughSearch($event)" @accurate_search="accurateSearch($event)" @close="closeSearchBlock" type="orders" placeholder="поиск по сумме и сообщениям"/>
 
       <AlertForNotification :message="alertMessage" :type="alertType" @clearMessages="clearAlertMessage" ref="alertNotificationComponent">
         <template #buttons>
@@ -256,8 +293,9 @@
         </template>
       </AlertForNotification>
 
-      <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-20">
+      <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-[50px]">
         <PinChatsInOrderList
+          v-if="currentUser.role !== 'Администратор' && !searchBlock"
           v-for="chat in pinnedChats.filter(chat => chat.order)"
           :key="chat.id"
           :orderFullInfo="order"
@@ -267,7 +305,6 @@
       </div>
 
     </div>
-
 
   </div>
 </template>
@@ -280,6 +317,7 @@ import ModalShowChat from './Chats/Modal/ModalShowChat.vue'
 import ModalShowOrderDetail from './Modal/ModalShowOrderDetail.vue'
 import { Icon } from '@iconify/vue'
 import { useOrdersStore } from '@/stores/ordersStore'
+import { useLockScreenStore } from '@/stores/lockScreenStore.js'
 import TextInput from '@/Components/Input/TextInput.vue'
 import { HollowDotsSpinner } from 'epic-spinners'
 import { useReminder } from '@/helpers/useReminder'
@@ -299,24 +337,28 @@ import { handleApiError } from '@/helpers/errors.js'
 import flatPickr from 'vue-flatpickr-component'
 import { Russian } from "flatpickr/dist/l10n/ru.js"
 import 'flatpickr/dist/flatpickr.css';
-import FilterBlock from '@/Pages/Order/Filter/FilterBlock.vue'
+import FilterBlock from '@/Components/Filter/FilterBlock.vue'
+import SearchBlock from '@/Components/Search/SearchBlock.vue'
 import Alert from '@/Components/Notifications/Alert.vue'
 import { eventBus } from '@/utils/eventBus.js'
+import ModalShowClientDetail from '@/Pages/Order/Modal/ModalShowClientDetail.vue'
+import { ClientService } from '@/services/ClientService.js'
 
 export default {
-  components: { Alert, FilterBlock, SetLockScreenPassword, ButtonUI, ModalLock, AlertForNotification, Pagination, Icon, ModalShowOrderScreenshot, ModalShowChat, ModalShowOrderDetail, TextInput, HollowDotsSpinner, PinChatsInOrderList, flatPickr},
+  components: { ModalShowClientDetail, SearchBlock, Alert, FilterBlock, SetLockScreenPassword, ButtonUI, ModalLock, AlertForNotification, Pagination, Icon, ModalShowOrderScreenshot, ModalShowChat, ModalShowOrderDetail, TextInput, HollowDotsSpinner, PinChatsInOrderList, flatPickr},
   data: function() {
     return {
       orders: [],
       oldOrders: [],
       pinnedChats: [],
-      filters: JSON.parse(localStorage.getItem('selectedFilters')) || [],
+      filters: JSON.parse(localStorage.getItem('selectedFiltersOrders')) || [],
       selectedFilters: [],
       filteredOrders: [],
       orderId: '',
       order: '',
       selectedOrder: '',
       selectedUser: '',
+      selectedClient: '',
       currentUser: [],
       clientName: '',
       editableClientNameId: null,
@@ -340,12 +382,15 @@ export default {
         locale: Russian
       },
       filterBlock: false,
+      getAllOrdersBeforeSearch: false,
+      sortDirection: 'asc',
+      searchBlock: false,
+      searchQuery: '',
       updateOrderChannel: null,
       newOrderChannel: null,
       messageChannel: null,
       closedOrderChannel: null,
       ordersMeta: {},
-      searchQuery: '',
       currentPage: 1,
       query: '',
       limit: 5,
@@ -365,6 +410,7 @@ export default {
       isModalLockShow: false,
       isModalChatShow: false,
       isModalShowOrderDetail: false,
+      isModalShowClientDetail: false,
       fromChatToDetail: false,
       currentImageUrl: '',
     }
@@ -373,20 +419,11 @@ export default {
     const { playSound, stopSound} = useSound()
     const ordersStore = useOrdersStore()
     const userStore = useUserStore()
+    const lockStore = useLockScreenStore()
     const { attentionOrders, setReminder, removeReminder, } = useReminder()
-    return { attentionOrders, playSound, stopSound, ordersStore, userStore, setReminder, removeReminder, REMINDER_TIMEOUT_MS, translateStatus}
+    return { attentionOrders, playSound, stopSound, ordersStore, userStore, lockStore, setReminder, removeReminder, REMINDER_TIMEOUT_MS, translateStatus}
   },
   beforeUnmount() {
-    if (this.messageChannel) {
-      this.messageChannel.unbind('send_message')
-      this.pusher.unsubscribe('send_message')
-      this.messageChannel = null
-    }
-    if (this.newOrderChannel) {
-      this.newOrderChannel.unbind('new_order')
-      this.pusher.unsubscribe('new_order')
-      this.newOrderChannel = null
-    }
     if (this.closedOrderChannel) {
       this.closedOrderChannel.unbind('order_closed')
       this.pusher.unsubscribe('order_closed')
@@ -401,11 +438,11 @@ export default {
   async mounted() {
     const { pusher } = usePusher()
     this.pusher = pusher
+    eventBus.on('newOrder', this.handleNewOrder)
+    eventBus.on('newOrderMessage', this.handleNewMessageOrder)
     await this.userStore.fetchUser()
     this.spinerLoading()
     await this.getOrders(this.currentPage, this.searchQuery);
-    this.checkNewMessage()
-    this.checkNewOrders()
     await this.getCurrentUser()
     await this.checkOrdersUpdate()
     this.checkOrdersClosed()
@@ -419,9 +456,25 @@ export default {
     }
   },
   methods: {
+    onPageChange(page) {
+      if (this.searchQuery && this.searchQuery.trim() !== '') {
+        alert('tut1')
+        this.getOrdersWithElasticSearch(this.searchQuery, page)
+      } else if(this.searchBlock) {
+        this.getOrdersWithSearch(this.ordersStore.searchParams, page)
+      }else if (this.getAllOrdersBeforeSearch && !this.searchQuery && !this.searchBlock){
+        alert('tut3')
+        this.getAllOrders(page)
+      }
+      else {
+        alert('tut4')
+        this.getOrders(page)
+      }
+    },
+
     async getOrders(page = 1, query = '', showSpiner = true) {
       this.isLoadingSpiner = showSpiner
-
+      this.getAllOrdersBeforeSearch = false
       try {
         const response = await OrdersService.getOrders(query, page)
         this.orders = response.data.data || []
@@ -438,13 +491,57 @@ export default {
         this.isLoadingSpiner = false
       }
     },
-    async getCurrentUser() {
+    async getAllOrders(page = 1, query = '',) {
       try {
-        const response = await UserService.currentUser();
-        this.currentUser = response.data.data || null;
+        this.getAllOrdersBeforeSearch = true
+        const response = await OrdersService.getAllOrders(query, page)
+        this.orders = response.data.data || []
+        this.ordersStore.setOrders(this.orders)
+        this.ordersMeta = response.data.meta || {}
+        this.currentPage = page
+        this.applyFilters(this.ordersStore.selectedFilters)
       } catch (error) {
         this.errors = handleApiError(error)
       }
+    },
+
+    async getOrdersWithElasticSearch(query = '', page = 1, showSpiner = true) {
+      this.isLoadingSpiner = showSpiner
+      this.getAllOrdersBeforeSearch = false
+      try {
+        const response = await OrdersService.getOrdersWithElasticSearch(query, page)
+        this.orders = response.data.data || []
+        this.ordersStore.setOrders(this.orders)
+        this.ordersMeta = response.data.meta || {}
+        this.currentPage = page
+        this.applyFilters(this.ordersStore.selectedFilters)
+      } catch (error) {
+        this.errors = handleApiError(error)
+        this.orders = []
+        this.filteredOrders = []
+        this.ordersMeta = {}
+      } finally {
+        this.isLoadingSpiner = false
+      }
+    },
+
+    async handleNewOrder(order) {
+      if (this.ordersStore.isSearchBlockActive) {
+        return
+      }
+        await this.getOrders();
+        this.applyFilters(this.ordersStore.selectedFilters)
+        this.setReminder(order.id, REMINDER_TIMEOUT_MS)
+    },
+    async getCurrentUser() {
+      this.currentUser = this.userStore.currentUser;
+      // try {
+      //   const response = await UserService.currentUser();
+      //   this.currentUser = response.data.data || null;
+      //
+      // } catch (error) {
+      //   this.errors = handleApiError(error)
+      // }
     },
     async getPinedChat() {
       try {
@@ -457,19 +554,8 @@ export default {
     getStatusColor(status) {
       return getStatusColorClass(status)
     },
-    checkNewMessage() {
-      if (this.messageChannel) {
-        return;
-      }
-      this.messageChannel = this.pusher.subscribe('send_message')
-
-      this.messageChannel.bind('send_message', (data) => {
-
-        if (this.notificationSettings.is_active){
-          this.playSound('new_sms.mp3')
-        }
-        this.getOrders(1, '', false)
-      })
+    handleNewMessageOrder(order) {
+      this.getOrders(1, '', false)
     },
     async checkOrdersUpdate() {
       if (this.updateOrderChannel) {
@@ -527,27 +613,17 @@ export default {
     async saveClientName(order) {
       if (this.editableClientName.trim() !== order.client.first_name) {
         order.client.first_name = this.editableClientName
-        await OrdersService.updateClientName(order.id, this.editableClientName)
-        this.getOrders()
+        await ClientService.updateClientName(order.id, this.editableClientName)
+
+        const clientId = order.client.id
+        this.filteredOrders.forEach(o => {
+          if (o.client && o.client.id === clientId) {
+            o.client.first_name = this.editableClientName
+          }
+        })
         await this.getPinedChat()
       }
       this.editableClientNameId = null
-    },
-    checkNewOrders() {
-      if (this.newOrderChannel) {
-        return;
-      }
-      this.newOrderChannel = this.pusher.subscribe('new_order')
-      this.newOrderChannel.bind('new_order', async (data) => {
-        this.ordersStore.addOrder(data.order)
-        await this.getOrders();
-        this.applyFilters(this.ordersStore.selectedFilters)
-        this.setReminder(data.order.id, REMINDER_TIMEOUT_MS)
-
-        if (this.notificationSettings.is_active){
-          this.playSound('new_order.wav')
-        }
-      })
     },
     async unPinChat(orderId, chatId) {
       try {
@@ -583,6 +659,11 @@ export default {
         this.errors = handleApiError(error);
       }
   },
+    showClientInfo(user, event) {
+      event.stopPropagation()
+      this.isModalShowClientDetail = true
+      this.selectedClient = user
+    },
     openCalendar() {
         if (this.$refs.calendar?.fp) {
           this.isCalendarOpen = true
@@ -632,7 +713,8 @@ export default {
       if (!is_lock){
         await this.saveIsLock()
       }
-      this.isModalLockShow = true
+      this.lockStore.showLockModal()
+      //this.isModalLockShow = true
     },
     async showLockScreen() {
       const is_locked = await this.userStore.getUserLockScreen(this.$page.props.auth.user.id)
@@ -640,11 +722,12 @@ export default {
         if (!is_locked){
           return
         }
-
-      this.isModalLockShow = true
+      this.lockStore.showLockModal()
+      //this.isModalLockShow = true
     },
     unLockScreen() {
-      this.isModalLockShow = false
+      this.lockStore.hideLockModal()
+      //this.isModalLockShow = false
     },
     async saveIsLock() {
       await UserService.saveIsLock()
@@ -664,6 +747,13 @@ export default {
       this.startFunction = false
       this.filterBlock = true
     },
+    openSearch() {
+      this.ordersStore.setActiveSearchBlock(true)
+
+      this.getAllOrders()
+      this.startFunction = false
+      this.searchBlock = true
+    },
     applyFilters(selectedFilters) {
       this.selectedFilters = selectedFilters
 
@@ -675,13 +765,63 @@ export default {
         )
       }
     },
+    roughSearch(query) {
+      this.searchQuery = query.toLowerCase().trim()
+
+      if (!this.searchQuery) {
+        return
+      }
+      this.getOrdersWithElasticSearch(this.searchQuery, 1)
+    },
+    accurateSearch(form) {
+      const params = {}
+
+      if (form.dateFrom) params.dateFrom = form.dateFrom
+      if (form.dateTo) params.dateTo = form.dateTo
+      if (form.status?.value) params.status = form.status.value
+      if (form.selectedClient?.id) params.client_id = form.selectedClient.id
+      if (form.selectedUser?.id) params.user_id = form.selectedUser.id
+      params.sort = this.sortDirection || 'desc'
+
+      this.ordersStore.setSearchParams(params)
+      this.getOrdersWithSearch(params, 1)
+    },
+
+    async getOrdersWithSearch(query = '', page = 1, showSpiner = true) {
+      this.isLoadingSpiner = showSpiner
+
+      try {
+        const response = await OrdersService.getOrdersWithSearch(query, page)
+        this.orders = response.data.data || []
+        this.ordersStore.setOrders(this.orders)
+        this.ordersMeta = response.data.meta || {}
+        this.currentPage = page
+        this.applyFilters(this.ordersStore.selectedFilters)
+      } catch (error) {
+        this.errors = handleApiError(error)
+        this.orders = []
+        this.filteredOrders = []
+        this.ordersMeta = {}
+      } finally {
+        this.isLoadingSpiner = false
+      }
+    },
     setSelectedFilters(filters) {
       this.filters = filters
-      localStorage.setItem('selectedFilters', JSON.stringify(filters))
+      localStorage.setItem('selectedFiltersOrders', JSON.stringify(filters))
     },
     closeFilterBlock() {
       this.startFunction = true
       this.filterBlock = false
+    },
+    closeSearchBlock(wasSearchApplied) {
+      this.getOrders(1)
+      // if (wasSearchApplied) {
+      //   this.getOrders(1)
+      // }
+      this.startFunction = true
+      this.searchBlock = false
+      this.searchQuery = ''
     },
     showModalChat($order) {
       this.isModalChatShow = true
@@ -737,14 +877,31 @@ export default {
 //TODO тут нужно понимать если мы перешли из чата к заказу и перекинули его другому то нужно так же закрывать и чат
       //this.isModalChatShow = false
     },
+    // closeModalShowClientDetail({id, comment}) {
+    //   this.filteredOrders.forEach(order => {
+    //     if (order.user && order.user.id === id) {
+    //       order.user.comment = comment
+    //     }
+    //   }
+    // },
+    updateClientCommentInOrders({ id, comment }) {
+      this.filteredOrders.forEach(order => {
+        if (order.client && order.client.id === id) {
+          order.client.comment = comment
+        }
+      })
+      this.isModalShowClientDetail = false
+    },
     spinerLoading() {
       if (this.orders || this.filteredOrders) {
         this.isLoadingSpiner = false
       }
     },
     enableEdit(order) {
-      this.editableClientNameId = order.id
-      this.editableClientName = order.client.first_name
+      if ( this.currentUser.role !== 'Администратор') {
+        this.editableClientNameId = order.id
+        this.editableClientName = order.client.first_name
+      }
     },
     closeRenameClientInput() {
       this.editableClientNameId = null
@@ -784,14 +941,17 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
 .table-container {
   flex-grow: 1;
   overflow-y: auto;
-  max-height: calc(94vh - 89px);
+  max-height: calc(97vh - 89px);
   background-color: white;
 }
-
+.pagination-wrapper {
+  position: fixed;
+  bottom: 71px;
+  left: 2%;
+}
 .filters_block {
   margin-bottom: 10px;
 
