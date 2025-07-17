@@ -8,4 +8,14 @@ export class ClientService {
         let url = `${this.serverUrl}/clients`;
         return axios.get(url)
     }
+
+    static updateClientComment(clientId, comment) {
+        let url = `${this.serverUrl}/clients/update_comment/${clientId}`
+        return axios.patch(url, { comment })
+    }
+
+    static updateClientName(orderId, first_name) {
+        let url = `${this.serverUrl}/clients/update_client_name/${orderId}`
+        return axios.patch(url, { first_name })
+    }
 }
