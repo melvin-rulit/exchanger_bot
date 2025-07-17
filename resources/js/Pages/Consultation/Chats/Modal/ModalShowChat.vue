@@ -18,10 +18,12 @@
 <!--              <span class="ml-2">{{ translateStatus(client.status) }}</span>-->
               <div class="text-lg font-semibold text-black">Чат </div>
               <span class="ml-2 text-black">№{{ message.id}}</span>
+
+              <p  v-if="!message.is_close" @click="closeChat" class="text-sm  hover:underline leading-none text-blue-500 ml-5 flex items-center gap-2 cursor-pointer"><Icon icon="qlementine-icons:close-all-16" width="24" height="24" /> Завершить чат</p>
             </div>
 
             <div class="flex items-center gap-5">
-              <p v-if="message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColorClass"/> Чат закрыт клиентом</p>
+              <p v-if="message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColorClass"/> Чат закрыт</p>
             </div>
 
             <div class="flex items-center gap-5">
@@ -413,6 +415,15 @@ export default {
         this.newMessagePhoto.photo_path = null;
         this.inputPlaceholder = 'Введите сообщение...'
       },
+      closeChat() {
+        try {
+          const response = ConsultationService.closeChat();
+          //this.messages = response.data.data;
+
+        } catch (error) {
+          this.errors = handleApiError(error)
+        }
+        },
       close() {
           this.showTemplates = false
           this.messages = []
