@@ -36,6 +36,11 @@
         :class="{'pulse-green': hasNewConsultMessages && !route().current('consultation') && consultationStore.unreadMessagesCount > 0}">
         Консультация
       </NavLink>
+
+      <!-- На всякий случай если вдруг надо очистить все непрочитанные сообщения при глюке -->
+      <!--    <button @click="consultationStore.clearAllUnread" class="ml-4 px-3 py-1 text-xs bg-red-600 text-white rounded">-->
+      <!--      Очистить все-->
+      <!--    </button>-->
     </div>
 
   </div>
