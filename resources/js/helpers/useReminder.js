@@ -21,7 +21,7 @@ export function useReminder() {
         if (!attentionOrders.value.includes(orderId)) {
             attentionOrders.value.push(orderId)
             console.log('attentionOrders updated:', attentionOrders.value)
-            const soundId = playSound('alarm.ogg')
+            const soundId = playSound('tikanie-budilnika.ogg')
             soundInstances.set(orderId, soundId)
         }
     }
