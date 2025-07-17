@@ -8,6 +8,7 @@ use App\Http\Responses\NotFoundResponse;
 use App\Exceptions\TelegramApiException;
 use App\Exceptions\Order\OrderNotFoundException;
 use App\Exceptions\Images\MediaLibraryException;
+use App\Http\Requests\Consultation\closeChatRequest;
 use App\Http\Resources\Consultation\MessageResource;
 use App\Http\Resources\Consultation\ChatMessageResource;
 use App\Services\Web\Consultation\ConsultationWebService;
@@ -71,5 +72,10 @@ class CunsultationController extends Controller
         } catch (MessageNotFoundException $e) {
             return new NotFoundResponse($e->getMessage());
         }
+    }
+    public function closeChat(closeChatRequest $request): SuccessResponse
+    {
+        $this->consultationWebService->closeChat($request);
+        return new SuccessResponse('Чат успешно закрыт');
     }
 }
