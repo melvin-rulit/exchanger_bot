@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="isActive"
-    class="fixed inset-0 bg-black shadow-lg flex items-center justify-center z-50"
+    class="fixed inset-0  flex items-center justify-center z-50"
   >
     <!-- Модальное окно -->
     <div class="relative bg-white p-6 rounded-lg shadow-md w-80">
