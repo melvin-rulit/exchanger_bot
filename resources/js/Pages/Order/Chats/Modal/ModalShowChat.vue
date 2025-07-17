@@ -23,7 +23,7 @@
             </div>
 
             <div class="flex items-center gap-3 w-[370px]">
-              <div v-if="localOrder.client.status === 'send_screenshot' && receiptNotice" class="flex items-start gap-2 p-1 text-sm text-green-800 bg-green-100 border border-green-300 rounded-lg shadow-sm animate-fade-bounce">
+              <div v-if="localOrder?.client?.status === 'send_screenshot' && receiptNotice" class="flex items-start gap-2 p-1 text-sm text-green-800 bg-green-100 border border-green-300 rounded-lg shadow-sm animate-fade-bounce">
                 <svg class="w-5 h-5 mt-0.5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8.364 8.364a1 1 0 01-1.414 0L3.293 11.05a1 1 0 011.414-1.414L8 12.93l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
@@ -428,10 +428,27 @@ export default {
       closeModalShowOrderScreenshot() {
         this.isModalScreenshotShow = false
       },
-      showModalOrderDetail() {
+      async showModalOrderDetail() {
         const order = Object.keys(this.orderIdForGoToDetailIfNextModalChat ?? {}).length? this.orderIdForGoToDetailIfNextModalChat: this.selectedOrder;
-        this.$emit('openOrderDetail', {fromChatToDetail: true, selectedUser: this.selectedUser, selectedOrder: order});
+        let freshOrder = order;
+        console.log(order)
+        if (this.ordersStore.receiptNoticeByOrderId[order.id]) {
+          freshOrder = await this.fetchUpdatedOrder(order.id);
+          console.log(freshOrder)
+          this.ordersStore.setOrderCheckRead(order.id)
+        }
+        //this.$emit('openOrderDetail', {fromChatToDetail: true, selectedUser: this.selectedUser, selectedOrder: order});
         this.orderIdForGoToDetailIfNextModalChat = null
+      },
+      async fetchUpdatedOrder(orderId) {
+        try {
+          const response = await OrdersService.getOrder(orderId)
+          const updated = response.data.data
+          useOrdersStore().updateOrder(updated)
+          return updated
+        } catch (error) {
+          this.errors = handleApiError(error)
+        }
       },
       closeModalOrderDetail() {
         this.isModalShowOrderDetail = false
@@ -490,12 +507,12 @@ export default {
       },
         close(order, nextChat = false) {
           this.newMessagePhoto.photo_path = null
+          this.ordersStore.setOrderCheckRead(this.orderId)
 
             setTimeout(() => {
               this.$emit('close', {nextChat: nextChat, order: order, orderId: order.id});
               this.showTemplates = false;
               this.messages = []
-              this.ordersStore.setOrderCheckRead(this.orderId)
             }, 500)
         },
     },
