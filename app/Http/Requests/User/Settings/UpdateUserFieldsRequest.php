@@ -5,9 +5,8 @@ namespace App\Http\Requests\User\Settings;
 use App\Http\Requests\BaseRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Support\Facades\Log;
 
-class NotificationRequest extends BaseRequest
+class UpdateUserFieldsRequest extends BaseRequest
 {
     /**
      * Определяет, авторизован ли пользователь на выполнение запроса.
@@ -18,6 +17,18 @@ class NotificationRequest extends BaseRequest
     }
 
     /**
+     * Laravel будет валидировать и данные из маршрута.
+     *
+     * @return array<string, string>
+     */
+    public function validationData(): array
+    {
+        return array_merge($this->all(), [
+            'userId' => $this->route('userId'),
+        ]);
+    }
+
+    /**
      * Правила валидации для запроса.
      *
      * @return array<string, mixed>
@@ -25,10 +36,7 @@ class NotificationRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'notification.id' => ['required', 'integer'],
-            'notification.key' => ['required', 'string', 'in:notification'],
-            'notification.is_active' => ['required', 'boolean'],
-            'notification.is_used' => ['integer', 'in:0,1'],
+            'userId' => 'required|integer',
         ];
     }
 
@@ -40,31 +48,18 @@ class NotificationRequest extends BaseRequest
     public function messages(): array
     {
         return [
-
+            'userId.required' => 'ID пользователя обязателен.',
+            'userId.integer' => 'ID пользователя должен быть числом.',
         ];
     }
 
     /**
      * Чистое получение свойств.
      */
-    public function getSettingId(): int
+    public function getName(): string
     {
-        return (int) $this->input('notification.id');
+        return (string) $this->input('userForm.editableUserName');
     }
-    public function getSettingKey(): string
-    {
-        return (string) $this->input('notification.key');
-    }
-    public function getSettingIsActive(): bool
-    {
-        return (bool) data_get($this->all(), 'notification.is_active', false);
-    }
-
-    public function getSettingIsUsed(): bool
-    {
-        return (bool) $this->input('notification.is_used');
-    }
-
 
     protected function failedValidation(Validator $validator)
     {

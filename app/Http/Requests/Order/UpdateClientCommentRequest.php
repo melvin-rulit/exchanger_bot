@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Requests\User\Settings;
+namespace App\Http\Requests\Order;
 
 use App\Http\Requests\BaseRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Support\Facades\Log;
 
-class NotificationRequest extends BaseRequest
+class UpdateClientCommentRequest extends BaseRequest
 {
     /**
      * Определяет, авторизован ли пользователь на выполнение запроса.
@@ -25,10 +24,7 @@ class NotificationRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'notification.id' => ['required', 'integer'],
-            'notification.key' => ['required', 'string', 'in:notification'],
-            'notification.is_active' => ['required', 'boolean'],
-            'notification.is_used' => ['integer', 'in:0,1'],
+            'comment' => 'required|string',
         ];
     }
 
@@ -40,31 +36,17 @@ class NotificationRequest extends BaseRequest
     public function messages(): array
     {
         return [
-
+            'comment.required' => 'Пожалуйста, введите комментарий.',
         ];
     }
 
     /**
      * Чистое получение свойств.
      */
-    public function getSettingId(): int
+    public function getClientComment(): string
     {
-        return (int) $this->input('notification.id');
+        return $this->input('comment');
     }
-    public function getSettingKey(): string
-    {
-        return (string) $this->input('notification.key');
-    }
-    public function getSettingIsActive(): bool
-    {
-        return (bool) data_get($this->all(), 'notification.is_active', false);
-    }
-
-    public function getSettingIsUsed(): bool
-    {
-        return (bool) $this->input('notification.is_used');
-    }
-
 
     protected function failedValidation(Validator $validator)
     {
