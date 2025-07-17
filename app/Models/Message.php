@@ -17,7 +17,7 @@ class Message extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = ['chat_id', 'order_id', 'user_id', 'client_id', 'sender_type', 'message', 'message_group', 'created_at'];
+    protected $fillable = ['chat_id', 'order_id', 'user_id', 'client_id', 'sender_type', 'message', 'is_message', 'message_group', 'created_at'];
 
     public function registerMediaCollections(): void
     {

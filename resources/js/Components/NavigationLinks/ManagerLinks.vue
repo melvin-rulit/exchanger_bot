@@ -69,25 +69,6 @@ export default {
 </script>
 
 <style scoped>
-.badge {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  color: black;
-  font-size: 14px;
-  font-weight: bold;
-  text-align: center;
-  line-height: 18px;
-}
-
-.badge-active {
-  background-color: #d1d5db;
-}
-
-.badge-inactive {
-  background-color: #22c55e;
-}
 .pulse-green {
   animation: pulse-text 1s infinite;
 }

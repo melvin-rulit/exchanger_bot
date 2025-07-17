@@ -18,7 +18,7 @@ export const useConsultationStore = defineStore('consultation', {
             this.unreadByChatId = {}
 
             for (const msg of messages) {
-                this.unreadByChatId[msg.id] = !msg.is_message
+                this.unreadByChatId[msg.id] = msg.sender_type !== 'user' && !msg.is_message
             }
         },
 

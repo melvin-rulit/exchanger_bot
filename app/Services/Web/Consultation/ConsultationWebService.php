@@ -15,12 +15,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use App\Exceptions\Order\OrderNotFoundException;
 use App\Exceptions\Images\MediaLibraryException;
 use App\Services\RedisService\RedisSessionService;
+use App\Telegram\Traits\SendsFakeWebhookCommandTrait;
 use App\Exceptions\Consultation\MessageNotFoundException;
 use App\Services\TelegramBotService\TelegramMessageService;
 
 class ConsultationWebService extends BaseWebService
 {
-    use HandlesFile;
+    use HandlesFile, SendsFakeWebhookCommandTrait;
 
     private TelegramMessageService $telegramService;
 
@@ -87,6 +88,7 @@ class ConsultationWebService extends BaseWebService
             'order_id' => null,
             'user_id' => auth()->user()->id,
             'sender_type' => 'user',
+            'is_message' => true,
             'message' => $request->getMessage(),
         ]);
 
@@ -143,5 +145,12 @@ class ConsultationWebService extends BaseWebService
 
         $message->is_message = true;
         $message->save();
+    }
+//TODO тут нужно пересылать chatId - пока для проверки прописано жестко
+    public function closeChat($request): void
+    {
+        $chatId = $request->getChatId();
+
+        $this->sendWebhookCommand(1138241185, 'На главную');
     }
 }
