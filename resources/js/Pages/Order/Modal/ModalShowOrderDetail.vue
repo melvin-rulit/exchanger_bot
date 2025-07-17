@@ -58,53 +58,53 @@
 
 
           <div v-if="selectedOrder.status === 'success' && selectedOrder.status !== 'closed'" class="order-info-wrapper">
-            <div class="order-info">
+            <div class="order-info border-t">
               <h1 class="order-title">Информация о заказе</h1>
 
               <div class="info-item mb-2">
                 <span class="label">Клиент: </span>
-                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.client.first_name }}</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ selectedOrder.client.first_name }}</span>
               </div>
 
               <div class="info-item mb-2">
-                <span class="label">Закрыл заказ: </span>
-                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.user?.name || '' }}</span>
+                <span class="label">Завершил заказ: </span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ selectedOrder.user?.name || '' }}</span>
               </div>
 
               <div class="info-item mb-2">
                 <span class="label">Сумма заказа: </span>
-                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
               </div>
 
               <div class="info-item">
-                <span class="label">Дата закрытия:</span>
-                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ formatDateTime(selectedOrder.close_at) }}</span>
+                <span class="label">Дата завершения:</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ formatDateTime(selectedOrder.end_at) }}</span>
               </div>
             </div>
           </div>
 
           <div v-if="selectedOrder.status !== 'success' && selectedOrder.status === 'closed'" class="order-info-wrapper">
-            <div class="order-info">
+            <div class="order-info border-t">
               <h1 class="order-title">Информация о заказе</h1>
 
-              <div class="info-item">
+              <div class="info-item mb-2">
                 <span class="label">Клиент: </span>
-                <span class="value">{{ selectedOrder.client.first_name }}</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ selectedOrder.client.first_name }}</span>
               </div>
 
-              <div class="info-item">
+              <div class="info-item mb-2">
                 <span class="label">Отменил заказ: </span>
-                <span class="value">{{ selectedOrder.client.first_name }}</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ selectedOrder.client.first_name }}</span>
               </div>
 
-              <div class="info-item">
+              <div class="info-item mb-2">
                 <span class="label">Сумма заказа: </span>
-                <span class="value">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ selectedOrder.amount }} {{ selectedOrder.currency_name }}</span>
               </div>
 
-              <div class="info-item">
-                <span class="label">Дата закрытия:</span>
-                <span class="px-4 bg-gray-50 rounded-md shadow-md">{{ formatDateTime(selectedOrder.close_at) }}</span>
+              <div class="info-item mb-2">
+                <span class="label">Дата отмены:</span>
+                <span class="px-4 bg-gray-50 rounded-md shadow-md ml-2">{{ formatDateTime(selectedOrder.close_at) }}</span>
               </div>
             </div>
           </div>
@@ -128,7 +128,7 @@
         </div>
 
         <FadeOrInstant :disable-transition="checkCloseOrder" name="fade">
-          <div v-if="!confirmationOrder && selectedOrder.status !== 'success' && !checkCloseOrder && selectedOrder.status !== 'closed' && form.selectedUser">
+          <div v-if="!confirmationOrder && !confirmationCloseOrder && selectedOrder.status !== 'success' && !checkCloseOrder && selectedOrder.status !== 'closed' && form.selectedUser">
 
             <div v-if="form.selectedUser && form.selectedUser.id !== $page.props.auth.user.id || selectedOrder.status === 'new'" class="spiner_wait">
               <hollow-dots-spinner
@@ -146,21 +146,33 @@
                 <ButtonUI v-if="selectedOrder.status !== 'new' && form.selectedUser && form.selectedUser.id !== $page.props.auth.user.id" @click="assignExecutor" type="submit" color="green">Передать заказ другому</ButtonUI>
               </div>
 
-            <div class="btn_close">
-              <ButtonUI @click="prepareCompleted" type="submit">Завершить заказ</ButtonUI>
+            <div class="btn_success">
+              <ButtonUI @click="prepareEnd" type="submit" :isDisabled="selectedOrder.status !== 'active'">Завершить заказ</ButtonUI>
+            </div>
+            <div class="btn_close pl-3">
+              <ButtonUI @click="prepareClosed" type="submit" color="red" :isDisabled="selectedOrder.status !== 'active'">Отменить заказ</ButtonUI>
             </div>
           </div>
 
-          <div v-if="!confirmationOrder && !form.selectedUser && selectedOrder.status !== 'closed'" class="mb-7 border">
+          <div v-if="!confirmationOrder && !form.selectedUser && selectedOrder.status !== 'closed' && selectedOrder.status !== 'success'" class="mb-7 border">
             <InfoNotification message="Чтобы начать обработку заказа назначьте менеджера" type="danger"/>
           </div>
         </FadeOrInstant>
 
 
-<!--        <transition name="fade">-->
           <div v-if="confirmationOrder">
             <div class="content">
               <p class="message_complete">Вы уверены, что хотите завершить этот заказ?</p>
+            </div>
+
+            <div class="buttons">
+              <ButtonUI @click="successEndOrder" type="submit" color="green">Да</ButtonUI>
+              <ButtonUI @click="cancelEndOrder" type="submit" color="red">Отмена</ButtonUI>
+            </div>
+          </div>
+        <div v-if="confirmationCloseOrder">
+            <div class="content">
+              <p class="message_complete">Вы уверены, что хотите отменить этот заказ?</p>
             </div>
 
             <div class="buttons">
@@ -168,7 +180,6 @@
               <ButtonUI @click="cancelCloseOrder" type="submit" color="red">Отмена</ButtonUI>
             </div>
           </div>
-<!--        </transition>-->
 
       </div>
     </div>
@@ -190,6 +201,7 @@ import { translateStatus } from '@/helpers/statusTranslationClass.js'
 import Multiselect from 'vue-multiselect'
 import { UserService } from '@/services/UserService.js'
 import { OrdersService } from '@/services/OrdersService.js'
+import { useOrdersStore } from '@/stores/ordersStore'
 import FadeOrInstant from "../../../Components/FadeOrInstant.vue";
 import Alert from "../../../Components/Notifications/Alert.vue";
 import { Icon } from '@iconify/vue';
@@ -197,6 +209,7 @@ import ButtonUI from "../../../Components/Button/ButtonUI.vue";
 import { HollowDotsSpinner } from 'epic-spinners'
 import ModalShowOrderScreenshot from '@/Pages/Order/Modal/ModalShowOrderScreenshot.vue'
 import InfoNotification from '@/Components/Notifications/InfoNotification.vue'
+import { REMINDER_TIMEOUT_MS } from '@/helpers/constants.js'
 
 export default {
   components: {InfoNotification, ModalShowOrderScreenshot, Multiselect, FadeOrInstant, Alert, Icon, ButtonUI, HollowDotsSpinner},
@@ -232,6 +245,7 @@ export default {
       alertType: 'success',
       loading: false,
       confirmationOrder: false,
+      confirmationCloseOrder: false,
       checkCloseOrder: false,
       isClosing: false,
       isModalShow: false,
@@ -239,7 +253,8 @@ export default {
     }
   },
   setup() {
-    return {translateStatus}
+    const ordersStore = useOrdersStore()
+    return { ordersStore, translateStatus}
   },
   mounted() {
     this.getManagers()
@@ -268,6 +283,7 @@ export default {
       OrdersService.assignExecutor(this.form)
         .then(response => {
           this.localOrder.user = response.data.assigned_user.user;
+          this.ordersStore.markAsReadNewOrder(this.selectedOrder.id)
 
           if (this.$page.props.auth.user.id !== response.data.assigned_user.user.id) {
             this.unPinChat()
@@ -306,12 +322,12 @@ export default {
           this.errors = handleApiError(error)
         })
     },
-    closeOrder: async function () {
+    endOrder: async function () {
       if (this.isClosing) return;
       this.isClosing = true;
       this.errors = {};
 
-      OrdersService.close_order(this.form)
+      OrdersService.end_order(this.form)
         .then(response => {
           Object.assign(this.selectedOrder, response.data.update.order);
           this.triggerSuccessAlert('Заказ успешно завершен');
@@ -330,26 +346,69 @@ export default {
           }
         });
     },
-    prepareCompleted() {
-      if (!this.form.selectedUser || !this.form.selectedUser.id) {
-        this.triggerErrorAlert('Назначьте ответственного менеджера')
-        return;
-      }
-      if (!this.form.selectedUser || !this.form.selectedUser.id || this.selectedOrder.status === 'new') {
-        this.triggerErrorAlert('Менеджер еще не назначен!')
-        return;
-      }
+    closeOrder: async function () {
+      if (this.isClosing) return;
+      this.isClosing = true;
+      this.errors = {};
+
+      OrdersService.close_order(this.form)
+        .then(response => {
+          Object.assign(this.selectedOrder, response.data.update.order);
+          this.triggerSuccessAlert('Заказ успешно отменен');
+        })
+        .catch(error => {
+          this.errors = handleApiError(error)
+        })
+        .finally(() => {
+          this.showSpinner = false
+          this.isClosing = false;
+          if (this.errors.success === false){
+            this.checkCloseOrder = false
+            this.triggerErrorAlert('Невозможно отменить заказ. Обратитесь к администратору')
+          }
+        });
+    },
+    prepareEnd() {
+      // if (!this.form.selectedUser || !this.form.selectedUser.id) {
+      //   this.triggerErrorAlert('Назначьте ответственного менеджера')
+      //   return;
+      // }
+      // if (!this.form.selectedUser || !this.form.selectedUser.id || this.selectedOrder.status === 'new') {
+      //   this.triggerErrorAlert('Менеджер еще не назначен!')
+      //   return;
+      // }
       this.confirmationOrder = true
+    },
+    prepareClosed() {
+      // if (!this.form.selectedUser || !this.form.selectedUser.id) {
+      //   this.triggerErrorAlert('Назначьте ответственного менеджера')
+      //   return;
+      // }
+      // if (!this.form.selectedUser || !this.form.selectedUser.id || this.selectedOrder.status === 'new') {
+      //   this.triggerErrorAlert('Менеджер еще не назначен!')
+      //   return;
+      // }
+      this.confirmationCloseOrder = true
+    },
+    successEndOrder() {
+      this.endOrder()
+      this.confirmationOrder = false
+      this.checkCloseOrder = true
+      this.showSpinner = true
+      this.$emit('successEndOrder');
     },
     successCloseOrder() {
       this.closeOrder()
-      this.confirmationOrder = false
+      this.confirmationCloseOrder = false
       this.checkCloseOrder = true
       this.showSpinner = true
       this.$emit('successCloseOrder');
     },
-    cancelCloseOrder() {
+    cancelEndOrder() {
       this.confirmationOrder = false
+    },
+    cancelCloseOrder() {
+      this.confirmationCloseOrder = false
     },
     openChat() {
       //console.log(this.localOrder.status)
@@ -554,9 +613,14 @@ export default {
   left: 7%;
   bottom: 40px;
 }
-.btn_close {
+.btn_success {
   position: absolute;
   left: 26%;
+  bottom: 40px;
+}
+.btn_close {
+  position: absolute;
+  left: 41%;
   bottom: 40px;
 }
 .buttons {
