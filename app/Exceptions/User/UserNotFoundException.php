@@ -7,5 +7,8 @@ use Exception;
 class UserNotFoundException extends Exception
 
 {
-    protected $message = 'Пользователь с таким id не найден.';
+    public function __construct()
+    {
+        parent::__construct('Пользователь с таким id не найден.');
+    }
 }
