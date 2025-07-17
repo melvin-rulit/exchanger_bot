@@ -7,6 +7,10 @@ export class OrdersService {
         const url = `${this.serverUrl}/orders?query=${encodeURIComponent(query)}&page=${page}`;
         return axios.get(url);
     }
+    static getAllOrders(query = '', page = 1) {
+        const url = `${this.serverUrl}/orders/all_orders?query=${encodeURIComponent(query)}&page=${page}`;
+        return axios.get(url);
+    }
     static getOrdersWithElasticSearch(query = '', page = 1) {
         const url = `${this.serverUrl}/orders/elastic_search?query=${encodeURIComponent(query)}&page=${page}`;
         return axios.get(url);
