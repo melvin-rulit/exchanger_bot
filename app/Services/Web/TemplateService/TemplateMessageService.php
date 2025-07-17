@@ -13,16 +13,9 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TemplateMessageService extends BaseWebService
 {
-    /**
-     * @throws TemplatesNotFoundException
-     */
     public function getTemplatesMessages(): AnonymousResourceCollection
     {
         $templates = auth()->user()->templateMessages()->get();
-
-        if ($templates->isEmpty()) {
-            throw new TemplatesNotFoundException("Ни одного шаблона для user с ID " . auth()->id() . " не найдено");
-        }
         return TemplateMessageResource::collection($templates);
     }
 
