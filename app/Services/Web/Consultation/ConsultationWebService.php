@@ -108,6 +108,7 @@ class ConsultationWebService extends BaseWebService
             'order_id' => null,
             'user_id' => auth()->user()->id,
             'sender_type' => 'user',
+            'is_message' => true,
             'message' => null,
         ]);
 
