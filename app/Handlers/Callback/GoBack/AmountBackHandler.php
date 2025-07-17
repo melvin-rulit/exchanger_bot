@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Enums\Bank\BankField;
 use App\Enums\TelegramCallbackAction;
 use App\Exceptions\TelegramApiException;
+use App\Services\RedisService\RedisMessageService;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
 use App\Services\RedisService\RedisSessionService;
@@ -16,7 +17,7 @@ use App\Services\TelegramBotService\TelegramMessageService;
 
 class AmountBackHandler
 {
-    public function __construct(protected TelegramMessageService $telegramMessageService, protected  ClientsService $clientsService, protected RedisSessionService $redis) {}
+    public function __construct(protected TelegramMessageService $telegramMessageService, protected  ClientsService $clientsService, protected RedisSessionService $redis, protected RedisMessageService $redisMessageService){}
 
     /**
      * @throws TelegramApiException
@@ -60,8 +61,11 @@ class AmountBackHandler
 
         $this->clientsService->setClientBankInput($clientBotId);
 
-        $this->telegramMessageService->deleteMessage($chatId, $messageId);
-        $this->telegramMessageService->sendDeleteReplay($chatId);
-        $this->telegramMessageService->sendMessageWithButtons($chatId, __('messages.get_banks'), $keyboard, $messageId);
+        $this->telegramMessageService->deleteMessages($chatId);
+        $stepTwoMessage = $this->telegramMessageService->sendDeleteReplay($chatId, 'Шаг 2');
+        $getBanks = $this->telegramMessageService->sendMessageWithButtons($chatId, __('messages.get_banks'), $keyboard, $messageId);
+
+        $this->redisMessageService->setDeletedMessageForChat($chatId, $stepTwoMessage);
+        $this->redisMessageService->setDeletedMessageForChat($chatId, $getBanks);
     }
 }

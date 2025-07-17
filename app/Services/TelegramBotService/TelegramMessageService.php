@@ -5,6 +5,7 @@ namespace App\Services\TelegramBotService;
 use Illuminate\Support\Facades\Http;
 use App\Exceptions\TelegramApiException;
 use Illuminate\Http\Client\ConnectionException;
+use App\Services\RedisService\RedisMessageService;
 use App\Exceptions\Helpers\InvalidStringValueException;
 
 class TelegramMessageService
@@ -14,7 +15,7 @@ class TelegramMessageService
     /**
      * @throws InvalidStringValueException
      */
-    public function __construct()
+    public function __construct(protected RedisMessageService $redisMessageService)
     {
         $this->url = ensure_string(config('telegram.telegram_bot.api_url'), 'telegram.telegram_bot.api_url') . ensure_string(config('telegram.telegram_bot.token'), 'telegram.telegram_bot.token');
     }
@@ -22,7 +23,7 @@ class TelegramMessageService
     /**
      * @throws TelegramApiException
      */
-    public function sendMessage(int|string $chatId, string $message): void
+    public function sendMessage(int|string $chatId, string $message)
     {
         if (empty($chatId) || empty($message)) {
             throw new \InvalidArgumentException('Chat ID и сообщение обязательны для отправки.');
@@ -43,6 +44,8 @@ class TelegramMessageService
 
             throw new TelegramApiException('Ошибка отправки сообщения: ' . json_encode($response->json(), JSON_UNESCAPED_UNICODE));
         }
+
+        return $response->json('result.message_id');
     }
 
     /**
@@ -99,7 +102,7 @@ class TelegramMessageService
     /**
      * @throws TelegramApiException
      */
-    public function sendMessageWithButtons(int|string $chatId, string $message, $keyboard, int $messageId = null): void
+    public function sendMessageWithButtons(int|string $chatId, string $message, $keyboard, int $messageId = null)
     {
         $response = Http::post("{$this->url}/sendMessage", [
             'chat_id' => $chatId,
@@ -111,9 +114,11 @@ class TelegramMessageService
         if (!$response->ok() || !$response->json('ok')) {
             throw new TelegramApiException('Ошибка отправки сообщения с кнопками: ' . json_encode($response->json(), JSON_UNESCAPED_UNICODE));
         }
+
+        return $response->json('result.message_id');
     }
 
-    public function sendDeleteReplay(int|string $chatId, string $text = '.'): void
+    public function sendDeleteReplay(int|string $chatId, string $text = '')
     {
         $response = Http::post("{$this->url}/sendMessage", [
             'chat_id' => $chatId,
@@ -121,6 +126,8 @@ class TelegramMessageService
             'reply_markup' => json_encode(['remove_keyboard' => true]),
             'parse_mode' => 'HTML',
         ]);
+
+        return $response->json('result.message_id');
     }
     public function editMessage(int|string $chatId, int $messageId, string $message, ?array $keyboard = null): bool
     {
@@ -145,30 +152,27 @@ class TelegramMessageService
      */
     public function deleteMessage(int|string $chatId, int $messageId): void
     {
-//        $response = Http::post($this->url . "/deleteMessage", [
-//            'chat_id' => $chatId,
-//            'message_id' => $messageId,
-//        ]);
-//
-//        if (!$response->successful()) {
-//            throw new TelegramApiException('Ошибка удаления сообщения: ' . $response->body());
-//        }
+        $response = Http::post($this->url . "/deleteMessage", [
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+        ]);
+
+        if (!$response->successful()) {
+            throw new TelegramApiException('Ошибка удаления сообщения: ' . $response->body());
+        }
     }
 
-    /**
-     * @throws TelegramApiException
-     */
-    public function deleteMessages($chatId, $messageIdToDelete): void
+    public function deleteMessages(int $chatId): void
     {
-        $this->deleteMessage($chatId, $messageIdToDelete);
+        $messageIds = $this->redisMessageService->getDeletedMessagesForChat($chatId);
 
-        // Удаляем сообщение с message_id - 1
-        $this->deleteMessage($chatId, $messageIdToDelete - 1);
-        $this->deleteMessage($chatId, $messageIdToDelete - 2);
-        $this->deleteMessage($chatId, $messageIdToDelete - 3);
-        $this->deleteMessage($chatId, $messageIdToDelete - 4);
-        $this->deleteMessage($chatId, $messageIdToDelete - 5);
-        $this->deleteMessage($chatId, $messageIdToDelete - 6);
-        $this->deleteMessage($chatId, $messageIdToDelete - 7);
+        foreach ($messageIds as $messageId) {
+            try {
+                $this->deleteMessage($chatId, (int)$messageId);
+            } catch (\Exception $e) {
+                \Log::warning("Не удалось удалить сообщение $messageId из чата $chatId: {$e->getMessage()}");
+            }
+        }
+        $this->redisMessageService->forgetMessagesForDelete($chatId);
     }
 }

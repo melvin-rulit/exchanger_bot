@@ -4,16 +4,16 @@ namespace App\Telegram\Handlers;
 
 use App\Exceptions\TelegramApiException;
 use App\Services\ChatService\ChatService;
+use App\Services\RedisService\RedisMessageService;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
 use App\Services\RedisService\RedisSessionService;
 use App\Exceptions\Services\MessageNotFoundException;
 use App\Services\TelegramBotService\TelegramMessageService;
-use Illuminate\Support\Facades\Log;
 
 class StartHandles
 {
-    public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService,  protected ChatService $chatService, protected RedisSessionService $redis){}
+    public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService,  protected ChatService $chatService, protected RedisSessionService $redis, protected RedisMessageService $redisMessageService){}
 
     /**
      * @throws TelegramApiException
@@ -23,15 +23,12 @@ class StartHandles
         $keyboard = KeyboardFactory::startKeyboard();
 
         $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
-//TODO определить нужно ли тут условие
-//        $this->sendMessageWithButton($chatId, $keyboard, __('messages.greeting'), $messageId);
-        $this->telegramMessageService->sendMessageWithButtons($chatId, __('messages.greeting'), $keyboard, $messageId);
 
+        $greetingMessage = $this->telegramMessageService->sendMessageWithButtons($chatId, __('messages.greeting'), $keyboard, $messageId);
 
-//        if(!$this->isInMainMenu){
-//
-//            $this->sendMessageWithButton($chatId, $keyboard, __('messages.greeting'), $messageId);
-//        }
+        if ($greetingMessage){
+            $this->redisMessageService->setDeletedMessageForChat($chatId, $greetingMessage);
+        }
     }
 
     /**
@@ -39,6 +36,9 @@ class StartHandles
      */
     public function checkStartMessage($text, $callback): string
     {
+       // \Log::info(print_r($callback, true));
+        $this->redisMessageService->setDeletedMessageForChat($callback->chatId, $callback->messageId);
+
         if ($this->clientsService->isClientConsultationInput($callback->clientBotId)) {
             $this->clientsService->setCloseConsultation($this->redis->getLastMessageIdFromClient($callback->chatId));
         }

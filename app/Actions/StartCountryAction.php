@@ -7,6 +7,7 @@ use App\DTO\CountrySelectionData;
 use App\Enums\Country\CountryField;
 use App\Enums\TelegramCallbackAction;
 use App\Exceptions\TelegramApiException;
+use App\Services\RedisService\RedisMessageService;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
 use App\Services\RedisService\RedisSessionService;
@@ -15,7 +16,7 @@ use App\Services\TelegramBotService\TelegramMessageService;
 
 class StartCountryAction
 {
-    public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService, protected RedisSessionService $redis) {}
+    public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService, protected RedisSessionService $redis, protected RedisMessageService $redisMessageService) {}
 
     /**
      * @throws TelegramApiException
@@ -58,12 +59,12 @@ class StartCountryAction
 
         $keyboard['inline_keyboard'][] = KeyboardFactory::toConsultation(TelegramCallbackAction::ToConsultation->value. CountryField::COUNTRY->value);
         $keyboard['inline_keyboard'][] = KeyboardFactory::toBack(TelegramCallbackAction::SelectCountryBack);
+        $this->telegramMessageService->deleteMessages($data->chatId);
 
-        $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.get_country'), $keyboard, $data->messageId);
-        $this->telegramMessageService->sendDeleteReplay($data->chatId);
-        //TODO проработать удаление сообщений
-        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId);
-        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -1);
-        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -2);
+        $stepOneMessage = $this->telegramMessageService->sendDeleteReplay($data->chatId, 'Шаг 1');
+        $getCountry = $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.get_country'), $keyboard, $data->messageId);
+
+        $this->redisMessageService->setDeletedMessageForChat($data->chatId, $stepOneMessage);
+        $this->redisMessageService->setDeletedMessageForChat($data->chatId, $getCountry);
     }
 }

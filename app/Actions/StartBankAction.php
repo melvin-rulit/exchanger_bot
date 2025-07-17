@@ -10,6 +10,7 @@ use App\Enums\TelegramCallbackAction;
 use App\Exceptions\TelegramApiException;
 use App\Telegram\Keyboard\KeyboardFactory;
 use App\Services\ClientService\ClientsService;
+use App\Services\RedisService\RedisMessageService;
 use App\Services\RedisService\RedisSessionService;
 use App\Exceptions\Country\CountryNotFoundException;
 use App\Exceptions\Country\CountryBankNotFoundException;
@@ -17,7 +18,7 @@ use App\Services\TelegramBotService\TelegramMessageService;
 
 class StartBankAction
 {
-    public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService, protected RedisSessionService $redis) {}
+    public function __construct(protected ClientsService $clientsService, protected TelegramMessageService $telegramMessageService, protected RedisSessionService $redis, protected RedisMessageService $redisMessageService) {}
 
     /**
      * @throws TelegramApiException
@@ -66,11 +67,12 @@ class StartBankAction
         $keyboard['inline_keyboard'][] = KeyboardFactory::toBack(TelegramCallbackAction::SelectBankBack->value);
 
         $this->clientsService->setClientBankInput($data->clientBotId);
+        $this->telegramMessageService->deleteMessages($data->chatId);
 
-        $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.get_banks'), $keyboard, $data->messageId);
-        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId);
-//        $this->telegramMessageService->sendDeleteReplay($data->chatId);
-//        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -1);
-//        $this->telegramMessageService->deleteMessage($data->chatId, $data->messageId -2);
+        $stepTwoMessage = $this->telegramMessageService->sendDeleteReplay($data->chatId, 'Шаг 2');
+        $getBank = $this->telegramMessageService->sendMessageWithButtons($data->chatId, __('messages.get_banks'), $keyboard, $data->messageId);
+
+        $this->redisMessageService->setDeletedMessageForChat($data->chatId, $stepTwoMessage);
+        $this->redisMessageService->setDeletedMessageForChat($data->chatId, $getBank);
     }
 }
