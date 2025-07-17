@@ -31,4 +31,8 @@ export class ConsultationService {
         let url = `${this.serverUrl}/consultation/set_read_messages/${messageId}`
         return axios.patch(url, messageId)
     }
+    static closeChat(chatId) {
+        let url = `${this.serverUrl}/consultation/close_chat/`
+        return axios.patch(url, chatId)
+    }
 }
