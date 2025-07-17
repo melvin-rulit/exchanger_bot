@@ -1,10 +1,9 @@
 <template>
     <div class="main">
-      <div class="table-container">
-
+      <div class="table-container rounded-xl">
         <table class="w-full whitespace-nowrap">
             <thead class="head_table text-gray-800">
-            <tr tabindex="0" class="focus:outline-none h-10 rounded">
+            <tr tabindex="0" class="focus:outline-none h-7 rounded">
                 <td>
                   <div class="flex pl-6">
                     <p class="font-semibold mr-2"></p>
@@ -55,11 +54,11 @@
 
               <td class="">
                 <div class="flex items-center">
-                  <p v-if="item.last_message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColor"/> Чат закрыт клиентом</p>
+                  <p v-if="item.last_message.is_close" class="text-sm leading-none text-gray-600 ml-2 flex items-center gap-1"><Icon icon="ci:chat-close" width="24" height="24" :class="iconColor"/> Чат закрыт</p>
                 </div>
               </td>
               <td class="">
-                <div class="flex items-center">
+                <div class="flex items-center ml-2">
                   {{ (item.client ?? item.last_message.client)?.first_name || 'Клиент не найден' }}
 <!--                  <span class="px-4 bg-gray-50 text-gray-800 rounded-md shadow-md">{{ item.client.first_name }}</span>-->
                 </div>
@@ -83,16 +82,8 @@
             <td v-if="!messages.length && !isLoadingSpiner" class="absolute top-[47%] left-[44%] text-xl text-muted">На сегодня нет сообщений</td>
           </tr>
           </tbody>
-
         </table>
-      </div>
-
-      <div class="flex justify-between items-center rounded-lg shadow">
-
-      </div>
-
-      <div class="flex justify-between items-center rounded-lg shadow h-[20px]">
-        <div class="w-[450px] text-sm sm:text-base font-medium text-gray-700 mt-16">
+        <div class="pagination-wrapper">
           <Pagination
             :total="messageMeta.total"
             :limit="messageMeta.per_page"
@@ -100,9 +91,19 @@
             @page-change="getTodayMessages"
           />
         </div>
+      </div>
+
+      <div class="flex justify-between items-center rounded-lg shadow">
+
+      </div>
+
+      <div class="flex justify-between items-center rounded-lg shadow h-[20px]">
+        <div  class="w-[420px] text-sm sm:text-base font-medium text-white mt-[67px] ml-6">
+
+        </div>
 
         <div v-if="startFunction" class="text-sm sm:text-base font-medium text-white">
-          <div class="flex items-center gap-3 mt-20">
+          <div class="flex items-center gap-3 mt-14">
             <Icon @click="toggleNotification(notificationSettings)" v-show="notificationSettings && notificationSettings.is_active" icon="system-uicons:bell-ringing" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
             <Icon @click="toggleNotification(notificationSettings)" v-show="notificationSettings && !notificationSettings.is_active" icon="system-uicons:bell-disabled" width="40" height="40" class="hover:text-gray-400 cursor-pointer" />
             <Icon icon="lsicon:find-outline" width="48" height="48" class="hover:text-gray-400 cursor-pointer" />
@@ -127,7 +128,7 @@
           </template>
         </AlertForNotification>
 
-        <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-20">
+        <div class="w-[450px] flex items-center justify-end gap-3 text-white mt-[50px]">
           <PinChatsInConsultantList
             v-for="chat in pinnedChats.filter(chat => !chat.order)"
             :key="chat.id"
@@ -142,11 +143,6 @@
         :message="message"
         :client="client"
         @close="closeModalShowChat"
-      />
-
-      <ModalLock
-        :is-active="isModalLockShow"
-        @unlocked="unLockScreen"
       />
 
       <SetLockScreenPassword
@@ -165,6 +161,7 @@ import { handleApiError } from '@/helpers/errors.js'
 import { getIconColorClass } from '@/helpers/iconColorClass.js'
 import { UserService } from '@/services/UserService.js'
 import { ConsultationService } from '@/services/ConsultationService.js'
+import { useLockScreenStore } from '@/stores/lockScreenStore.js'
 import ButtonUI from '@/Components/Button/ButtonUI.vue'
 import Pagination from '@/Components/Pagination.vue'
 import ModalLock from '@/Components/Modal/ModalLock.vue'
@@ -232,7 +229,8 @@ export default {
     const { playSound, stopSound} = useSound()
     const consultationStore = useConsultationStore()
     const userStore = useUserStore()
-    return { playSound, stopSound, consultationStore, userStore }
+    const lockStore = useLockScreenStore()
+    return { playSound, stopSound, consultationStore, userStore, lockStore }
   },
 
     async mounted() {
@@ -328,7 +326,7 @@ export default {
         if (!is_lock){
           await this.saveIsLock()
         }
-        this.isModalLockShow = true
+        this.lockStore.showLockModal()
       },
       async showLockScreen() {
         const is_locked = await this.userStore.getUserLockScreen(this.$page.props.auth.user.id)
@@ -337,10 +335,7 @@ export default {
           return
         }
 
-        this.isModalLockShow = true
-      },
-      unLockScreen() {
-        this.isModalLockShow = false
+        this.lockStore.showLockModal()
       },
       async saveIsLock() {
         await UserService.saveIsLock()
@@ -357,6 +352,7 @@ export default {
       },
       async setMessagesRead() {
         try {
+          this.consultationStore.markAsRead(this.message.id)
           await ConsultationService.setConsultantMessagesRead(this.message.id);
         } catch (error) {
           this.errors = handleApiError(error);
@@ -424,11 +420,10 @@ export default {
   display: flex;
   flex-direction: column;
 }
-
 .table-container {
   flex-grow: 1;
   overflow-y: auto;
-  max-height: calc(94vh - 89px);
+  max-height: calc(97vh - 89px);
   background-color: white;
 }
 .filters_block {
@@ -438,19 +433,21 @@ export default {
     font-size: 11px;
   }
 }
-
 .head_table {
   border-bottom: 1px solid #e5e7eb;
 }
-
 .inside_table {
   background-color: white;
   cursor: pointer;
   border-bottom: 2px solid rgba(0, 0, 0, .09);
 }
-
 .inside_table:hover {
   background-color: #f3f4f6;
+}
+.pagination-wrapper {
+  position: fixed;
+  bottom: 71px;
+  left: 2%;
 }
 .no-messages {
   text-align: center;
