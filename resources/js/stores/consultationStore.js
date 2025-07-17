@@ -24,6 +24,10 @@ export const useConsultationStore = defineStore('consultation', {
 
         markAsRead(messageId) {
             this.unreadByChatId[messageId] = false
+        },
+
+        clearAllUnread() {
+            this.unreadByChatId = {}
         }
     }
 })
