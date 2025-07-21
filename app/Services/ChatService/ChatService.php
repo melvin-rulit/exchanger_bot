@@ -5,6 +5,7 @@ namespace App\Services\ChatService;
 use App\Models\Order;
 use App\Models\Message;
 use App\Events\Order\OrderMessageSent;
+use App\Http\Resources\Consultation\ChatMessageResource;
 use App\Events\Consultation\ClientConsultationMessageSent;
 
 class ChatService
@@ -41,7 +42,7 @@ class ChatService
         }
 
         $createdMessage = $this->saveMessage($chatId, $clientId, $message, null, $messageGroup);
-        broadcast(new ClientConsultationMessageSent($chatId, $message));
+        broadcast(new ClientConsultationMessageSent($chatId, new ChatMessageResource($createdMessage)));
 
         return $createdMessage;
     }
