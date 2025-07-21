@@ -17,18 +17,6 @@ class closeChatRequest extends BaseRequest
     }
 
     /**
-     * Laravel будет валидировать и данные из маршрута.
-     *
-     * @return array<string, string>
-     */
-    public function validationData(): array
-    {
-        return array_merge($this->all(), [
-            'chatId' => $this->route('chatId'),
-        ]);
-    }
-
-    /**
      * Правила валидации для запроса.
      *
      * @return array<string, mixed>
@@ -36,7 +24,7 @@ class closeChatRequest extends BaseRequest
     public function rules(): array
     {
         return [
-
+            'chatId' => 'required|integer',
         ];
     }
 
