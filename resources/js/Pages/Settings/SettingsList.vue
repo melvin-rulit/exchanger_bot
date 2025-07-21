@@ -20,7 +20,7 @@
               <div class="w-[336px] h-[140px]">
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
                   <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша фотография в системе</h6>
-                  <img v-if="userStore.currentUser.image_url" @click="triggerFileInput" :src="userStore.currentUser.image_url" class="w-20 mt-3 mx-auto cursor-pointer"  alt=""/>
+                  <img v-if="userStore.currentUser.image_url" @click="triggerFileInput" :src="userStore.currentUser.image_url" class="w-16 h-16 mt-3 mx-auto cursor-pointer"  alt=""/>
                   <img v-else @click="triggerFileInput" src="/Images/User/no_avatar.svg" alt="Аватар по умолчанию" class="w-20 mx-auto cursor-pointer">
 
                   <file-input
