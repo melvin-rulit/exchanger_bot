@@ -147,11 +147,9 @@ class ConsultationWebService extends BaseWebService
         $message->is_message = true;
         $message->save();
     }
-//TODO тут нужно пересылать chatId - пока для проверки прописано жестко
+
     public function closeChat($request): void
     {
-        $chatId = $request->getChatId();
-
-        $this->sendWebhookCommand(1138241185, 'На главную');
+        $this->sendWebhookCommand($request->getChatId(), 'На главную');
     }
 }
