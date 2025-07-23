@@ -18,6 +18,8 @@ class MessageResource extends BaseTypedResource
 
         return [
             'message' => $model->message,
+            'sender_type'  => $model->sender_type,
+            'image_url'    => $model->getImageUrl(),
         ];
     }
 }
