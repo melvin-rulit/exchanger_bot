@@ -32,7 +32,7 @@ class ChekSend implements ShouldBroadcast
     }
     public function broadcastWith(): array
     {
-        $orderWithRelations = $this->order->load('client');
+        $orderWithRelations = $this->order->load('client', 'user');
 
         return [
             'order' => $orderWithRelations,
