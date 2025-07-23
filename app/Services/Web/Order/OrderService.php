@@ -155,6 +155,7 @@ class OrderService extends BaseWebService
         }
 
         $order->user()->associate($user);
+        $order->status = 'active';
         $order->save();
 
         return $user;
