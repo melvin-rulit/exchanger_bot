@@ -183,10 +183,11 @@ class ClientsService extends BaseService implements ClientServiceInterface
         }
 
         $message->is_close = true;
+        $message->is_message = true;
         $message->save();
         //$this->clearConsultationSession($clientId);
 
-        broadcast( new ConsultationClosed());
+        broadcast( new ConsultationClosed($message));
     }
     public function isClientInACountryInput($clientBotId): bool
     {
