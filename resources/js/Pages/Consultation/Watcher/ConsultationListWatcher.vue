@@ -26,7 +26,7 @@ export default {
     }
     channel.unbind('new_message')
 
-    const handler = async (data) => {
+    const handlerNewMessage = async (data) => {
       const response = await ConsultationService.getMessages('', 1)
       consultationStore.setMessages(response.data.data)
 
@@ -34,13 +34,13 @@ export default {
         playSound('new_sms.mp3')
       }
 
-      eventBus.emit('newMessage')
+      eventBus.emit('newMessage', data)
     }
 
-    channel.bind('new_message', handler)
+    channel.bind('new_message', handlerNewMessage)
 
     onUnmounted(() => {
-      channel.unbind('new_message', handler)
+      channel.unbind('new_message', handlerNewMessage)
     })
 
     return {}
