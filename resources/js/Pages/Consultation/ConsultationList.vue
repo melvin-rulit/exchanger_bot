@@ -345,6 +345,7 @@ export default {
       },
       setScreenLockPassword() {
         this.startFunction = false
+        this.$refs.alertComponent.closeAlert();
         this.isVisibleSetPassword = true
 
       },

@@ -75,7 +75,7 @@ export default {
 <style>
 .block {
   position: fixed;
-  bottom: 35px;
+  bottom: 20px;
   left: 37%;
 }
 .slide-down-enter-active, .slide-down-leave-active {
