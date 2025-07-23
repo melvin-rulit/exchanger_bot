@@ -36,7 +36,6 @@ class StartHandles
      */
     public function checkStartMessage($text, $callback): string
     {
-       // \Log::info(print_r($callback, true));
         $this->redisMessageService->setDeletedMessageForChat($callback->chatId, $callback->messageId);
 
         if ($this->clientsService->isClientConsultationInput($callback->clientBotId)) {
@@ -50,8 +49,6 @@ class StartHandles
     public function checkMainMenu($text): bool
     {
         if ($text === __('buttons.to_main') || $text === __('buttons.cancel')) {
-//            $this->clientsService->setClientMainInput($clientId, __('buttons.to_main'));
-//            $this->sendStartMessageWithButtons($chatId, $messageId, $clientId);
             return true;
         }
         return false;
