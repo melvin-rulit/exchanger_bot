@@ -33,6 +33,6 @@ export class ConsultationService {
     }
     static closeChat(chatId) {
         let url = `${this.serverUrl}/consultation/close_chat/`
-        return axios.patch(url, chatId)
+        return axios.patch(url, {chatId})
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Events\Consultation;
 
+use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -16,7 +17,7 @@ class ConsultationClosed implements ShouldBroadcast
      * Create a new event instance.
      */
 
-    public function __construct(){}
+    public function __construct(public Message $message, public ?string $eventType = null){}
 
 
     /**
@@ -33,7 +34,8 @@ class ConsultationClosed implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-
+            'message' => $this->message,
+            'type' => $this->eventType ?? 'default',
         ];
     }
     public function broadcastAs(): string
