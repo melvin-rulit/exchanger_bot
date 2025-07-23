@@ -294,9 +294,12 @@ export default {
         this.currentPage = page;
         this.consultationStore.setMessages(this.messages)
       },
-      async handleNewMessage() {
+      async handleNewMessage(data) {
         if(!this.isModalChatShow) {
           await this.getTodayMessages()
+        }
+        if (this.isModalChatShow) {
+          this.message = data
         }
       },
       checkCloseConsultation() {
@@ -446,8 +449,8 @@ export default {
 }
 .pagination-wrapper {
   position: fixed;
-  bottom: 71px;
-  left: 2%;
+  bottom: 65px;
+  left: 16px;
 }
 .no-messages {
   text-align: center;
