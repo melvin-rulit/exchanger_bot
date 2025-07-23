@@ -19,7 +19,7 @@
 
               <div class="w-[336px] h-[140px]">
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
-                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша фотография в системе</h6>
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша фотография</h6>
                   <img v-if="userStore.currentUser.image_url" @click="triggerFileInput" :src="userStore.currentUser.image_url" class="w-16 h-16 mt-3 mx-auto cursor-pointer"  alt=""/>
                   <img v-else @click="triggerFileInput" src="/Images/User/no_avatar.svg" alt="Аватар по умолчанию" class="w-20 mx-auto cursor-pointer">
 
@@ -37,7 +37,7 @@
 
               <div class="w-[336px] h-[140px]">
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
-                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя/ник в системе</h6>
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваше имя/ник</h6>
                   <div class="flex items-center gap-2 mt-3 flex-col">
                     <span v-if="editableUserId !== userStore.currentUser.id" @click="enableEdit(userStore.currentUser, 'userType')" class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ userStore.currentUser.name }}</span>
                     <div  v-if="editableUserId === userStore.currentUser.id" class="flex items-center gap-2">
@@ -60,7 +60,7 @@
 
               <div class="w-[336px] h-[140px]">
                 <div class="h-full rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white p-5 flex flex-col border-t">
-                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша почта в системе:</h6>
+                  <h6 class="text-sm font-semibold text-gray-500 uppercase mb-2 mx-auto">Ваша почта</h6>
                   <div class="flex items-center gap-2 mt-3 flex-col">
                   <span class="px-5 py-2 bg-gray-100 text-gray-800 rounded-md shadow-md cursor-pointer w-[200px]">{{ userStore.currentUser.email }}</span>
                   </div>
