@@ -4,7 +4,7 @@
   <AuthenticatedLayout :user="currentUser">
 
     <div class="py-2">
-      <div class="mx-auto max-w-9xl sm:px-6 lg:px-8">
+      <div class="mx-auto w-full lg:px-4">
         <div class="overflow-hidden  shadow-lg sm:rounded-lg dark:bg-gray-800">
           <div class="text-gray-900">
             <AdminList></AdminList>

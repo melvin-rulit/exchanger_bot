@@ -399,7 +399,7 @@ export default defineComponent({
 }
 .pagination-wrapper {
   position: fixed;
-  bottom: 71px;
-  left: 2%;
+  bottom: 65px;
+  left: 16px;
 }
 </style>
