@@ -144,7 +144,7 @@
           </div>
 
           <div v-if="showTemplates"
-               class="absolute bottom-20 left-[158px] z-20 bg-white border rounded-lg shadow-lg animate-fade-in">
+               class="absolute bottom-[110px] left-[158px] z-20 bg-white border rounded-lg shadow-lg animate-fade-in">
             <div class="max-h-60 overflow-y-auto">
               <div
                 v-for="(template, index) in templates"

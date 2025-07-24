@@ -178,7 +178,7 @@
               <div v-if="!newMessagePhoto.photo_path" class="mr-4 cursor-pointer"> <Icon @click="openTemplates" icon="icon-park-twotone:text-message" width="30" height="30" /></div>
               <div v-if="!newMessagePhoto.photo_path" class="mr-4 cursor-pointer"> <Icon @click="sendRequisite" icon="wpf:bank-cards" width="30" height="30" /></div>
 
-              <div v-if="showTemplates" class="absolute bottom-20 left-[200px] z-20 bg-white border rounded-lg shadow-lg animate-fade-in">
+              <div v-if="showTemplates" class="absolute bottom-[110px] left-[200px] z-20 bg-white border rounded-lg shadow-lg animate-fade-in">
                 <div class="max-h-60 overflow-y-auto">
                   <div
                     v-for="(template, index) in templates"
