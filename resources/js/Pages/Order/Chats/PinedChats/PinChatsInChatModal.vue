@@ -2,15 +2,15 @@
   <div v-if="chats" @click="handleClick" class="relative w-[30px] h-[30px] cursor-pointer">
     <Icon
       icon="circum:chat-1"
-      width="37"
-      height="37"
+      width="50"
+      height="50"
       class="absolute inset-0"
-      :class="isSelected ? 'text-green-600' : 'text-gray-500'"
+      :class="isSelected ? 'text-green-600' : 'text-gray-400'"
     />
-    <div v-if="chats.order" class="absolute inset-0 flex items-center justify-center text-[10px] text-black leading-none">
+    <div v-if="chats.order" class="absolute inset-0 flex top-3 left-3 items-center justify-center text-[14px] text-white leading-none">
       {{chats.order.id}}
     </div>
-    <div v-else-if="chats.order === null" class="absolute inset-0 flex items-center justify-center text-[10px] text-black leading-none">
+    <div v-else-if="chats.order === null" class="absolute inset-0 flex items-center justify-center text-[10px] text-white leading-none">
       {{chats.id}}
     </div>
   </div>
