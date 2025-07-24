@@ -203,9 +203,24 @@
           </td>
 
           <td class="w-[400px] text-xs leading-tight break-words">
+
             <div class="whitespace-normal line-clamp-2">
-              {{ order.last_message?.message }}
+
+              <p v-if="order.last_message?.message !== null" class="text-sm leading-none text-gray-600 ml-2">
+                {{ order.last_message?.message }}
+                <span v-if="order.last_message && order.last_message.sender_type" class="text-xs text-gray-400 ml-2">
+                    (от {{ order.last_message?.sender_type === 'client' ? 'клиента' : 'менеджера' }})
+                </span>
+              </p>
+              <div v-else class="flex items-center pl-[10px]">
+                <img @click="showModalScreenshot(order.last_message.image_url)" :src="order.last_message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
+                <span class="text-xs text-gray-400 ml-2">
+                    (от {{ order.last_message?.sender_type === 'client' ? 'клиента' : 'менеджера' }})
+                </span>
+              </div>
             </div>
+
+
           </td>
 
         </tr>
@@ -353,7 +368,7 @@ export default {
       pinnedChats: [],
       filters: JSON.parse(localStorage.getItem('selectedFiltersOrders')) || [],
       selectedFilters: [],
-      filteredOrders: [],
+      //filteredOrders: [],
       orderId: '',
       order: '',
       selectedOrder: '',
@@ -453,21 +468,26 @@ export default {
   computed: {
     notificationSettings() {
       return this.userStore.currentUser?.settings?.find(s => s.key === 'notification') || { is_active: false }
+    },
+    filteredOrders() {
+      if (!this.selectedFilters.length) {
+        return this.ordersStore.orders
+      }
+      return this.ordersStore.orders.filter(order =>
+        this.selectedFilters.includes(order.status)
+      )
     }
   },
   methods: {
     onPageChange(page) {
       if (this.searchQuery && this.searchQuery.trim() !== '') {
-        alert('tut1')
         this.getOrdersWithElasticSearch(this.searchQuery, page)
       } else if(this.searchBlock) {
         this.getOrdersWithSearch(this.ordersStore.searchParams, page)
       }else if (this.getAllOrdersBeforeSearch && !this.searchQuery && !this.searchBlock){
-        alert('tut3')
         this.getAllOrders(page)
       }
       else {
-        alert('tut4')
         this.getOrders(page)
       }
     },
@@ -529,7 +549,8 @@ export default {
       if (this.ordersStore.isSearchBlockActive) {
         return
       }
-        await this.getOrders();
+
+        this.ordersStore.setOrders(this.orders)
         this.applyFilters(this.ordersStore.selectedFilters)
         this.setReminder(order.id, REMINDER_TIMEOUT_MS)
     },
@@ -571,6 +592,10 @@ export default {
         switch (data.type) {
           case 'attach_user':
             await this.unPinChat(data.order.id, null);
+            await this.getOrders();
+              this.isModalShowOrderDetail = false
+              this.ordersStore.markAsReadNewOrder(data.order.id)
+
             if (this.notificationSettings.is_active){
               this.playSound('attach_user_out.wav')
             }
@@ -578,6 +603,9 @@ export default {
             case 'send_chek':
               if(!this.isModalShowOrderDetail && !this.isModalChatShow) {
                 await this.getOrders();
+              }
+              if (this.notificationSettings.is_active){
+                this.playSound('send_chek.ogg')
               }
               eventBus.emit('newChek', data.order)
             break;
@@ -847,10 +875,20 @@ export default {
         this.selectedUser = selectedOrder.user ?? null;
       }
     },
+    // openOrderDetail(data) {
+    //   this.fromChatToDetail = data.fromChatToDetail
+    //     this.selectedOrder = { ...data.selectedOrder, orderStatus: this.translateStatus(data.selectedOrder.status) }
+    //   this.selectedUser = data.selectedOrder.user
+    // },
     openOrderDetail(data) {
       this.fromChatToDetail = data.fromChatToDetail
-      this.selectedOrder = { ...data.selectedOrder, orderStatus: this.translateStatus(data.selectedOrder.status) }
       this.selectedUser = data.selectedOrder.user
+      this.selectedOrder = {
+        ...data.selectedOrder,
+        orderStatus: this.translateStatus(data.selectedOrder.status),
+        ...(data.orderCheck ? { image_url: data.orderCheck } : {})
+      };
+
     },
     closeModalShowOrderScreenshot() {
       this.isModalShow = false
@@ -870,8 +908,8 @@ export default {
       }
       //TODO тут надо сделать чтоб при закрытии модалку детальной информации не обновлялись каждый раз а только в нужный момент
       // this.getPinedChat()
-       //this.getOrders(this.currentPage)
       this.isModalShowOrderDetail = false
+      this.getOrders(this.currentPage)
       this.fromChatToDetail = false
         //console.log(this.fromChatToDetail )
 //TODO тут нужно понимать если мы перешли из чата к заказу и перекинули его другому то нужно так же закрывать и чат
@@ -949,8 +987,8 @@ export default {
 }
 .pagination-wrapper {
   position: fixed;
-  bottom: 71px;
-  left: 2%;
+  bottom: 65px;
+  left: 16px;
 }
 .filters_block {
   margin-bottom: 10px;
