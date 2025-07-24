@@ -286,8 +286,9 @@ export default {
           this.ordersStore.markAsReadNewOrder(this.selectedOrder.id)
 
           if (this.$page.props.auth.user.id !== response.data.assigned_user.user.id) {
-            this.unPinChat()
-            this.close();
+            //eventBus.emit('order-assigned-to-other', this.selectedOrder.id)
+            //this.unPinChat()
+            //this.close();
           }
         })
         .catch(error => {
@@ -561,7 +562,7 @@ export default {
 .right-panel {
   flex: 1;
   display: flex;
-  justify-content: center;
+  justify-content: end;
   align-items: center;
   max-height: 60vh;
   overflow: hidden;
@@ -610,17 +611,17 @@ export default {
 }
 .btn_assign {
   position: absolute;
-  left: 7%;
+  left: 4%;
   bottom: 40px;
 }
 .btn_success {
   position: absolute;
-  left: 26%;
+  left: 23%;
   bottom: 40px;
 }
 .btn_close {
   position: absolute;
-  left: 41%;
+  left: 38%;
   bottom: 40px;
 }
 .buttons {

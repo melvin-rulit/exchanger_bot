@@ -1,50 +1,98 @@
 <template>
   <Alert ref="alertComponent" :message="alertMessage" :type="alertType" />
 
-    <div v-if="isActive" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div v-if="isActive" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="flex items-center gap-7 absolute top-10 right-[310px]">
+
+      <PinChatsInChatModal
+        v-for="chat in pinnedChats.filter(chat => chat.order && chat.order.user?.id === $page.props.auth.user.id)"
+        :key="chat.id"
+        :chats="chat"
+        :selectedOrderId="orderId"
+        :pinnedChats="pinnedChats"
+        :onClick="() => showNextModalChat(chat.order)"
+      />
+    </div>
+
+    <div class="bg-white max-h-[90vh] rounded-lg overflow-hidden flex flex-col shadow-lg">
+
+      <div class="p-2 bg-gray-100 border-b border-gray-300">
+        <div class="flex justify-between items-center flex-wrap gap-2 max-h-20 overflow-auto pr-2">
+
+          <!-- Левая часть: информация о заказе и кнопки -->
+          <div class="flex items-center flex-wrap gap-2 ml-3">
+            <div class="text-lg font-semibold">Заказ</div>
+            <span class="ml-1">№{{ orderId }}</span>
+
+            <span @click="showModalOrderDetail" class="text-xs text-blue-500 hover:underline cursor-pointer ml-4">Перейти к заказу</span>
+          </div>
+
+                    <div class="flex justify-between items-center">
+
+
+                      <div class="flex items-center gap-3 w-[370px]">
+                        <div v-if="localOrder?.media?.length && receiptNotice">
+                        <div v-for="file in localOrder.media" :key="file.id">
+                          <img
+                            @click="showModalScreenshot(file.original_url)"
+                            :src="file.original_url"
+                            alt="Чек"
+                            class="rounded-md w-8 h-8 cursor-pointer"/>
+                        </div>
+                        </div>
+                        <div v-if="localOrder?.client?.status === 'send_screenshot' && receiptNotice" class="flex items-start gap-2 p-1 text-sm text-green-800 bg-green-100 border border-green-300 rounded-lg shadow-sm animate-fade-bounce">
+                          <Icon icon="fxemoji:left" width="20" height="20" class="self-center"/>
+                          <div>
+                            <span class="font-medium">К этому заказу клиент выслал чек</span>
+                          </div>
+                        </div>
+                      </div>
+
+
+                    </div>
+
+          <!-- Правая часть: дата -->
+          <div class="flex items-center gap-2 text-xs">
+            <div v-if="pinedChat && !pinedChat.is_pinned" class="cursor-pointer flex items-center">
+              <Icon @click="pinChat(selectedOrder)" icon="bi:pin-angle" width="20" height="20"/>
+            </div>
+            <div v-if="pinedChat && pinedChat.is_pinned" class="cursor-pointer flex items-center">
+              <Icon @click="unPinChat(null, pinedChat.id)" icon="bi:pin-angle-fill" width="20" height="20"/>
+            </div>
+            <div class="text-gray-400 whitespace-nowrap">
+              <span>Сегодня: {{ new Date().toLocaleDateString('ru-RU') }}</span>
+            </div>
+
+            <button
+              @click.stop="close"
+              class="text-black close-btn">
+              <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+
 
         <div @click.stop class="relative bg-white chat_container w-96 h-96 rounded-lg  flex flex-col">
 
-          <div class="flex justify-between items-center pb-2 border-b border-gray-200">
-            <div class="flex items-center">
-
-              <div v-if="pinedChat && !pinedChat.is_pinned" class="cursor-pointer flex items-center">
-                <Icon @click="pinChat(selectedOrder)" icon="bi:pin-angle" width="26" height="26" class="mr-4 cursor-pointer"/>
-              </div>
-              <div v-if="pinedChat && pinedChat.is_pinned" class="cursor-pointer flex items-center">
-                <Icon @click="unPinChat(null, pinedChat.id)" icon="bi:pin-angle-fill" width="26" height="26" class="mr-4 cursor-pointer"/>
-              </div>
-
-              <div class="text-lg font-semibold">Заказ </div>
-              <span class="ml-2">№{{ orderId}}</span>
-              <div class="flex items-center gap-1 cursor-pointer hover:underline ml-4">
-                <span @click="showModalOrderDetail" class="text-xs text-blue-500">Перейти к заказу</span>
-              </div>
-            </div>
-
+          <div class="flex justify-between items-center pb-2 ">
             <div class="flex items-center gap-3 w-[370px]">
+              <div v-if="localOrder?.media?.length">
+              <div v-for="file in localOrder.media" :key="file.id">
+                <img
+                  @click="showModalScreenshot(file.original_url)"
+                  :src="file.original_url"
+                  alt="Чек"
+                  class="rounded-md w-8 h-8 cursor-pointer"/>
+              </div>
+              </div>
               <div v-if="localOrder?.client?.status === 'send_screenshot' && receiptNotice" class="flex items-start gap-2 p-1 text-sm text-green-800 bg-green-100 border border-green-300 rounded-lg shadow-sm animate-fade-bounce">
-                <svg class="w-5 h-5 mt-0.5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8.364 8.364a1 1 0 01-1.414 0L3.293 11.05a1 1 0 011.414-1.414L8 12.93l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
+                <Icon icon="fxemoji:left" width="20" height="20" class="self-center"/>
                 <div>
                   <span class="font-medium">К этому заказу клиент выслал чек</span>
                 </div>
               </div>
-            </div>
-
-            <div class="flex items-center gap-5">
-
-                <PinChatsInChatModal
-                  v-for="chat in pinnedChats.filter(chat => chat.order && chat.order.user?.id === $page.props.auth.user.id)"
-                  :key="chat.id"
-                  :chats="chat"
-                  :selectedOrderId="orderId"
-                  :pinnedChats="pinnedChats"
-                  :onClick="() => showNextModalChat(chat.order)"
-                />
-
-              <span class="text-xs text-gray-400 ml-5">Сегодня: {{ new Date().toLocaleDateString('ru-RU') }}</span>
             </div>
           </div>
 
@@ -67,7 +115,7 @@
                         </div>
                         <div class="rounded-md shadow-md text-gray-700">
                           <div class="p-2" v-if="message.message">
-                            {{ message.message }}
+                            <p class="whitespace-pre-line">{{ message.message }}</p>
                           </div>
                           <template v-else-if="message.image_url">
                             <img @click="showModalScreenshot(message.image_url)" :src="message.image_url" alt="Изображение" class="rounded-md w-10 h-10 cursor-pointer" />
@@ -142,31 +190,39 @@
                 </div>
               </div>
 
-                <input
-                    v-model="newMessage"
-                    @keydown.enter="sendMessages"
-                    type="text"
-                    class="border p-2 w-full rounded-l-md"
-                    :placeholder="inputPlaceholder"/>
-                <button
-                    @click="sendMessages"
-                    class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-md"
-                    aria-label="Send message">Отправить
-                </button>
+<!--                <input-->
+<!--                    v-model="newMessage"-->
+<!--                    @keydown.enter="sendMessages"-->
+<!--                    type="text"-->
+<!--                    class="border p-2 w-full rounded-l-md"-->
+<!--                    :placeholder="inputPlaceholder"/>-->
+
+              <textarea
+                ref="textareaRef"
+                v-model="newMessage"
+                @input="resizeTextarea"
+                @keydown="handleEnterKey"
+                class="border border-gray-300 p-2 w-[85%] max-h-[80px] resize-none rounded-md text-black focus:outline-none focus:ring-0 focus:border-gray-400"
+                :placeholder="inputPlaceholder"/>
+
+<!--                <button-->
+<!--                    @click="sendMessages"-->
+<!--                    class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-md"-->
+<!--                    aria-label="Send message">Отправить-->
+<!--                </button>-->
+              <button
+                @click="sendMessages"
+                class="bg-blue-500 hover:bg-blue-600 text-white p-3 ml-14 rounded-md transition-colors duration-200 cursor-pointer "
+                aria-label="Отправить">Отправить
+              </button>
 
               <div class="relative group">
                 <div class="sm:ms-6 sm:flex">
-                  <span v-if="newMessage || newMessagePhoto.photo_path" class="text-xs text-[color:theme(colors.gray.400)] rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-[0.1rem] right-[10rem]"> Очистить</span>
-                  <Icon v-if="newMessage || newMessagePhoto.photo_path" @click="clearInput" class="cursor-pointer absolute bottom-[-1rem] right-[8rem]" icon="fluent:text-clear-formatting-32-light" width="32" height="32" />
+                  <span class="text-xs text-[color:theme(colors.gray.400)] rounded opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-[0.1rem] right-[12rem]"> Очистить</span>
+                  <Icon @click="clearInput" class="cursor-pointer absolute bottom-[-1rem] right-[9rem]" icon="fluent:text-clear-formatting-32-light" width="32" height="32" />
                 </div>
               </div>
             </div>
-
-            <button
-                @click.stop="close"
-                class="absolute top-4 right-4 p-2 text-black close-btn">
-              <Icon icon="material-symbols-light:close-small-rounded" width="34" height="34" />
-            </button>
         </div>
 
       <ModalShowOrderScreenshot
@@ -182,6 +238,7 @@
         :clientName="clientName"
         @close="closeModalOrderDetail"
       />
+    </div>
     </div>
 </template>
 
@@ -360,6 +417,19 @@ export default {
             this.clientMessages = this.messages.filter(message => message.sender_type === 'user');
             this.supportMessages = this.messages.filter(message => message.sender_type === 'client');
         },
+      handleEnterKey(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          this.sendMessages();
+        }
+      },
+      resizeTextarea() {
+        const el = this.$refs.textareaRef;
+        if (!el) return;
+
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+      },
       async sendMessages() {
         const hasText = this.newMessage.trim() !== '';
         const hasImage = this.newMessagePhoto?.photo_path !== null;
@@ -429,26 +499,19 @@ export default {
         this.isModalScreenshotShow = false
       },
       async showModalOrderDetail() {
-        const order = Object.keys(this.orderIdForGoToDetailIfNextModalChat ?? {}).length? this.orderIdForGoToDetailIfNextModalChat: this.selectedOrder;
-        let freshOrder = order;
-        console.log(order)
+        const order = Object.keys(this.orderIdForGoToDetailIfNextModalChat ?? {}).length? this.orderIdForGoToDetailIfNextModalChat: this.localOrder;
+        let orderCheck = '';
         if (this.ordersStore.receiptNoticeByOrderId[order.id]) {
-          freshOrder = await this.fetchUpdatedOrder(order.id);
-          console.log(freshOrder)
+          const imageUrl = this.localOrder.media?.[0]?.original_url;
+          if (imageUrl) {
+            orderCheck = imageUrl;
+          }
+
           this.ordersStore.setOrderCheckRead(order.id)
         }
-        //this.$emit('openOrderDetail', {fromChatToDetail: true, selectedUser: this.selectedUser, selectedOrder: order});
+
+        this.$emit('openOrderDetail', {fromChatToDetail: true, selectedUser: this.selectedUser, selectedOrder: order, orderCheck: orderCheck});
         this.orderIdForGoToDetailIfNextModalChat = null
-      },
-      async fetchUpdatedOrder(orderId) {
-        try {
-          const response = await OrdersService.getOrder(orderId)
-          const updated = response.data.data
-          useOrdersStore().updateOrder(updated)
-          return updated
-        } catch (error) {
-          this.errors = handleApiError(error)
-        }
       },
       closeModalOrderDetail() {
         this.isModalShowOrderDetail = false
@@ -561,7 +624,7 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     background-color: rgba(0, 0, 0, 0.9);
 }
 .flex {
