@@ -148,7 +148,6 @@
 
             <div class="flex items-center">
               <div class="mr-4 cursor-pointer">
-
                 <img
                   v-if="newMessagePhoto.photo_path"
                   :src="newMessagePhoto.previewUrl"
@@ -190,26 +189,15 @@
                 </div>
               </div>
 
-<!--                <input-->
-<!--                    v-model="newMessage"-->
-<!--                    @keydown.enter="sendMessages"-->
-<!--                    type="text"-->
-<!--                    class="border p-2 w-full rounded-l-md"-->
-<!--                    :placeholder="inputPlaceholder"/>-->
-
               <textarea
                 ref="textareaRef"
                 v-model="newMessage"
                 @input="resizeTextarea"
+                @paste="handlePaste"
                 @keydown="handleEnterKey"
                 class="border border-gray-300 p-2 w-[85%] max-h-[80px] resize-none rounded-md text-black focus:outline-none focus:ring-0 focus:border-gray-400"
                 :placeholder="inputPlaceholder"/>
 
-<!--                <button-->
-<!--                    @click="sendMessages"-->
-<!--                    class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-r-md"-->
-<!--                    aria-label="Send message">Отправить-->
-<!--                </button>-->
               <button
                 @click="sendMessages"
                 class="bg-blue-500 hover:bg-blue-600 text-white p-3 ml-14 rounded-md transition-colors duration-200 cursor-pointer "
@@ -468,6 +456,22 @@ export default {
           this.newMessage = '';
           this.inputPlaceholder = 'Введите сообщение...'
           this.newMessagePhoto.photo_path = null;
+        }
+      },
+      handlePaste(e) {
+        const items = e.clipboardData?.items
+        if (!items) return
+
+        for (const item of items) {
+          if (item.kind === 'file') {
+            const file = item.getAsFile()
+            if (file && file.type && file.type.startsWith('image/')) {
+              const objectUrl = URL.createObjectURL(file)
+              this.newMessagePhoto.photo_path = file
+              this.newMessagePhoto.previewUrl = objectUrl
+              break
+            }
+          }
         }
       },
       onOrderUpdated(updatedOrder) {

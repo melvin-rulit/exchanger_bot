@@ -156,18 +156,12 @@
             </div>
           </div>
 
-<!--          <input-->
-<!--            v-model="newMessage"-->
-<!--            @keydown.enter="sendMessages"-->
-<!--            type="text"-->
-<!--            class="border p-2 w-full rounded-l-md text-black"-->
-<!--            :placeholder="inputPlaceholder" />-->
-
           <textarea
             ref="textareaRef"
             v-model="newMessage"
             @input="resizeTextarea"
             @keydown="handleEnterKey"
+            @paste="handlePaste"
             class="border border-gray-300 p-2 w-[85%] max-h-[80px] resize-none rounded-md text-black focus:outline-none focus:ring-0 focus:border-gray-400"
             :placeholder="inputPlaceholder"/>
 
@@ -403,6 +397,22 @@ export default {
         })
       } catch (error) {
         this.errors = handleApiError(error)
+      }
+    },
+    handlePaste(e) {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (file && file.type && file.type.startsWith('image/')) {
+            const objectUrl = URL.createObjectURL(file)
+            this.newMessagePhoto.photo_path = file
+            this.newMessagePhoto.previewUrl = objectUrl
+            break
+          }
+        }
       }
     },
     async getPinedChat() {
