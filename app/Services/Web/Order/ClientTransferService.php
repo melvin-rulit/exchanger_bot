@@ -14,33 +14,52 @@ class ClientTransferService extends BaseWebService
 {
     use SendsFakeWebhookCommandTrait;
 
-    public function extractRequisitesFromMessage(string $message): ?string
+    public function extractRequisitesAndName(string $message): array
     {
-        preg_match('/\b\d{5,}\b/', $message, $matches);
-        return $matches[0] ?? null;
+        preg_match('/\b(\d{5,})\b(.*)/u', $message, $matches);
+
+        $requisite = isset($matches[1]) ? trim($matches[1]) : null;
+        $clientFullName = isset($matches[2]) ? trim($matches[2]) : null;
+
+        return [
+            'requisite' => $requisite,
+            'fullName' => $clientFullName,
+        ];
     }
+
 
     /**
      * @throws TelegramApiException
      * @throws OrderClientNotFoundException
      */
+
     public function handleRequisiteRequest(Order $order, $chatId, $message): void
     {
         setAppLanguage($this->clientsService->getClientLanguage($order->chat_id));
 
-        $requisite = $this->extractRequisitesFromMessage($message);
+        $parsed = $this->extractRequisitesAndName($message);
+        $requisite = $parsed['requisite'];
+        $clientFullName = $parsed['fullName'] ?? 'ФИ';
 
-        $messageHtml = <<<HTML
-        Отправьте <i>$order->amount</i> на эти реквизиты и прикрепите чек.
-        <pre>
-          $requisite
-        </pre>
-HTML;
-        //$keyboard['inline_keyboard'][] = KeyboardFactory::toConsultation(TelegramCallbackAction::ToConsultation->value . BankField::BANK->value);
+        if (!$requisite) {
+            throw new \RuntimeException('Не удалось извлечь реквизит из сообщения');
+        }
+$messageHead = 'Отправьте ' .  $order->amount .  ' на эти реквизиты ☝️и прикрепите чек';
+//        $messageHtml = <<<HTML
+//Отправьте <i>$order->amount</i> на эти реквизиты и прикрепите чек.
+//<pre>
+//  $requisite
+//  $clientFullName
+//</pre>
+//
+//HTML;
+
         $keyboard['inline_keyboard'][] = KeyboardFactory::toCancel(true);
 
-        //$this->telegramMessageService->deleteMessages($chatId, $message);
-        $this->telegramMessageService->sendMessageWithButtons($order->chat_id, $messageHtml, $keyboard);
+        //$this->telegramMessageService->sendDeleteReplay($order->chat_id, $messageHead);
+        $this->telegramMessageService->sendMessage($order->chat_id, $requisite);
+        $this->telegramMessageService->sendMessage($order->chat_id, $clientFullName);
+        $this->telegramMessageService->sendMessageWithButtons($order->chat_id, $messageHead, $keyboard);
 
         if (!$order->client) {
             throw new OrderClientNotFoundException("Заказу с ID {$order->id} не присвоен клиент");
@@ -52,4 +71,5 @@ HTML;
             'status' => MenuLevelStatus::Screenshot->value,
         ]);
     }
+
 }
