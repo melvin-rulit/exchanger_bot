@@ -117,7 +117,7 @@
               v-if="newMessagePhoto.photo_path"
               :src="newMessagePhoto.previewUrl"
               alt="preview"
-              class="w-20 h-20 object-cover rounded"
+              class="w-22 h-20 object-cover rounded"
               title="выбрать другое"
               @click="triggerFileInput"
             />
