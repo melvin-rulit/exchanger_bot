@@ -261,6 +261,7 @@
       @close="closeModalShowOrderDetail"
       @successEndOrder="closeModalShowChat"
       @successCloseOrder="closeModalShowChat"
+      @executorChanged="handleExecutorChanged"
     />
     <ModalShowClientDetail
       v-if="isModalShowClientDetail"
@@ -552,7 +553,10 @@ export default {
 
         this.ordersStore.setOrders(this.orders)
         this.applyFilters(this.ordersStore.selectedFilters)
-        this.setReminder(order.id, REMINDER_TIMEOUT_MS)
+        //this.setReminder(order.id, REMINDER_TIMEOUT_MS)
+    },
+    async handleExecutorChanged(order) {
+
     },
     async getCurrentUser() {
       this.currentUser = this.userStore.currentUser;
