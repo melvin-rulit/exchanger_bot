@@ -50,8 +50,8 @@ class TelegramBotService extends AbstractTelegramHandler implements TelegramBotS
                     $this->savePhoto(getLargestPhoto($callback->photos), $this->redis->getClientIdForChat($callback->chatId), $callback->chatId, $message_group);
                 }
 
-        } elseif (isset($data['message']['text']) || isset($data['message']['photo'])) {
-//            } elseif (isset($data['message']['text'])) {
+       // } elseif (isset($data['message']['text']) || isset($data['message']['photo'])) {
+           } elseif (isset($data['message']['text'])) {
 
                 $this->clientsService->checkIfClientExit($data);
                 setAppLanguage($this->clientsService->getClientLanguage($callback->clientBotId));
@@ -87,7 +87,8 @@ class TelegramBotService extends AbstractTelegramHandler implements TelegramBotS
                             $this->redis->getMessageGroupForConsultation($callback->chatId),
                             null,
                             $callback->text,
-                            $this->redisField->getOrderId($callback->chatId));
+                            $this->redisField->getOrderId($callback->chatId),
+                        true);
 
                         $this->telegramMessageService->sendMessage($callback->chatId, __('messages.wait_usdt'));
                     }
@@ -96,9 +97,6 @@ class TelegramBotService extends AbstractTelegramHandler implements TelegramBotS
                 }
                 elseif (!$this->startHandles->checkMainMenu($callback->text) && $this->clientsService->isClientConsultationInput($callback->clientBotId)) {
 
-//               if ($callback->text === __('buttons.to_main')) {
-//                   \Log::info($callback->text);
-//               }
                     $message = $this->chatService->prepareSaveMessage(
                         $callback->chatId,
                         $this->clientsService->getClient($callback->chatId, $callback->clientBotId),
