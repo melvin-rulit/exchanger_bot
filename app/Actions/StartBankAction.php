@@ -46,10 +46,22 @@ class StartBankAction
             'inline_keyboard' => []
         ];
 
+        $anyBank = $country->banks->firstWhere('type', 'any');
+        if ($anyBank) {
+            $keyboard['inline_keyboard'][] = [[
+                'text' => $anyBank->name,
+                'callback_data' => 'bank_' . $anyBank->id
+            ]];
+        }
+
         $row = [];
 
         /** @var Bank $bank */
         foreach ($country->banks as $bank) {
+            if ($bank->type === 'any') {
+                continue;
+            }
+
             $row[] = [
                 'text' => $bank->name,
                 'callback_data' => 'bank_' . $bank->id
