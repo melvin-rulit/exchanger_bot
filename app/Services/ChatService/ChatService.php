@@ -22,7 +22,7 @@ class ChatService
         }
     }
 
-    public function prepareSaveMessage(int $chatId ,int $clientId, ?int $messageGroup = null, ?string $photoFileId = null, ?string $message = null, ?int $saveOrderId = null): ?Message {
+    public function prepareSaveMessage(int $chatId ,int $clientId, ?int $messageGroup = null, ?string $photoFileId = null, ?string $message = null, ?int $saveOrderId = null, ?bool $walletMessage = false): ?Message {
         if ($photoFileId) {
             broadcast(new ClientConsultationMessageSent($chatId, $message));
 
@@ -35,7 +35,7 @@ class ChatService
 
         if ($saveOrderId) {
             if ($message !== __('buttons.to_main')) {
-                $this->saveMessage($chatId, $clientId, $message, $saveOrderId, $messageGroup);
+                $this->saveMessage($chatId, $clientId, $message, $saveOrderId, $messageGroup, $walletMessage);
                 $this->setMessageInput($saveOrderId);
             }
             return null;
@@ -47,7 +47,7 @@ class ChatService
         return $createdMessage;
     }
 
-    public function saveMessage(int $chatId, int $clientId, ?string $message, ?int $orderId, ?int $messageGroup = null): Message
+    public function saveMessage(int $chatId, int $clientId, ?string $message, ?int $orderId, ?int $messageGroup = null, ?bool $walletMessage = false): Message
     {
         return Message::create([
             'message_group' => $messageGroup,
@@ -57,6 +57,7 @@ class ChatService
             'user_id'       => null,
             'sender_type'   => 'client',
             'message'       => $message,
+            'is_wallet_message' => $walletMessage,
         ]);
     }
 
