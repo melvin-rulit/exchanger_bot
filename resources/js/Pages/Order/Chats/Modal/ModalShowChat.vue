@@ -76,27 +76,6 @@
 
         <div @click.stop class="relative bg-white chat_container w-96 h-96 rounded-lg  flex flex-col">
 
-          <div class="flex justify-between items-center pb-2 ">
-            <div class="flex items-center gap-3 w-[370px]">
-              <div v-if="localOrder?.media?.length">
-              <div v-for="file in localOrder.media" :key="file.id">
-                <img
-                  @click="showModalScreenshot(file.original_url)"
-                  :src="file.original_url"
-                  alt="Чек"
-                  class="rounded-md w-8 h-8 cursor-pointer"/>
-              </div>
-              </div>
-              <div v-if="localOrder?.client?.status === 'send_screenshot' && receiptNotice" class="flex items-start gap-2 p-1 text-sm text-green-800 bg-green-100 border border-green-300 rounded-lg shadow-sm animate-fade-bounce">
-                <Icon icon="fxemoji:left" width="20" height="20" class="self-center"/>
-                <div>
-                  <span class="font-medium">К этому заказу клиент выслал чек</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
           <div ref="chatContainer" class="flex-1 overflow-auto mb-4">
 
                 <div v-for="(group, groupIndex) in groupedMessages" :key="'group-' + groupIndex">
@@ -113,7 +92,7 @@
                           <img v-if="message.user.image_url" :src="message.user.image_url" class="rounded-xl w-6 h-6" alt=""/>
                           <span>{{ message.user?.name || 'Гость' }} в {{formatTime(message.created_at)}}</span>
                         </div>
-                        <div class="rounded-md shadow-md text-gray-700">
+                        <div class="rounded-md shadow-md text-gray-700 border-2">
                           <div class="p-2" v-if="message.message">
                             <p class="whitespace-pre-line">{{ message.message }}</p>
                           </div>
@@ -125,7 +104,11 @@
 
                       <!-- Сообщение от клиента -->
                       <div v-if="message.sender_type === 'client'" class="flex items-center gap-2 mr-6">
-                        <div class="rounded-md shadow-md text-gray-700">
+                        <div v-if="message.is_wallet_message === 1">
+                          <Icon icon="streamline-ultimate-color:money-wallet-open" width="24" height="24" />
+                        </div>
+                        <div class="rounded-md shadow-md text-gray-700" :class="{'border-2 ': message.is_wallet_message === 1}">
+
                           <div class="p-2" v-if="message.message">
                             {{ message.message }}
                           </div>
@@ -189,6 +172,18 @@
                 </div>
               </div>
 
+              <div v-if="showRequisiteType" class="absolute bottom-[110px] left-[200px] z-20 bg-white border rounded-lg shadow-lg animate-fade-in">
+                <div class="max-h-60 overflow-y-auto">
+                  <div
+                    v-for="(group, index) in requisitesType"
+                    :key="index"
+                    @click="selectRequisiteType(group.typeName, group.type)"
+                    class="px-4 py-2 cursor-pointer text-black hover:bg-gray-100">
+                    {{ group.typeName }}
+                  </div>
+                </div>
+              </div>
+
               <textarea
                 ref="textareaRef"
                 v-model="newMessage"
@@ -246,9 +241,10 @@ import ModalShowOrderDetail from '@/Pages/Order/Modal/ModalShowOrderDetail.vue'
 import PinChatsInChatModal from '@/Pages/Order/Chats/PinedChats/PinChatsInChatModal.vue'
 import { HollowDotsSpinner } from 'epic-spinners'
 import FileInput from '@/Components/Input/FileInput.vue'
+import TextInput from '@/Components/Input/TextInput.vue'
 
 export default {
-  components: { FileInput, ModalShowOrderDetail, Alert, ModalShowOrderScreenshot, Icon, PinChatsInChatModal, HollowDotsSpinner},
+  components: { TextInput, FileInput, ModalShowOrderDetail, Alert, ModalShowOrderScreenshot, Icon, PinChatsInChatModal, HollowDotsSpinner},
     props: {
         isActive: {
             type: Boolean,
@@ -291,6 +287,22 @@ export default {
             isModalShowOrderDetail: false,
             currentImageUrl: '',
             showTemplates: false,
+            requisitesType: [
+            {
+              typeName: 'Номер карты + получатель',
+              type: 'cardUser'
+            },
+            {
+              typeName: 'Номер телефона + получатель',
+              type: 'phoneUser'
+            },
+            {
+              typeName: 'Ибан',
+              type: 'iban'
+            }
+          ],
+            showRequisiteType: false,
+            selectedRequisiteType: '',
             pinedChat: false,
             templates: [],
             errors: '',
@@ -418,18 +430,38 @@ export default {
         el.style.height = 'auto';
         el.style.height = `${el.scrollHeight}px`;
       },
+      getRequisiteRegex(type) {
+        switch (type) {
+          case 'cardUser':
+            return /Номер карты:?\s*(.+)/i;
+          case 'phoneUser':
+            return /Номер телефона:?\s*(.+)/i;
+          case 'iban':
+            return /IBAN:?\s*(.+)/i;
+          default:
+            return null;
+        }
+      },
       async sendMessages() {
         const hasText = this.newMessage.trim() !== '';
         const hasImage = this.newMessagePhoto?.photo_path !== null;
 
         if (!hasText && !hasImage) return;
 
-        if (hasText && this.isRequisiteMessage(this.newMessage)) {
-          const matches = this.newMessage.match(/вот реквизиты:\s*(.+)/i);
-          this.removeReminder(this.orderId);
-          if (!matches || !matches[1].trim()) {
-            this.triggerErrorAlert('Вы не указали реквизиты после фразы "Вот реквизиты:"');
-            return;
+        if (hasText && this.isRequisiteMessage(this.selectedRequisiteType)) {
+
+          const selectedTypeObj = this.requisitesType.find(r => r.type === this.selectedRequisiteType);
+
+          if (selectedTypeObj) {
+            const regex = this.getRequisiteRegex(this.selectedRequisiteType);
+            const matches = regex ? this.newMessage.match(regex) : null;
+
+            this.removeReminder(this.orderId);
+
+            if (!matches || !matches[1].trim()) {
+              this.triggerErrorAlert(`Вы не указали реквизиты после выбранного типа: ${selectedTypeObj.typeName}`);
+              return;
+            }
           }
         }
 
@@ -442,7 +474,8 @@ export default {
             response = await OrdersService.sendOrderMessages(
               this.orderId,
               this.newMessage,
-              this.isRequisiteMessage(this.newMessage)
+              this.isRequisiteMessage(this.selectedRequisiteType),
+              this.selectedRequisiteType
             );
           }
 
@@ -526,22 +559,34 @@ export default {
         this.$refs.alertComponent.showAlert();
       },
       openTemplates() {
+        this.showRequisiteType = false;
         if (!this.templates.length) {
           this.triggerErrorAlert('Вы не установили ни одного шаблонного сообщения');
           return;
         }
+
         this.showTemplates = !this.showTemplates;
       },
       sendRequisite() {
         this.showTemplates = false;
-        this.newMessage = 'Вот реквизиты: '
+        this.showRequisiteType = !this.showRequisiteType;
+        //this.newMessage = 'Вот реквизиты: '
       },
-      isRequisiteMessage($text) {
-        return $text.toLowerCase().includes('вот реквизиты');
+      isRequisiteMessage(type) {
+        //return $text.toLowerCase().includes('вот реквизиты');
+        const lowered = type.toLowerCase();
+        return this.requisitesType.some(item =>
+          lowered.includes(item.type.toLowerCase())
+        );
       },
       selectTemplate(template) {
         this.newMessage = template;
         this.showTemplates = false;
+      },
+      selectRequisiteType(typeName, type) {
+        this.newMessage = typeName + ': ';
+        this.selectedRequisiteType = type;
+        this.showRequisiteType = false;
       },
       pinChat(order) {
           UserService.pinChat(order.id, order.client.id)
