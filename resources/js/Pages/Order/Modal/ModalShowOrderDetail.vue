@@ -286,6 +286,7 @@ export default {
           this.ordersStore.markAsReadNewOrder(this.selectedOrder.id)
 
           if (this.$page.props.auth.user.id !== response.data.assigned_user.user.id) {
+            this.$emit('executorChanged', this.selectedOrder.id);
             //eventBus.emit('order-assigned-to-other', this.selectedOrder.id)
             //this.unPinChat()
             //this.close();
@@ -300,7 +301,6 @@ export default {
           this.triggerSuccessAlert('Заказ передается другому менеджеру');
         }
       });
-
     },
     unPinChat(pinedChatId) {
       UserService.unPinChat(pinedChatId)
