@@ -77,7 +77,7 @@
                          alt="" />
                     <span>{{ message.user?.name || 'Гость' }} в {{ formatTime(message.created_at) }}</span>
                   </div>
-                  <div class="rounded-md shadow-md text-gray-700">
+                  <div class="rounded-md shadow-md text-gray-700 border-2">
                     <div class="p-2" v-if="message.message">
                       <p class="whitespace-pre-line">{{ message.message }}</p>
                     </div>
@@ -90,7 +90,7 @@
 
                 <!-- Сообщение от клиента -->
                 <div v-if="message.sender_type === 'client'" class="flex items-center gap-2 mr-6">
-                  <div class="rounded-md shadow-md text-gray-700">
+                  <div class="rounded-md shadow-md text-gray-700 border-2">
                     <div class="p-2" v-if="message.message">
                       {{ message.message }}
                     </div>

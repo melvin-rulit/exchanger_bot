@@ -14,45 +14,74 @@ class ClientTransferService extends BaseWebService
 {
     use SendsFakeWebhookCommandTrait;
 
-    public function extractRequisitesAndName(string $message): array
+    public function extractRequisitesAndName(string $message, string $type): array
     {
-        preg_match('/\b(\d{5,})\b(.*)/u', $message, $matches);
+        $requisite = null;
+        $clientFullName = null;
+        $IDNP = null;
 
-        $requisite = isset($matches[1]) ? trim($matches[1]) : null;
-        $clientFullName = isset($matches[2]) ? trim($matches[2]) : null;
+        switch ($type) {
+            case 'iban': // ✅ Тип 1
+                // Получатель: TODOROV IVAN
+                // IDNP: 2002500106846
+                // IBAN: MD41AG000000022595902591
+                preg_match('/IBAN:\s*([A-Z0-9]+)/u', $message, $ibanMatch);
+                preg_match('/Получатель:\s*(.+)/u', $message, $nameMatch);
+                preg_match('/IDNP:\s*(\d+)/u', $message, $idnpMatch);
+
+                $requisite = $ibanMatch[1] ?? null;
+                $clientFullName = $nameMatch[1] ?? null;
+                $IDNP = $idnpMatch[1] ?? null;
+                break;
+
+            case 'phoneUser': // ✅ Тип 2
+                // Mia: 68165847
+                // Получатель: TODOROV IVAN
+                preg_match('/Mia:\s*(\d+)/u', $message, $miaMatch);
+                preg_match('/Получатель:\s*(.+)/u', $message, $nameMatch);
+
+                $requisite = $miaMatch[1] ?? null;
+                $clientFullName = $nameMatch[1] ?? null;
+                break;
+
+            case 'cardUser': // ✅ Тип 3
+                // Номер карты: 7584858585858484
+                // Получатель: Иван Иванов
+                preg_match('/Номер карты:\s*(\d{12,19})/u', $message, $cardMatch);
+                preg_match('/Получатель:\s*(.+)/u', $message, $nameMatch);
+
+                $requisite = $cardMatch[1] ?? null;
+                $clientFullName = $nameMatch[1] ?? null;
+                break;
+        }
 
         return [
             'requisite' => $requisite,
             'fullName' => $clientFullName,
+            'IDNP' => $IDNP,
         ];
     }
-
 
     /**
      * @throws TelegramApiException
      * @throws OrderClientNotFoundException
      */
 
-    public function handleRequisiteRequest(Order $order, $chatId, $message): void
+    public function handleRequisiteRequest(Order $order, $chatId, $message, $type): void
     {
         setAppLanguage($this->clientsService->getClientLanguage($order->chat_id));
 
-        $parsed = $this->extractRequisitesAndName($message);
+        $parsed = $this->extractRequisitesAndName($message, $type);
+
         $requisite = $parsed['requisite'];
         $clientFullName = $parsed['fullName'] ?? 'ФИ';
+        $IDNP = $parsed['IDNP'];
 
         if (!$requisite) {
             throw new \RuntimeException('Не удалось извлечь реквизит из сообщения');
         }
-$messageHead = 'Отправьте ' .  $order->amount .  ' на эти реквизиты ☝️и прикрепите чек';
-//        $messageHtml = <<<HTML
-//Отправьте <i>$order->amount</i> на эти реквизиты и прикрепите чек.
-//<pre>
-//  $requisite
-//  $clientFullName
-//</pre>
-//
-//HTML;
+
+        $messageHead = 'Отправьте ' .  $order->amount .  ' на эти реквизиты ☝️и прикрепите чек';
 
         $keyboard['inline_keyboard'][] = KeyboardFactory::toCancel(true);
 

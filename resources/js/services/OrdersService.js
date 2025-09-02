@@ -31,9 +31,9 @@ export class OrdersService {
         let url = `${this.serverUrl}/orders/set_read_messages/${orderId}`
         return axios.patch(url, orderId)
     }
-    static sendOrderMessages(orderId, message, isRequisite) {
+    static sendOrderMessages(orderId, message, isRequisite, typeRequisite) {
         let url = `${this.serverUrl}/orders/send_message/${orderId}`
-        return axios.post(url, { message, isRequisite})
+        return axios.post(url, { message, isRequisite, typeRequisite})
     }
     static sendOrderMessagesWithImage(orderId, photoFile, caption) {
         let url = `${this.serverUrl}/orders/send_photo/${orderId}`

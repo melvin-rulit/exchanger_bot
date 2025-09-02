@@ -23,6 +23,7 @@ class OrderMessagesResource extends BaseTypedResource
             'sender_type'  => $model->sender_type,
             'user'         => new UserResource($model->user),
             'image_url'    => $model->getImageUrl(),
+            'is_wallet_message'    => $model->is_wallet_message,
             'created_at'   => $model->created_at,
             ];
     }

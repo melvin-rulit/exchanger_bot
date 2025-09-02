@@ -200,7 +200,7 @@ class OrderService extends BaseWebService
                 $this->redis->forgetRequisiteConsultant($order->chat_id);
                 $this->sendWebhookCommand($order->chat_id, __('buttons.to_main'));
             }
-            $this->clientTransferService->handleRequisiteRequest($order, $order->chat_id, $request->getMessage());
+            $this->clientTransferService->handleRequisiteRequest($order, $order->chat_id, $request->getMessage(), $request->getRequisiteType());
         } else {
                 $this->telegramMessageService->sendMessage($order->chat_id, $request->getMessage());
         }

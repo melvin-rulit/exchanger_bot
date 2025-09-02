@@ -56,6 +56,10 @@ class CreateOrderMessageRequest extends BaseRequest
     {
         return $this->input('isRequisite');
     }
+    public function getRequisiteType(): string
+    {
+        return $this->input('typeRequisite');
+    }
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
