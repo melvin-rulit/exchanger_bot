@@ -39,7 +39,10 @@ class StartHandles
         $this->redisMessageService->setDeletedMessageForChat($callback->chatId, $callback->messageId);
 
         if ($this->clientsService->isClientConsultationInput($callback->clientBotId)) {
-            $this->clientsService->setCloseConsultation($this->redis->getLastMessageIdFromClient($callback->chatId));
+            if ($lastMessageId = $this->redis->getLastMessageIdFromClient($callback->chatId)) {
+                $this->clientsService->setCloseConsultation($lastMessageId);
+            }
+            //$this->clientsService->setCloseConsultation($this->redis->getLastMessageIdFromClient($callback->chatId));
         }
 
         $this->clientsService->setClientMainInput($callback->clientBotId, __('buttons.to_main'));
