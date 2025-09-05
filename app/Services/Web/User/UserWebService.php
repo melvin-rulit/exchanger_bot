@@ -49,7 +49,7 @@ class UserWebService extends BaseWebService
         return $users;
     }
 
-    public function getUsersWitchSearch($request)
+    public function getUsersWitchSearch($request): LengthAwarePaginator
     {
         $dateFrom = $request->query('dateFrom');
         $dateTo = $request->query('dateTo');

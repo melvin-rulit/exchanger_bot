@@ -14,44 +14,47 @@ class ClientTransferService extends BaseWebService
 {
     use SendsFakeWebhookCommandTrait;
 
-    public function extractRequisitesAndName(string $message, string $type): array
+    public function extractRequisite(string $message, string $type): array
     {
         $requisite = null;
         $clientFullName = null;
         $IDNP = null;
 
+        \Log::info($message);
         switch ($type) {
             case 'iban': // ✅ Тип 1
-                // Получатель: TODOROV IVAN
-                // IDNP: 2002500106846
-                // IBAN: MD41AG000000022595902591
                 preg_match('/IBAN:\s*([A-Z0-9]+)/u', $message, $ibanMatch);
-                preg_match('/Получатель:\s*(.+)/u', $message, $nameMatch);
-                preg_match('/IDNP:\s*(\d+)/u', $message, $idnpMatch);
-
                 $requisite = $ibanMatch[1] ?? null;
-                $clientFullName = $nameMatch[1] ?? null;
-                $IDNP = $idnpMatch[1] ?? null;
+
+                if ($requisite) {
+                    $rest = trim(str_replace($ibanMatch[0], '', $message));
+                    $lines = preg_split('/\r?\n/', $rest, -1, PREG_SPLIT_NO_EMPTY);
+
+                    if (isset($lines[0])) {
+                        $IDNP = trim($lines[0]);
+                    }
+                    if (isset($lines[1])) {
+                        $clientFullName = trim($lines[1]);
+                    }
+                }
                 break;
 
             case 'phoneUser': // ✅ Тип 2
-                // Mia: 68165847
-                // Получатель: TODOROV IVAN
-                preg_match('/Mia:\s*(\d+)/u', $message, $miaMatch);
-                preg_match('/Получатель:\s*(.+)/u', $message, $nameMatch);
+                preg_match('/Телефон:\s*(\d{6,15})/u', $message, $phoneMatch);
 
-                $requisite = $miaMatch[1] ?? null;
-                $clientFullName = $nameMatch[1] ?? null;
+                $requisite = $phoneMatch[1] ?? null;
+                if ($phoneMatch) {
+                    $clientFullName = trim(str_replace($phoneMatch[0], '', $message));
+                }
                 break;
 
             case 'cardUser': // ✅ Тип 3
-                // Номер карты: 7584858585858484
-                // Получатель: Иван Иванов
-                preg_match('/Номер карты:\s*(\d{12,19})/u', $message, $cardMatch);
-                preg_match('/Получатель:\s*(.+)/u', $message, $nameMatch);
+                preg_match('/Карта:\s*(\d{6,19})/u', $message, $cardMatch);
 
-                $requisite = $cardMatch[1] ?? null;
-                $clientFullName = $nameMatch[1] ?? null;
+                if ($cardMatch) {
+                    $requisite = $cardMatch[1];
+                    $clientFullName = trim(str_replace($cardMatch[0], '', $message));
+                }
                 break;
         }
 
@@ -71,10 +74,10 @@ class ClientTransferService extends BaseWebService
     {
         setAppLanguage($this->clientsService->getClientLanguage($order->chat_id));
 
-        $parsed = $this->extractRequisitesAndName($message, $type);
+        $parsed = $this->extractRequisite($message, $type);
 
         $requisite = $parsed['requisite'];
-        $clientFullName = $parsed['fullName'] ?? 'ФИ';
+        $clientFullName = $parsed['fullName'];
         $IDNP = $parsed['IDNP'];
 
         if (!$requisite) {
@@ -87,6 +90,9 @@ class ClientTransferService extends BaseWebService
 
         //$this->telegramMessageService->sendDeleteReplay($order->chat_id, $messageHead);
         $this->telegramMessageService->sendMessage($order->chat_id, $requisite);
+        if ($type === 'iban' && $IDNP) {
+            $this->telegramMessageService->sendMessage($order->chat_id, $IDNP);
+        }
         $this->telegramMessageService->sendMessage($order->chat_id, $clientFullName);
         $this->telegramMessageService->sendMessageWithButtons($order->chat_id, $messageHead, $keyboard);
 

@@ -289,15 +289,15 @@ export default {
             showTemplates: false,
             requisitesType: [
             {
-              typeName: 'Номер карты + получатель',
+              typeName: 'Карта',
               type: 'cardUser'
             },
             {
-              typeName: 'Номер телефона + получатель',
+              typeName: 'Телефон',
               type: 'phoneUser'
             },
             {
-              typeName: 'Ибан',
+              typeName: 'IBAN',
               type: 'iban'
             }
           ],
@@ -433,9 +433,9 @@ export default {
       getRequisiteRegex(type) {
         switch (type) {
           case 'cardUser':
-            return /Номер карты:?\s*(.+)/i;
+            return /Карта:?\s*(.+)/i;
           case 'phoneUser':
-            return /Номер телефона:?\s*(.+)/i;
+            return /Телефон:?\s*(.+)/i;
           case 'iban':
             return /IBAN:?\s*(.+)/i;
           default:
