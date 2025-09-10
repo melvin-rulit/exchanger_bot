@@ -454,7 +454,7 @@ export default {
 
           if (selectedTypeObj) {
             const regex = this.getRequisiteRegex(this.selectedRequisiteType);
-            const matches = regex ? this.newMessage.match(regex) : null;
+            //const matches = regex ? this.newMessage.match(regex) : null;
 
             this.removeReminder(this.orderId);
 
