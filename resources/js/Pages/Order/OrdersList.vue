@@ -4,54 +4,54 @@
   <div class="main">
     <div class="table-container rounded-xl">
       <table class="w-full">
-        <thead class="head_table">
-        <tr tabindex="0" class="focus:outline-none h-7 rounded sticky top-0 bg-white">
-          <td>
-            <div class="flex">
+<!--        <thead class="head_table">-->
+<!--        <tr tabindex="0" class="focus:outline-none h-7 rounded sticky top-0 bg-white">-->
+<!--          <td>-->
+<!--            <div class="flex">-->
 
-            </div>
-          </td>
-          <td>
-            <div class="flex pl-6">
-              <p class="font-semibold mr-2">№</p>
-            </div>
-          </td>
-          <td>
-            <div class="flex">
-              <p class="font-semibold ml-3">Статус</p>
-            </div>
-          </td>
-          <td>
-            <div class="flex">
-              <p class="font-semibold ml-2">Клиент</p>
-            </div>
-          </td>
-          <td>
-            <div class="flex">
-              <p class="font-semibold ml-2">Сумма обмена</p>
-            </div>
-          </td>
-          <td>
-            <div class="flex">
-              <p class="font-semibold ml-2">Банк</p>
-            </div>
-          </td>
-          <td class="pl-3">
-            <p class="font-semibold ml-2">Чек</p>
-          </td>
-          <td>
-            <div class="flex">
-              <p class="font-semibold ml-2">Кем взят</p>
-            </div>
-          </td>
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td>-->
+<!--            <div class="flex pl-6">-->
+<!--              <p class="font-semibold mr-2">№</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td>-->
+<!--            <div class="flex">-->
+<!--              <p class="font-semibold ml-3">Статус</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td>-->
+<!--            <div class="flex">-->
+<!--              <p class="font-semibold ml-2">Клиент</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td>-->
+<!--            <div class="flex">-->
+<!--              <p class="font-semibold ml-2">Сумма обмена</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td>-->
+<!--            <div class="flex">-->
+<!--              <p class="font-semibold ml-2">Банк</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--          <td class="pl-3">-->
+<!--            <p class="font-semibold ml-2">Чек</p>-->
+<!--          </td>-->
+<!--          <td>-->
+<!--            <div class="flex">-->
+<!--              <p class="font-semibold ml-2">Кем взят</p>-->
+<!--            </div>-->
+<!--          </td>-->
 
-          <td>
-            <div class="flex">
-              <p class="font-semibold ">Последнее сообщение</p>
-            </div>
-          </td>
-        </tr>
-        </thead>
+<!--          <td>-->
+<!--            <div class="flex">-->
+<!--              <p class="font-semibold ">Последнее сообщение</p>-->
+<!--            </div>-->
+<!--          </td>-->
+<!--        </tr>-->
+<!--        </thead>-->
 
         <tbody v-if="isLoadingSpiner">
         <tr>
