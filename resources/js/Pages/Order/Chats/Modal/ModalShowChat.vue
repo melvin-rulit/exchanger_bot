@@ -458,10 +458,10 @@ export default {
 
             this.removeReminder(this.orderId);
 
-            if (!matches || !matches[1].trim()) {
-              this.triggerErrorAlert(`Вы не указали реквизиты после выбранного типа: ${selectedTypeObj.typeName}`);
-              return;
-            }
+            // if (!matches || !matches[1].trim()) {
+            //   this.triggerErrorAlert(`Вы не указали реквизиты после выбранного типа: ${selectedTypeObj.typeName}`);
+            //   return;
+            // }
           }
         }
 
